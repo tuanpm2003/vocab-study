@@ -1,0 +1,272 @@
+# API CONTRACT
+
+> Hợp đồng giữa frontend và backend. Quy ước chung (đặt tên URL, mã trạng thái, shape
+> response/error) ở skill `api-contract`.
+>
+> **Trạng thái: thiết kế. Chưa endpoint nào được implement.**
+> Mỗi phase sẽ cập nhật file này khi endpoint thật sự tồn tại.
+
+Ký hiệu: ⬜ chưa làm · ✅ đã implement và có test
+
+---
+
+## Quy ước tóm tắt
+
+| | |
+|---|---|
+| Base URL (local) | `http://localhost:4000` |
+| Content-Type | `application/json` |
+| Tài nguyên đơn | trả thẳng object, không bọc `{ data }` |
+| Danh sách | luôn bọc `{ items, total, page, limit, totalPages }` |
+| Cập nhật | `PATCH` (không dùng `PUT`) |
+| Xóa | `DELETE` → 204, không có body |
+
+Mọi endpoint đều **ngầm định lọc theo `ownerId`** lấy từ `@CurrentUser()`.
+Client không gửi và không thấy `ownerId`.
+
+---
+
+## Health — Phase 1
+
+### ⬜ `GET /health`
+Kiểm tra app sống và database kết nối được. Cần cho health check của ALB/App Runner ở Phase 13.
+
+**200**
+```json
+{ "status": "ok", "database": "connected", "timestamp": "2026-09-18T10:00:00.000Z" }
+```
+**503** khi không kết nối được database.
+
+---
+
+## Languages — Phase 2
+
+### ⬜ `GET /languages`
+**Mục đích:** Trang Languages — danh sách ngôn ngữ kèm số từ vựng.
+**Query:** `page` (≥1, mặc định 1), `limit` (1-100, mặc định 20)
+
+**200**
+```json
+{
+  "items": [
+    { "id": "clx1", "name": "Japanese", "code": "ja", "vocabularyCount": 320,
+      "createdAt": "...", "updatedAt": "..." }
+  ],
+  "total": 3, "page": 1, "limit": 20, "totalPages": 1
+}
+```
+`vocabularyCount` lấy bằng `_count`, **không** load hết rồi `.length`.
+
+### ⬜ `POST /languages`
+**Body:** `{ "name": string (1-50, bắt buộc), "code"?: string (≤10) }`
+**201** → object Language
+**400** thiếu `name`, hoặc gửi field lạ
+**409** trùng tên trong cùng owner
+
+### ⬜ `GET /languages/:id`
+**200** → Language kèm `levelSystems` (mỗi cái kèm `levels` đã sắp theo `order`)
+**404** không tìm thấy
+
+### ⬜ `PATCH /languages/:id`
+**Body:** các field của POST, tất cả optional · **200** / **404**
+
+### ⬜ `DELETE /languages/:id`
+**204**. Xóa Language sẽ **cascade** xóa LevelSystem, Level, Collection, Vocabulary bên trong.
+Frontend **phải** hỏi xác nhận kèm số lượng từ sẽ mất.
+**404** không tìm thấy
+
+---
+
+## Level Systems & Levels — Phase 3
+
+### ⬜ `GET /languages/:languageId/level-systems`
+**200** → mảng LevelSystem, mỗi cái kèm `levels` sắp theo `order`.
+Không phân trang — số lượng luôn rất nhỏ (1-2 hệ thống mỗi ngôn ngữ).
+*Đây là ngoại lệ duy nhất của quy tắc phân trang, và được ghi nhận có chủ đích.*
+
+### ⬜ `POST /languages/:languageId/level-systems`
+**Body:** `{ "name": string, "isDefault"?: boolean, "levels"?: [{ "name": string, "order": number }] }`
+
+Cho phép tạo cả hệ thống + danh sách level trong **một request**. Lý do UX: người dùng
+tạo "JLPT" rồi phải gọi thêm 5 request để tạo N5..N1 là trải nghiệm tệ. Backend bọc trong
+`$transaction`.
+
+**201** → LevelSystem kèm levels
+
+### ⬜ `PATCH /level-systems/:id` · ⬜ `DELETE /level-systems/:id`
+### ⬜ `POST /level-systems/:id/levels` · ⬜ `PATCH /levels/:id` · ⬜ `DELETE /levels/:id`
+
+Xóa Level → `Collection.levelId` và `Vocabulary.levelId` được set `null`,
+**không** xóa collection hay từ vựng.
+
+---
+
+## Collections — Phase 3
+
+### ⬜ `GET /collections`
+**Query:** `languageId` (bắt buộc), `levelId` (`null` để lấy collection xuyên level),
+`kind` (`LESSON|TOPIC`), `page`, `limit`
+
+**200** → envelope, mỗi item kèm `vocabularyCount`
+
+### ⬜ `POST /collections`
+**Body:**
+```json
+{ "languageId": "clx1", "levelId": "clx5 | null", "name": "Lesson 3",
+  "kind": "LESSON", "description": null }
+```
+`levelId: null` là **hợp lệ và có chủ đích** — đó là collection xuyên level (Topic).
+
+**201** / **400** / **404** (language hoặc level không tồn tại)
+
+### ⬜ `GET /collections/:id` · ⬜ `PATCH /collections/:id` · ⬜ `DELETE /collections/:id`
+
+Xóa Collection **không** xóa từ vựng — chỉ xóa các dòng trong bảng nối
+`VocabularyCollection`. Một từ thuộc 3 collection, xóa 1 collection thì từ vẫn còn ở 2 cái kia.
+
+---
+
+## Vocabulary — Phase 4
+
+### ⬜ `GET /vocabularies`
+**Mục đích:** màn hình danh sách từ vựng với search + filter.
+
+**Query:**
+| Param | Kiểu | Ghi chú |
+|---|---|---|
+| `page` / `limit` | int | mặc định 1 / 20, `limit` tối đa **100** |
+| `search` | string | tìm trong `term`, `meaning`, `reading` (không phân biệt hoa thường) |
+| `languageId` / `levelId` / `collectionId` | string | filter |
+| `status` | enum | `NEW\|LEARNING\|REVIEW\|MASTERED` (từ Phase 9) |
+| `sort` | string | `createdAt:desc` (mặc định), `term:asc`, `updatedAt:desc` — **whitelist** |
+
+**200**
+```json
+{
+  "items": [{
+    "id": "clx9", "term": "食べる", "meaning": "to eat",
+    "reading": "たべる", "romanization": "taberu",
+    "exampleSentence": "毎日ご飯を食べます。",
+    "exampleTranslation": "Tôi ăn cơm mỗi ngày.",
+    "notes": null, "extra": { "verbGroup": "ichidan" },
+    "language": { "id": "clx1", "name": "Japanese" },
+    "level": { "id": "clx5", "name": "N5" },
+    "collections": [
+      { "id": "clx7", "name": "Lesson 3" },
+      { "id": "clx8", "name": "Food" }
+    ],
+    "progress": { "status": "LEARNING", "reviewCount": 8 },
+    "createdAt": "...", "updatedAt": "..."
+  }],
+  "total": 253, "page": 1, "limit": 20, "totalPages": 13
+}
+```
+`sort` **phải** được whitelist — nhận chuỗi tùy ý từ client rồi đưa vào `orderBy` là lỗ hổng.
+
+### ⬜ `POST /vocabularies`
+**Body:**
+```json
+{
+  "languageId": "clx1",          // bắt buộc
+  "levelId": "clx5",             // tùy chọn
+  "collectionIds": ["clx7"],     // tùy chọn, mảng — quan hệ N-N
+  "term": "食べる",               // bắt buộc
+  "meaning": "to eat",           // bắt buộc
+  "reading": "たべる",
+  "romanization": "taberu",
+  "exampleSentence": null, "exampleTranslation": null, "notes": null,
+  "extra": { "verbGroup": "ichidan" }
+}
+```
+
+**201** → Vocabulary, **có thể kèm** `warnings`:
+```json
+{ "id": "clx9", "term": "行", "warnings": [
+    { "code": "POSSIBLE_DUPLICATE", "message": "Từ này đã có trong Lesson 1",
+      "existingIds": ["clx99"] } ] }
+```
+
+**Từ trùng KHÔNG trả 409.** Từ đồng tự khác nghĩa là hợp lệ (`行` = đi / hàng).
+Frontend hiển thị cảnh báo và để người dùng quyết định. Xem [DATABASE.md §6](DATABASE.md).
+
+Tạo Vocabulary + các dòng `VocabularyCollection` phải nằm trong cùng một `$transaction`.
+
+### ⬜ `GET /vocabularies/:id` · ⬜ `PATCH /vocabularies/:id` · ⬜ `DELETE /vocabularies/:id`
+
+`PATCH` với `collectionIds` sẽ **thay thế toàn bộ** danh sách collection (xóa hết rồi thêm
+lại), phải nằm trong `$transaction` — nếu xóa xong mà thêm lỗi, từ sẽ mất hết collection.
+
+`DELETE` → 204, cascade xóa các dòng bảng nối, `LearningProgress`, và `ReviewLog`.
+
+---
+
+## Learning — Phase 7-9
+
+### ⬜ `GET /learning/session`
+**Mục đích:** lấy bộ từ cho một phiên học.
+**Query:** `mode` (`flashcard|multiple_choice`), `languageId`, `levelId`, `collectionId`,
+`limit` (mặc định 20)
+
+**200** — với `multiple_choice`, backend sinh sẵn đáp án nhiễu:
+```json
+{ "items": [{
+    "vocabulary": { "id": "clx9", "term": "食べる", "meaning": "to eat", "reading": "たべる" },
+    "choices": ["Ăn", "Uống", "Ngủ", "Đi"],
+    "correctIndex": 1
+  }] }
+```
+Sinh đáp án nhiễu ở **backend**, không ở frontend — nếu làm ở frontend thì phải tải toàn
+bộ từ vựng về máy client, vi phạm yêu cầu "không load toàn bộ database lên frontend".
+
+### ⬜ `POST /learning/review`
+**Body:**
+```json
+{ "vocabularyId": "clx9", "mode": "FLASHCARD", "rating": "GOOD", "isCorrect": null }
+```
+`rating` cho flashcard, `isCorrect` cho quiz. Đúng một trong hai phải có.
+
+**201** → `LearningProgress` sau khi cập nhật.
+
+Backend làm trong một `$transaction`:
+1. Tạo một dòng `ReviewLog`
+2. `upsert` `LearningProgress` (tạo mới nếu từ này chưa từng được ôn)
+3. Cập nhật `reviewCount`, `correctCount`/`incorrectCount`, `lastReviewedAt`, `status`
+4. *(Phase 11)* tính `dueAt`, `intervalDays`, `easeFactor` theo thuật toán SRS
+
+### ⬜ `GET /learning/due`
+**Query:** `languageId`, `limit`
+MVP: trả từ có `status` ∈ `NEW | LEARNING`, sắp theo `lastReviewedAt` tăng dần (lâu nhất trước).
+Phase 11: đổi thành lọc `dueAt <= now()`. **Contract không đổi** — chỉ logic bên trong đổi.
+
+### ⬜ `GET /learning/stats` — Phase 10
+**Query:** `from`, `to` (ISO date, mặc định: hôm nay)
+
+**200**
+```json
+{
+  "today": { "reviewed": 45, "correct": 37, "incorrect": 8, "accuracy": 0.822 },
+  "byLanguage": [
+    { "languageId": "clx1", "name": "Japanese", "reviewed": 20, "correct": 15, "incorrect": 5 }
+  ],
+  "totals": { "vocabulary": 690, "new": 120, "learning": 340, "review": 180, "mastered": 50 },
+  "dueCount": 63,
+  "streak": 7
+}
+```
+`today` tính theo **múi giờ của người dùng**, không phải UTC — nếu dùng UTC, người ở
+Việt Nam sẽ thấy thống kê reset lúc 7 giờ sáng. Frontend gửi kèm offset, hoặc backend
+cấu hình `APP_TIMEZONE=Asia/Ho_Chi_Minh`.
+
+---
+
+## Checklist trước khi đánh dấu ✅ cho một endpoint
+
+- [ ] Có DTO với `class-validator` cho mọi input
+- [ ] Endpoint danh sách có phân trang với `@Max(100)`
+- [ ] `sort` được whitelist
+- [ ] Mọi truy vấn có `ownerId` trong `where`
+- [ ] Trả đúng status code (201 POST, 204 DELETE)
+- [ ] Không tìm thấy → 404, không phải 500
+- [ ] Có `@ApiTags` / `@ApiProperty` cho Swagger
+- [ ] Có ít nhất một integration test
+- [ ] Đã cập nhật file này
