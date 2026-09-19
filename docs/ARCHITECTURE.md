@@ -42,7 +42,7 @@ Lý do chọn từng thứ: [DECISIONS.md — ADR-001](DECISIONS.md).
                        ▼
               ┌─────────────────┐
               │   PostgreSQL    │   docker compose up -d
-              │   (port 5432)   │
+              │   (port 5434)   │
               └─────────────────┘
 ```
 

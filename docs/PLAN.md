@@ -36,7 +36,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 
 | # | Chức năng | Phase | Yêu cầu | Task | Xong | Tiến độ | Gate |
 |---|---|:---:|---|:---:|:---:|:---:|:---:|
-| F0 | Nền tảng dự án | 1 | §4 | 13 | 0 | 0% | — |
+| F0 | Nền tảng dự án | 1 | §4 | 13 | 2 | 15% | — |
 | F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 0 | 0% | — |
 | F2 | Hệ thống level | 3 | §3.2 | 7 | 0 | 0% | — |
 | F3 | Collection | 3 | §3.3 | 7 | 0 | 0% | — |
@@ -48,7 +48,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **0** | **0%** | |
+| | **Tổng** | | | **99** | **2** | **2%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -61,18 +61,18 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F0-01 | `git init`, `.gitignore` (node_modules, .env, dist, .next), commit tài liệu Phase 0 | Infra | `git log` có commit đầu tiên; `git check-ignore backend/.env` xác nhận `.env` bị bỏ qua | 🔄 |
-| F0-02 | `docker-compose.yml`: Postgres dev (5432) + test (5433), bind `127.0.0.1`, có volume | Infra | `docker compose ps` cho thấy cả hai container healthy | ⬜ |
-| F0-03 | Khởi tạo NestJS trong `backend/`, TypeScript strict | BE | `npm run start:dev` chạy, `http://localhost:4000` phản hồi | ⬜ |
+| F0-01 | `git init`, `.gitignore` (node_modules, .env, dist, .next), commit tài liệu Phase 0 | Infra | `git log` có commit đầu tiên; `git check-ignore backend/.env` xác nhận `.env` bị bỏ qua | ✅ |
+| F0-02 | `docker-compose.yml`: Postgres dev (5434 — 5432 đã bị PostgreSQL 18 cài sẵn chiếm) + test (5433), bind `127.0.0.1`, có volume | Infra | `docker compose ps` cho thấy cả hai container healthy | ⬜ |
+| F0-03 | Khởi tạo NestJS trong `backend/`, TypeScript strict | BE | `npm run start:dev` chạy, `http://localhost:4000` phản hồi | ✅ |
 | F0-04 | `ConfigModule` + `.env` / `.env.example` (`DATABASE_URL`, `PORT`, `LOCAL_OWNER_ID`, `CORS_ORIGIN`) | BE | App đọc cấu hình từ env; grep không thấy secret nào trong `src/` | ⬜ |
 | F0-05 | `ValidationPipe` toàn cục (`whitelist`, `forbidNonWhitelisted`, `transform`), CORS cho `localhost:3000`, Swagger | BE | Swagger UI mở được tại `/api` | ⬜ |
 | F0-06 | Cài Prisma, `PrismaModule` + `PrismaService` (có shutdown hook) | DB | `npx prisma validate` pass; app kết nối được DB khi khởi động | ⬜ |
 | F0-07 | `GET /health` kiểm tra kết nối DB bằng `SELECT 1` | BE | Trả 200 `{status:"ok", database:"connected"}`; tắt Docker → trả 503 | ⬜ |
-| F0-08 | Cấu hình Jest cho unit + e2e (e2e dùng DB test 5433) | Test | `npm run test` và `npm run test:e2e` đều chạy, test `/health` pass | ⬜ |
+| F0-08 | Cấu hình Vitest cho unit + e2e (e2e dùng DB test 5433, có chốt chặn không cho chạy nhầm vào DB dev) — ADR-009 | Test | `npm run test` và `npm run test:e2e` đều chạy, test `/health` pass | ⬜ |
 | F0-09 | Khởi tạo Next.js trong `frontend/` (App Router, TS strict, Tailwind) | FE | `npm run dev` chạy tại `http://localhost:3000` | ⬜ |
 | F0-10 | shadcn/ui + TanStack Query provider + `lib/api-client.ts` (`ApiError`) + `.env.local.example` | FE | Build pass; `apiFetch` gọi được backend | ⬜ |
 | F0-11 | Walking skeleton: trang chủ gọi `/health` và hiển thị trạng thái | FE | Trình duyệt hiện "Backend: ok · DB: connected"; tắt backend → hiện thông báo lỗi dễ hiểu | ⬜ |
-| F0-12 | ESLint + Prettier cho cả hai bên (`no-floating-promises`, `no-explicit-any` = error) | Infra | `npm run lint` pass ở cả `backend/` và `frontend/` | ⬜ |
+| F0-12 | Linter + Prettier: backend oxlint, frontend ESLint (ADR-009); `no-floating-promises` và `no-explicit-any` = error | Infra | `npm run lint` pass ở cả `backend/` và `frontend/` | ⬜ |
 | F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | Làm theo README trên một thư mục clone mới → app chạy được | ⬜ |
 
 ---
@@ -289,4 +289,6 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-09-19 | F0-03 | NestJS 12 (ESM, Vitest, oxlint); cổng 4000; bỏ @nestjs/mau; ADR-009 |
+| 2026-09-19 | F0-01 | git init; commit đầu 7516d96; .env bị ignore, .env.example không; thêm .gitattributes (LF) |
 | 2026-09-19 | — | Tạo PLAN.md: 99 task, 12 nhóm chức năng |

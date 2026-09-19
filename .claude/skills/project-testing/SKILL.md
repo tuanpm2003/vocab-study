@@ -27,14 +27,17 @@ thật và là nơi bug gây hậu quả thật (sai dữ liệu). Component tes
 
 ## Mock PrismaService
 
+Dự án dùng **Vitest** (mặc định của NestJS 12, xem ADR-009). `vi` là global — không cần import.
+Import nội bộ phải có đuôi `.js` vì backend là ESM: `import { LanguagesService } from './languages.service.js'`.
+
 ```ts
 const prismaMock = {
   language: {
-    findMany:   jest.fn(),
-    findFirst:  jest.fn(),
-    create:     jest.fn(),
-    update:     jest.fn(),
-    delete:     jest.fn(),
+    findMany:   vi.fn(),
+    findFirst:  vi.fn(),
+    create:     vi.fn(),
+    update:     vi.fn(),
+    delete:     vi.fn(),
   },
 };
 
@@ -46,7 +49,7 @@ beforeEach(async () => {
     ],
   }).compile();
   service = module.get(LanguagesService);
-  jest.clearAllMocks();          // ← quên dòng này thì test ảnh hưởng lẫn nhau
+  vi.clearAllMocks();          // ← quên dòng này thì test ảnh hưởng lẫn nhau
 });
 ```
 
@@ -142,7 +145,7 @@ cd frontend; npm run test
 | Bẫy | Cách tránh |
 |---|---|
 | Test phụ thuộc thứ tự chạy | Mỗi test tự dựng dữ liệu của mình, dọn sạch DB trước mỗi test |
-| Quên `jest.clearAllMocks()` | Đặt trong `beforeEach` |
+| Quên `vi.clearAllMocks()` | Đặt trong `beforeEach` |
 | Test chỉ chạy happy path rồi tuyên bố "đã test" | Dùng checklist trường hợp biên ở trên |
 | **Sửa code nguồn để test xanh** | Test fail nghĩa là có bug hoặc test sai — xác định rõ cái nào trước khi sửa |
 | Mock quá sâu tới mức test không còn kiểm chứng gì | Nếu test chỉ xác nhận "mock đã được gọi", nó không có giá trị |

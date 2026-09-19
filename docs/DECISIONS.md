@@ -16,6 +16,7 @@
 | 006 | Hoãn bảng User, nhưng mang `ownerId` từ đầu | 2026-09-18 | Accepted |
 | 007 | Cột SRS tạo sẵn ở Phase 9, thuật toán để Phase 11 | 2026-09-18 | Accepted |
 | 008 | Quy trình AI-assisted: session chính viết code, subagent kiểm chứng | 2026-09-18 | Accepted |
+| 009 | Theo mặc định NestJS 12 (ESM, Vitest, oxlint) + Prisma 7 ghim phiên bản | 2026-09-19 | Accepted |
 
 ---
 
@@ -335,3 +336,56 @@ có mặt ở ít nhất ba thời điểm (G0, sau G4, G5).
 Nếu sau vài phase, việc dừng ở mỗi gate trở thành nghi thức hình thức (đọc lướt rồi bấm
 đồng ý), thì quy trình đang không hoạt động — lúc đó nên **giảm số gate** thay vì giả vờ
 tuân thủ chúng.
+
+---
+
+## ADR-009 — Theo mặc định NestJS 12 (ESM, Vitest, oxlint) + Prisma 7 ghim phiên bản
+
+- **Ngày:** 2026-09-19 · **Trạng thái:** Accepted · **Phase:** 1
+
+### Bối cảnh
+Tài liệu Phase 0 được viết với giả định NestJS 11: CommonJS, Jest, ESLint. Khi bắt đầu
+Phase 1, phiên bản ổn định mới nhất là **NestJS 12**, và CLI chính thức sinh ra một bộ công
+cụ khác hẳn: **ESM** (`"type": "module"`, import phải có đuôi `.js`), **Vitest** thay Jest,
+**oxlint** (type-aware) thay ESLint, TypeScript 6.
+
+Cùng lúc, `@prisma/client` ổn định ở **7.10.0**, nhưng tag `latest` của gói CLI `prisma`
+đang trỏ nhầm vào bản thử nghiệm `8.0.0-rc.15`. Prisma 7 cũng thay đổi lớn so với 6:
+bắt buộc dùng driver adapter, cấu hình kết nối chuyển sang `prisma.config.ts`.
+
+### Các phương án đã cân nhắc
+1. **Ép NestJS 12 về CommonJS + Jest + ESLint** để khớp tài liệu cũ.
+   Nhược: đi ngược mặc định của framework; mỗi lần đọc tài liệu chính thức hay nâng cấp
+   đều phải tự "dịch" lại; Jest với ESM là nguồn lỗi cấu hình kinh điển.
+2. **Dùng NestJS 11 (tag `legacy`) + Prisma 6** — bộ đôi quen thuộc, nhiều tutorial.
+   Nhược: bắt đầu một dự án mới trên phiên bản đã bị gắn nhãn legacy; sớm muộn phải nâng
+   cấp trên code đã viết.
+3. **Theo đúng mặc định của NestJS 12, dùng Prisma 7, ghim phiên bản chính xác.**
+
+### Quyết định
+Phương án 3.
+- Backend: ESM, Vitest, oxlint, Prettier — đúng như `nest new` sinh ra.
+- Prisma CLI và `@prisma/client` **ghim cùng phiên bản `7.10.0`** (không dùng `^`),
+  vì hai gói lệch phiên bản sẽ sinh client không tương thích.
+- Frontend giữ **ESLint** (mặc định của Next.js, có rule riêng cho Next như
+  `next/core-web-vitals` mà oxlint chưa thay thế hết).
+
+### Lý do
+Với người đang học, chi phí lớn nhất không phải là học công cụ mới, mà là **cấu hình ngược
+với tài liệu chính thức**. Theo mặc định nghĩa là mọi hướng dẫn chính thức áp dụng thẳng
+vào dự án. ESM cũng là hướng đi của toàn bộ hệ sinh thái Node — Prisma 7 cũng là ESM, nên
+hai thứ khớp nhau tự nhiên thay vì phải nối qua lớp tương thích.
+
+### Hệ quả
+**Tích cực:** khớp tài liệu chính thức; Vitest và oxlint nhanh hơn Jest/ESLint đáng kể.
+**Cái giá phải trả:**
+- Import nội bộ phải có đuôi `.js` (`import { X } from './x.js'`) dù file là `.ts`.
+  Đây là quy tắc của ESM trong Node, không phải lỗi đánh máy.
+- Ít tutorial tiếng Việt/cộng đồng cho NestJS 12 + Vitest hơn so với NestJS 11 + Jest.
+- Test dùng `vi.fn()` thay cho `jest.fn()`.
+- Frontend và backend dùng hai linter khác nhau.
+**Đã cập nhật theo:** PLAN.md (F0-08, F0-12), skill `project-testing`, `backend-nestjs`.
+
+### Khi nào nên xem lại
+Khi Prisma CLI có bản 8 ổn định (tag `latest` trỏ về bản không phải RC) — lúc đó nâng cả
+hai gói cùng lúc, có kế hoạch riêng.

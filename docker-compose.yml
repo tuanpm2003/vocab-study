@@ -1,0 +1,50 @@
+# Chỉ chạy PostgreSQL. Frontend và backend chạy trực tiếp bằng npm để hot-reload nhanh.
+#   docker compose up -d        khởi động
+#   docker compose ps           xem trạng thái (cột STATUS phải là "healthy")
+#   docker compose down         dừng, GIỮ dữ liệu
+#   docker compose down -v      dừng, XÓA SẠCH dữ liệu dev
+name: vocab-app
+
+x-postgres: &postgres
+  image: postgres:16-alpine
+  environment: &pg-env
+    POSTGRES_USER: ${POSTGRES_USER:-vocab}
+    # Mật khẩu chỉ dùng cho máy local, cổng chỉ mở trên 127.0.0.1.
+    # Không bao giờ dùng lại giá trị này ở môi trường có mạng (Phase 13 dùng Secrets Manager).
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vocab_local_only}
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+
+services:
+  postgres:
+    <<: *postgres
+    container_name: vocab-postgres
+    restart: unless-stopped
+    environment:
+      <<: *pg-env
+      POSTGRES_DB: vocab_dev
+    # Cổng 5434 (không phải 5432): máy này đã có PostgreSQL 18 cài sẵn chiếm 5432.
+    # 127.0.0.1: chỉ máy này kết nối được. Nếu ghi "5434:5432", Docker mở cổng ra mọi
+    # card mạng — ai cùng Wi-Fi quán cà phê cũng thử đăng nhập vào database được.
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  postgres-test:
+    <<: *postgres
+    container_name: vocab-postgres-test
+    environment:
+      <<: *pg-env
+      POSTGRES_DB: vocab_test
+    ports:
+      - "127.0.0.1:5433:5432"
+    # Dữ liệu test nằm trên RAM: nhanh hơn, và tự mất khi container dừng — đúng ý đồ.
+    tmpfs:
+      - /var/lib/postgresql/data
+
+volumes:
+  pgdata:

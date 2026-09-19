@@ -61,7 +61,7 @@ cd frontend; npm run lint
 ### Tiêu chí pass
 
 - [ ] `tsc` không lỗi
-- [ ] ESLint không có error (warning thì được, nhưng phải giảm dần)
+- [ ] Linter không có error — backend oxlint, frontend ESLint (warning thì được, nhưng phải giảm dần)
 - [ ] **Không có `any` mới** trong diff
 - [ ] Không có `console.log` sót lại trong `backend/src` hoặc `frontend/src`
 - [ ] `npx prisma validate` pass (nếu phase đụng schema)

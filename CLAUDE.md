@@ -222,7 +222,7 @@ Tiền tố: `feat` · `fix` · `refactor` · `test` · `docs` · `chore`
 |---|---|
 | 3000 | Next.js |
 | 4000 | NestJS |
-| 5432 | PostgreSQL (dev) |
+| 5434 | PostgreSQL dev (Docker). 5432 bị PostgreSQL 18 cài sẵn trên Windows chiếm — đừng dùng |
 | 5433 | PostgreSQL (test) |
 | 5555 | Prisma Studio |
 

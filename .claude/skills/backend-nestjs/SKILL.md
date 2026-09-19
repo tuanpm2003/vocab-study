@@ -186,7 +186,7 @@ sửa chữ ký của hàng chục method.
 
 | Bẫy | Triệu chứng | Cách tránh |
 |---|---|---|
-| Quên `await` | Trả về `Promise {}` hoặc lỗi xảy ra sau khi response đã gửi | Bật ESLint rule `@typescript-eslint/no-floating-promises` |
+| Quên `await` | Trả về `Promise {}` hoặc lỗi xảy ra sau khi response đã gửi | oxlint rule `typescript/no-floating-promises` = error (đã bật) |
 | **N+1 query** | Vòng lặp gọi Prisma bên trong; app chậm dần khi nhiều dữ liệu | Dùng `include` / `select`, hoặc một truy vấn `findMany` với `in` |
 | Quên `PrismaModule` trong `imports` | `Nest can't resolve dependencies of X` | Luôn `imports: [PrismaModule]` |
 | Business logic nằm trong Controller | Controller dài quá 10 dòng mỗi method | Đẩy xuống Service |

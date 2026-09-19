@@ -58,7 +58,7 @@ của E2E.
 # docker-compose.yml
 postgres-test:
   image: postgres:16-alpine
-  ports: ["5433:5432"]            # ← port KHÁC với dev (5432)
+  ports: ["5433:5432"]            # ← port KHÁC với dev (5434)
   environment:
     POSTGRES_DB: vocab_test
 ```
