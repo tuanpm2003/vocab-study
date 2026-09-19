@@ -73,7 +73,7 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 | F0-10 | shadcn/ui + TanStack Query provider + `lib/api-client.ts` (`ApiError`) + `.env.local.example` | FE | Build pass; `apiFetch` gọi được backend | ✅ |
 | F0-11 | Walking skeleton: trang chủ gọi `/health` và hiển thị trạng thái | FE | Trình duyệt hiện "Backend: ok · DB: connected"; tắt backend → hiện thông báo lỗi dễ hiểu | ⬜ |
 | F0-12 | Linter + Prettier: backend oxlint, frontend ESLint (ADR-009); `no-floating-promises` và `no-explicit-any` = error | Infra | `npm run lint` pass ở cả `backend/` và `frontend/` | ✅ |
-| F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | ⬜ |
+| F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | Làm theo README trên một thư mục clone mới → app chạy được | ⬜ |
 
 > **⛔ Đang bị chặn bởi Docker (2026-09-19).** Docker Desktop sập ngay khi mở do file socket cũ
 > trong `%LOCALAPPDATA%\Docker\run\` (cách sửa: README → "Xử lý sự cố"). Code của các task dưới đây
@@ -83,7 +83,7 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 > - **F0-07** — `/health` trả 200 (nhánh 503 đã kiểm chứng)
 > - **F0-08** — `npm run test:e2e` pass (unit test đã pass; chốt chặn `_test` đã kiểm chứng)
 > - **F0-11** — trang chủ hiện "Backend: ok · DB: connected" (2 trạng thái lỗi đã kiểm chứng)
-> - **F0-13** — bước `docker compose` trong README (các bước còn lại kiểm chứng trên bản clone mới) 🔄 |
+> - **F0-13** — bước `docker compose` trong README (các bước còn lại kiểm chứng trên bản clone mới)
 
 ---
 
