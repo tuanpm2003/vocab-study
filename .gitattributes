@@ -1,0 +1,7 @@
+# Luôn dùng LF trong repo, kể cả trên Windows (git config core.autocrlf=true).
+# Không có dòng này, Prettier/ESLint sẽ báo lỗi "Delete ␍" ở mọi dòng.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
