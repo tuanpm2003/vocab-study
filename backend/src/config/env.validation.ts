@@ -15,6 +15,12 @@ export class EnvironmentVariables {
   @Max(65535)
   PORT: number = 4000;
 
+  // 127.0.0.1: chỉ máy này gọi được API. API chưa có đăng nhập, nên mở ra 0.0.0.0
+  // nghĩa là ai cùng mạng Wi-Fi cũng đọc/sửa được dữ liệu. Container (Phase 13) đặt HOST=0.0.0.0.
+  @IsString()
+  @IsNotEmpty()
+  HOST: string = "127.0.0.1";
+
   @IsString()
   @IsNotEmpty()
   DATABASE_URL: string;
