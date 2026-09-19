@@ -73,7 +73,7 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 | F0-10 | shadcn/ui + TanStack Query provider + `lib/api-client.ts` (`ApiError`) + `.env.local.example` | FE | Build pass; `apiFetch` gọi được backend | ✅ |
 | F0-11 | Walking skeleton: trang chủ gọi `/health` và hiển thị trạng thái | FE | Trình duyệt hiện "Backend: ok · DB: connected"; tắt backend → hiện thông báo lỗi dễ hiểu | ⬜ |
 | F0-12 | Linter + Prettier: backend oxlint, frontend ESLint (ADR-009); `no-floating-promises` và `no-explicit-any` = error | Infra | `npm run lint` pass ở cả `backend/` và `frontend/` | ✅ |
-| F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | Làm theo README trên một thư mục clone mới → app chạy được | ⬜ |
+| F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | Làm theo README trên một thư mục clone mới → app chạy được | 🔄 |
 
 ---
 
