@@ -5,7 +5,9 @@ config({ quiet: true });
 const testUrl = process.env.TEST_DATABASE_URL;
 
 if (!testUrl) {
-  throw new Error('Thiếu TEST_DATABASE_URL trong backend/.env (xem .env.example).');
+  throw new Error(
+    'Thiếu TEST_DATABASE_URL trong backend/.env (xem .env.example).',
+  );
 }
 
 // E2E test sẽ xóa dữ liệu. Chốt chặn này tồn tại để một lỗi cấu hình

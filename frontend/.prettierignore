@@ -1,0 +1,4 @@
+.next/
+node_modules/
+src/components/ui/
+next-env.d.ts

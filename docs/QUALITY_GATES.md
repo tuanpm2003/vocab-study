@@ -54,8 +54,10 @@ kế hoạch 10 mục. Nhưng bất cứ thay đổi nào đụng `schema.prisma
 ```powershell
 cd backend;  npm run build
 cd backend;  npm run lint
+cd backend;  npm run format:check
 cd frontend; npm run build
 cd frontend; npm run lint
+cd frontend; npm run format:check
 ```
 
 ### Tiêu chí pass

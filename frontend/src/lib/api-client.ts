@@ -1,5 +1,4 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 /** Lỗi có cấu trúc từ backend, hoặc lỗi mạng (status = 0) khi không gọi được backend. */
 export class ApiError extends Error {
@@ -27,7 +26,10 @@ function extractMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API_BASE_URL}${path}`, {

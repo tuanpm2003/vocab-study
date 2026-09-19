@@ -9,7 +9,12 @@ interface Health {
   timestamp: string;
 }
 
-type View = { tone: "ok" | "warn" | "error"; backend: string; database: string; hint?: string };
+type View = {
+  tone: "ok" | "warn" | "error";
+  backend: string;
+  database: string;
+  hint?: string;
+};
 
 function toView(data: Health | undefined, error: Error | null): View {
   if (data) return { tone: "ok", backend: "ok", database: data.database };
@@ -33,7 +38,12 @@ function toView(data: Health | undefined, error: Error | null): View {
     };
   }
 
-  return { tone: "error", backend: "lỗi", database: "không rõ", hint: error?.message };
+  return {
+    tone: "error",
+    backend: "lỗi",
+    database: "không rõ",
+    hint: error?.message,
+  };
 }
 
 const toneClass: Record<View["tone"], string> = {
@@ -50,13 +60,18 @@ export function HealthStatus() {
   });
 
   if (isPending) {
-    return <p className="text-sm text-muted-foreground">Đang kiểm tra kết nối…</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Đang kiểm tra kết nối…</p>
+    );
   }
 
   const view = toView(data, error);
 
   return (
-    <div className={`rounded-lg border p-4 ${toneClass[view.tone]}`} role="status">
+    <div
+      className={`rounded-lg border p-4 ${toneClass[view.tone]}`}
+      role="status"
+    >
       <p className="font-medium">
         Backend: {view.backend} · DB: {view.database}
       </p>

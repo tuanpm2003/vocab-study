@@ -11,7 +11,9 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Vocabulary API')
-    .setDescription('REST API của Multi-Language Vocabulary App — xem docs/API.md')
+    .setDescription(
+      'REST API của Multi-Language Vocabulary App — xem docs/API.md',
+    )
     .setVersion('0.1.0')
     .build();
   SwaggerModule.setup('api', app, () =>

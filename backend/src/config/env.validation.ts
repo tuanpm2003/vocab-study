@@ -19,7 +19,7 @@ export class EnvironmentVariables {
   // nghĩa là ai cùng mạng Wi-Fi cũng đọc/sửa được dữ liệu. Container (Phase 13) đặt HOST=0.0.0.0.
   @IsString()
   @IsNotEmpty()
-  HOST: string = "127.0.0.1";
+  HOST: string = '127.0.0.1';
 
   @IsString()
   @IsNotEmpty()
@@ -40,7 +40,10 @@ export function validateEnv(config: Record<string, unknown>) {
   const errors = validateSync(env, { skipMissingProperties: false });
   if (errors.length > 0) {
     const detail = errors
-      .map((e) => `  - ${e.property}: ${Object.values(e.constraints ?? {}).join(', ')}`)
+      .map(
+        (e) =>
+          `  - ${e.property}: ${Object.values(e.constraints ?? {}).join(', ')}`,
+      )
       .join('\n');
     throw new Error(
       `Biến môi trường không hợp lệ (xem backend/.env.example):\n${detail}`,

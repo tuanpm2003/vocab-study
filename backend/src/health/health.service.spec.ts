@@ -10,7 +10,10 @@ describe('HealthService', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     const module = await Test.createTestingModule({
-      providers: [HealthService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        HealthService,
+        { provide: PrismaService, useValue: prismaMock },
+      ],
     }).compile();
     service = module.get(HealthService);
   });

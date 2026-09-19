@@ -36,7 +36,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 
 | # | Chức năng | Phase | Yêu cầu | Task | Xong | Tiến độ | Gate |
 |---|---|:---:|---|:---:|:---:|:---:|:---:|
-| F0 | Nền tảng dự án | 1 | §4 | 13 | 6 | 46% | — |
+| F0 | Nền tảng dự án | 1 | §4 | 13 | 7 | 54% | — |
 | F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 0 | 0% | — |
 | F2 | Hệ thống level | 3 | §3.2 | 7 | 0 | 0% | — |
 | F3 | Collection | 3 | §3.3 | 7 | 0 | 0% | — |
@@ -48,7 +48,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **6** | **6%** | |
+| | **Tổng** | | | **99** | **7** | **7%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -72,7 +72,7 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 | F0-09 | Khởi tạo Next.js trong `frontend/` (App Router, TS strict, Tailwind) | FE | `npm run dev` chạy tại `http://localhost:3000` | ✅ |
 | F0-10 | shadcn/ui + TanStack Query provider + `lib/api-client.ts` (`ApiError`) + `.env.local.example` | FE | Build pass; `apiFetch` gọi được backend | ✅ |
 | F0-11 | Walking skeleton: trang chủ gọi `/health` và hiển thị trạng thái | FE | Trình duyệt hiện "Backend: ok · DB: connected"; tắt backend → hiện thông báo lỗi dễ hiểu | ⬜ |
-| F0-12 | Linter + Prettier: backend oxlint, frontend ESLint (ADR-009); `no-floating-promises` và `no-explicit-any` = error | Infra | `npm run lint` pass ở cả `backend/` và `frontend/` | ⬜ |
+| F0-12 | Linter + Prettier: backend oxlint, frontend ESLint (ADR-009); `no-floating-promises` và `no-explicit-any` = error | Infra | `npm run lint` pass ở cả `backend/` và `frontend/` | ✅ |
 | F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | Làm theo README trên một thư mục clone mới → app chạy được | ⬜ |
 
 ---
@@ -289,6 +289,7 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-09-19 | F0-12 | backend oxlint + frontend ESLint (type-aware); no-explicit-any & no-floating-promises = error, đã chứng minh bắt lỗi bằng file thử; Prettier + format:check cả hai |
 | 2026-09-19 | F0-10 | shadcn/ui (base-nova) + TanStack Query + apiFetch/ApiError; gọi /health qua CORS thành công; sửa lỗi font --font-sans tự tham chiếu |
 | 2026-09-19 | F0-09 | Next.js 16.3.5 (App Router, TS strict, Tailwind 4) chạy ở 3000; tắt agentRules; bỏ .gitignore của Next (nuốt .env.*.example) |
 | 2026-09-19 | F0-05 | ValidationPipe + CORS dùng chung qua configureApp() (cho cả e2e); Swagger /api 200 |
