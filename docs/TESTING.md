@@ -63,9 +63,13 @@ postgres-test:
     POSTGRES_DB: vocab_test
 ```
 
+E2E đọc `TEST_DATABASE_URL` trong `backend/.env` (xem `.env.example`). File `test/setup-e2e.ts`
+gán nó vào `DATABASE_URL` trước khi app khởi động, và **từ chối chạy** nếu tên database
+không kết thúc bằng `_test`.
+
 ```powershell
-$env:DATABASE_URL = "postgresql://postgres:postgres@localhost:5433/vocab_test"
-npx prisma migrate deploy
+docker compose up -d          # cần container postgres-test (cổng 5433)
+cd backend
 npm run test:e2e
 ```
 

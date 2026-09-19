@@ -1,0 +1,14 @@
+// Nguồn sự thật duy nhất của database. Thiết kế đầy đủ: docs/DATABASE.md
+// Sửa file này xong → npx prisma migrate dev --name <ten_mo_ta_hanh_dong>
+// Kết nối (DATABASE_URL) cấu hình ở prisma7.config.ts, không phải ở đây (thay đổi của Prisma 7).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Chưa có model nào. Model đầu tiên (Language) được thêm ở task F1-04.
