@@ -12,7 +12,12 @@ Ký hiệu: ⬜ chưa làm · 🔄 đang làm · ✅ xong · ⏸️ hoãn có ch
 
 ## Nợ kỹ thuật đã nhận diện
 
-Chưa có mục nào — dự án chưa có code.
+| Mục | Phát hiện | Xử lý khi |
+|---|---|---|
+| ESLint 9 đã hết hỗ trợ (`npm warn deprecated eslint@9`), nhưng `eslint-config-next@16` vẫn ghim `^9` | Phase 1 | Khi `eslint-config-next` hỗ trợ ESLint 10 — nâng cả hai cùng lúc |
+| Backend dùng nháy đơn, frontend dùng nháy kép (mỗi bên theo mặc định của framework) | Phase 1 | Chỉ đồng bộ nếu gây khó chịu thật; không ảnh hưởng hành vi |
+| Prisma CLI `latest` trỏ tới `8.0.0-rc` — đang ghim `7.10.0` (ADR-009) | Phase 1 | Khi Prisma 8 ổn định — nâng CLI và client cùng lúc, có kế hoạch riêng |
+| Trang `/` hiện là walking skeleton (kiểm tra `/health`) | Phase 1 | F10-04 thay bằng Dashboard; có thể giữ khối health ở góc trang |
 
 ---
 
@@ -47,6 +52,7 @@ có URL công khai.** Chi tiết ở skill `security-checklist`.
 - [ ] Mật khẩu DB mạnh, lưu ở Secrets Manager
 - [ ] RDS trong private subnet, Security Group chỉ cho phép ECS task
 - [ ] CORS giới hạn đúng domain production
+- [ ] `HOST=0.0.0.0` chỉ đặt bên trong container phía sau load balancer — mặc định `127.0.0.1` (Phase 1)
 - [ ] Log không ghi thông tin nhạy cảm
 - [ ] Backup tự động + **đã thử khôi phục một lần**
 - [ ] CloudWatch alarm cho lỗi 5xx **và cho chi phí**
