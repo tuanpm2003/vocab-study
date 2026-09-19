@@ -5,6 +5,11 @@ description: Mẫu chuẩn frontend Next.js của dự án — cấu trúc App R
 
 # Frontend Next.js — mẫu chuẩn của dự án
 
+> **Phiên bản: Next.js 16** (App Router, Turbopack). API có thể khác dữ liệu huấn luyện của AI.
+> Tài liệu chính thức khớp đúng phiên bản nằm sẵn ở `frontend/node_modules/next/dist/docs/` —
+> tra ở đó trước khi dùng một API không chắc chắn. `agentRules: false` trong `next.config.ts`
+> tắt việc `next dev` tự sinh AGENTS.md/CLAUDE.md trong `frontend/`.
+
 ## Ràng buộc quan trọng nhất
 
 **Frontend KHÔNG truy cập database.** Không import `@prisma/client`. Không viết Server
