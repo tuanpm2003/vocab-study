@@ -37,7 +37,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | # | Chức năng | Phase | Yêu cầu | Task | Xong | Tiến độ | Gate |
 |---|---|:---:|---|:---:|:---:|:---:|:---:|
 | F0 | Nền tảng dự án | 1 | §4 | 13 | 13 | 100% | — |
-| F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 0 | 0% | — |
+| F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 14 | 100% | — |
 | F2 | Hệ thống level | 3 | §3.2 | 7 | 0 | 0% | — |
 | F3 | Collection | 3 | §3.3 | 7 | 0 | 0% | — |
 | F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 0 | 0% | — |
@@ -48,7 +48,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **13** | **13%** | |
+| | **Tổng** | | | **99** | **27** | **27%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -94,20 +94,20 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F1-01 | Decorator `@CurrentUser()` trả `ownerId` từ `LOCAL_OWNER_ID` | BE | Controller nhận được `ownerId`; không có chỗ nào đọc `process.env` trực tiếp trong service | ⬜ |
-| F1-02 | `PaginationDto` (`page` ≥1, `limit` 1–100) + kiểu response `{items,total,page,limit,totalPages}` | BE | `limit=101` → 400; `page=0` → 400 | ⬜ |
-| F1-03 | `PrismaExceptionFilter`: P2002→409, P2025→404, P2003→409; lỗi có shape thống nhất | BE | Lỗi trả ra không chứa tên bảng, câu SQL, stack trace | ⬜ |
-| F1-04 | Model `Language` + migration `add_language` (`@@unique([ownerId, name])`) | DB | Migration chạy; Prisma Studio thấy bảng `Language` | ⬜ |
-| F1-05 | `LanguagesService`: findAll (phân trang), findOne, create, update, remove — tất cả lọc `ownerId` | BE | Mọi lời gọi Prisma có `ownerId` trong `where` | ⬜ |
-| F1-06 | Controller + DTO + Swagger: `GET/POST /languages`, `GET/PATCH/DELETE /languages/:id` | BE | Thử được cả 5 endpoint trên Swagger với đúng status code (200/201/204) | ⬜ |
-| F1-07 | Unit test service (mock `PrismaService`) — **bộ test mẫu** | Test | Mỗi method có happy path + ít nhất một nhánh lỗi; tất cả pass | ⬜ |
-| F1-08 | E2E test: CRUD, 400 (thiếu field, field lạ), 404, 409 trùng tên, cách ly `ownerId`, Unicode | Test | Tất cả pass trên DB test | ⬜ |
-| F1-09 | Seed idempotent: Japanese, Chinese, English | DB | Chạy `npx prisma db seed` hai lần không tạo bản ghi trùng | ⬜ |
-| F1-10 | App shell: layout, thanh điều hướng có 3 hành động chính (tạm để trạng thái "sắp có" cho tới khi tính năng tồn tại), responsive | FE | Ở màn hình 375px, điều hướng dùng được và 3 nút chính luôn nhìn thấy | ⬜ |
-| F1-11 | Trang `/languages`: danh sách card (tên + số từ); đủ 4 trạng thái loading / error / empty / có dữ liệu | FE | Thấy được cả 4 trạng thái (tắt backend để xem trạng thái lỗi) | ⬜ |
-| F1-12 | Form tạo/sửa ngôn ngữ (React Hook Form + Zod), hiển thị lỗi 409 từ backend | FE | Tạo trùng tên → thông báo lỗi dễ hiểu, form không mất dữ liệu đã nhập | ⬜ |
-| F1-13 | Xóa ngôn ngữ, có hộp xác nhận | FE | Phải xác nhận mới xóa; danh sách tự cập nhật sau khi xóa | ⬜ |
-| F1-14 | Khung trang `/languages/[id]` (cây level/collection bổ sung ở F2, F3) | FE | Mở từ card, hiện đúng tên ngôn ngữ; id không tồn tại → trang báo 404 | ⬜ |
+| F1-01 | Decorator `@CurrentUser()` trả `ownerId` từ `LOCAL_OWNER_ID` | BE | Controller nhận được `ownerId`; không có chỗ nào đọc `process.env` trực tiếp trong service | ✅ |
+| F1-02 | `PaginationDto` (`page` ≥1, `limit` 1–100) + kiểu response `{items,total,page,limit,totalPages}` | BE | `limit=101` → 400; `page=0` → 400 | ✅ |
+| F1-03 | `PrismaExceptionFilter`: P2002→409, P2025→404, P2003→409; lỗi có shape thống nhất | BE | Lỗi trả ra không chứa tên bảng, câu SQL, stack trace | ✅ |
+| F1-04 | Model `Language` + migration `add_language` (`@@unique([ownerId, name])`) | DB | Migration chạy; Prisma Studio thấy bảng `Language` | ✅ |
+| F1-05 | `LanguagesService`: findAll (phân trang), findOne, create, update, remove — tất cả lọc `ownerId` | BE | Mọi lời gọi Prisma có `ownerId` trong `where` | ✅ |
+| F1-06 | Controller + DTO + Swagger: `GET/POST /languages`, `GET/PATCH/DELETE /languages/:id` | BE | Thử được cả 5 endpoint trên Swagger với đúng status code (200/201/204) | ✅ |
+| F1-07 | Unit test service (mock `PrismaService`) — **bộ test mẫu** | Test | Mỗi method có happy path + ít nhất một nhánh lỗi; tất cả pass | ✅ |
+| F1-08 | E2E test: CRUD, 400 (thiếu field, field lạ), 404, 409 trùng tên, cách ly `ownerId`, Unicode | Test | Tất cả pass trên DB test | ✅ |
+| F1-09 | Seed idempotent: Japanese, Chinese, English | DB | Chạy `npx prisma db seed` hai lần không tạo bản ghi trùng | ✅ |
+| F1-10 | App shell: layout, thanh điều hướng có 3 hành động chính (tạm để trạng thái "sắp có" cho tới khi tính năng tồn tại), responsive | FE | Ở màn hình 375px, điều hướng dùng được và 3 nút chính luôn nhìn thấy | ✅ |
+| F1-11 | Trang `/languages`: danh sách card (tên + số từ); đủ 4 trạng thái loading / error / empty / có dữ liệu | FE | Thấy được cả 4 trạng thái (tắt backend để xem trạng thái lỗi) | ✅ |
+| F1-12 | Form tạo/sửa ngôn ngữ (React Hook Form + Zod), hiển thị lỗi 409 từ backend | FE | Tạo trùng tên → thông báo lỗi dễ hiểu, form không mất dữ liệu đã nhập | ✅ |
+| F1-13 | Xóa ngôn ngữ, có hộp xác nhận | FE | Phải xác nhận mới xóa; danh sách tự cập nhật sau khi xóa | ✅ |
+| F1-14 | Khung trang `/languages/[id]` (cây level/collection bổ sung ở F2, F3) | FE | Mở từ card, hiện đúng tên ngôn ngữ; id không tồn tại → trang báo 404 | ✅ |
 
 > **Lưu ý:** `vocabularyCount` trên card ngôn ngữ sẽ hiển thị 0 cho tới khi có bảng Vocabulary (task F4-07).
 
@@ -299,6 +299,20 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F1-14 | `/languages/[id]` hiện tên ngôn ngữ; `/languages/khong-co` → màn hình 404 có nút về danh sách |
+| 2026-10-06 | F1-13 | Xóa qua hộp xác nhận (nêu số từ sẽ mất); tạo Korean rồi xóa → danh sách tự về 3 mục |
+| 2026-10-06 | F1-12 | Form RHF + Zod trong dialog; tạo trùng "Japanese" → ô tên báo `Ngôn ngữ "Japanese" đã tồn tại`, giá trị đã gõ còn nguyên |
+| 2026-10-06 | F1-11 | Trang `/languages` hiện 3 ngôn ngữ đã seed (tên + số từ + mã); có đủ nhánh loading / error / empty / dữ liệu trong `LanguageList` |
+| 2026-10-06 | F1-10 | `AppShell`: header + thanh 3 hành động cố định ở đáy trên mobile (trạng thái "Sắp có"); đo ở 375px: 3 nút cao 56px, luôn trong khung nhìn, không tràn ngang |
+| 2026-10-06 | F1-09 | `npx prisma db seed` chạy 2 lần liên tiếp → vẫn 3 ngôn ngữ (upsert theo `ownerId_name`); thêm `tsx` để chạy seed |
+| 2026-10-06 | F1-08 | E2E 26 test Languages: CRUD, 400, 404, 409, cách ly ownerId, Unicode (日本語/中文/한국어/Tiếng Việt); `npm run test:e2e` 30/30 pass |
+| 2026-10-06 | F1-07 | Unit test mẫu: 12 test cho 5 method (happy path + nhánh lỗi), `npm run test` 29/29 pass |
+| 2026-10-06 | F1-06 | 5 endpoint + DTO + Swagger; status 200/201/204 kiểm chứng bằng e2e thay cho bấm tay trên Swagger |
+| 2026-10-06 | F1-05 | `LanguagesService` 5 method, mọi lời gọi Prisma có `ownerId` (xóa bằng `deleteMany({id, ownerId})`) |
+| 2026-10-06 | F1-04 | Migration `20261006120605_add_language` áp dụng trên DB dev; `@@unique([ownerId, name])` |
+| 2026-10-06 | F1-03 | `AllExceptionsFilter` gắn trong `configureApp`: P2002→409, P2025→404, P2003→409, lỗi lạ → 500 chung; e2e xác nhận body không chứa prisma/constraint/stack |
+| 2026-10-06 | F1-02 | `PaginationDto` + `paginate()`; e2e: `limit=101`, `limit=0`, `page=0`, `page=-1`, `page=abc` → 400 |
+| 2026-10-06 | F1-01 | `OwnerGuard` (APP_GUARD) gán `ownerId` từ ConfigService, `@CurrentUser()` đọc từ request; grep `process.env` trong `src/` = 0 kết quả |
 | 2026-09-21 | F0-13 | Clone mới vào thư mục tạm, làm đúng 3 bước README: compose healthy, `npm install` tự sinh Prisma Client, `/health` ok·connected, Swagger 200, trang chủ "Backend: ok · DB: connected". Chạy ở cổng 4001/3001 bằng biến môi trường vì server dev của bạn đang giữ 4000/3000 |
 | 2026-09-21 | F0-08 | Sửa `TEST_DATABASE_URL` trong `backend/.env` 5433 → 5435 (trước đó e2e trả 503); `npm run test` 2/2 pass, `npm run test:e2e` 1/1 pass |
 | 2026-09-21 | F0-11 | Trang `/` hiện "Backend: ok · DB: connected" trên trình duyệt thật (2 trạng thái lỗi đã kiểm chứng trước đó) |

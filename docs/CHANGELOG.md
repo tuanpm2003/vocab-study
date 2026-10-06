@@ -7,6 +7,41 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 
 ---
 
+> **Từ 2026-10-06:** chủ dự án giao Claude Code tự quyết và tự hoàn thiện MVP, không dừng ở
+> G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
+> kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
+
+## [Phase 2] — Language Management — 2026-10-06
+
+### Added
+- Backend dùng chung: `OwnerGuard` + `@CurrentUser()`, `PaginationDto` / `paginate()`,
+  `AllExceptionsFilter` (mọi lỗi cùng một shape; lỗi Prisma không lọt ra ngoài)
+- Model `Language` + migration `add_language`; module `languages` (5 endpoint)
+- Seed idempotent (Japanese, Chinese, English) — `npx prisma db seed`
+- Frontend: `AppShell` (3 hành động chính luôn hiển thị), trang `/languages`,
+  form tạo/sửa (RHF + Zod), xóa có xác nhận, khung trang `/languages/[id]`
+- Test: 12 unit test cho `LanguagesService` (bộ mẫu), 26 e2e test
+
+### Notes
+- `ownerId` lấy qua guard thay vì đọc `process.env` trong decorator: Phase 12 chỉ thay guard.
+- Xóa dùng `deleteMany({ id, ownerId })` — lọc owner ngay trong câu lệnh xóa.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘ (G3/G4 chạy gộp ở F11-03)
+
+## [Phase 1] — Setup & Walking Skeleton — 2026-09-21
+
+### Added
+- Docker Compose: Postgres dev (5434) + test (5435, tmpfs)
+- NestJS 12 (ESM, Vitest, oxlint), ConfigModule có validate env, ValidationPipe, CORS, Swagger
+- Prisma 7 + `PrismaService`; `GET /health`
+- Next.js 16 + Tailwind 4 + shadcn/ui + TanStack Query; trang chủ hiển thị trạng thái `/health`
+- E2E tự `migrate deploy` lên DB test trước khi chạy; chốt chặn không cho e2e chạm DB dev
+
+### Fixed
+- `CORS_ORIGIN` thiếu protocol từng được chấp nhận — nay bị từ chối lúc khởi động
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 0] — Architecture & AI Workflow — 2026-09-18
 
 ### Added

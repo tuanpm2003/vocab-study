@@ -3,7 +3,7 @@
 > Hợp đồng giữa frontend và backend. Quy ước chung (đặt tên URL, mã trạng thái, shape
 > response/error) ở skill `api-contract`.
 >
-> **Trạng thái: thiết kế. Chưa endpoint nào được implement.**
+> **Trạng thái:** endpoint có dấu ✅ đã implement và có test; ⬜ mới là thiết kế.
 > Mỗi phase sẽ cập nhật file này khi endpoint thật sự tồn tại.
 
 Ký hiệu: ⬜ chưa làm · ✅ đã implement và có test
@@ -28,7 +28,7 @@ Client không gửi và không thấy `ownerId`.
 
 ## Health — Phase 1
 
-### ⬜ `GET /health`
+### ✅ `GET /health`
 Kiểm tra app sống và database kết nối được. Cần cho health check của ALB/App Runner ở Phase 13.
 
 **200**
@@ -41,7 +41,7 @@ Kiểm tra app sống và database kết nối được. Cần cho health check 
 
 ## Languages — Phase 2
 
-### ⬜ `GET /languages`
+### ✅ `GET /languages`
 **Mục đích:** Trang Languages — danh sách ngôn ngữ kèm số từ vựng.
 **Query:** `page` (≥1, mặc định 1), `limit` (1-100, mặc định 20)
 
@@ -57,20 +57,20 @@ Kiểm tra app sống và database kết nối được. Cần cho health check 
 ```
 `vocabularyCount` lấy bằng `_count`, **không** load hết rồi `.length`.
 
-### ⬜ `POST /languages`
+### ✅ `POST /languages`
 **Body:** `{ "name": string (1-50, bắt buộc), "code"?: string (≤10) }`
 **201** → object Language
 **400** thiếu `name`, hoặc gửi field lạ
 **409** trùng tên trong cùng owner
 
-### ⬜ `GET /languages/:id`
+### ✅ `GET /languages/:id`
 **200** → Language kèm `levelSystems` (mỗi cái kèm `levels` đã sắp theo `order`)
 **404** không tìm thấy
 
-### ⬜ `PATCH /languages/:id`
+### ✅ `PATCH /languages/:id`
 **Body:** các field của POST, tất cả optional · **200** / **404**
 
-### ⬜ `DELETE /languages/:id`
+### ✅ `DELETE /languages/:id`
 **204**. Xóa Language sẽ **cascade** xóa LevelSystem, Level, Collection, Vocabulary bên trong.
 Frontend **phải** hỏi xác nhận kèm số lượng từ sẽ mất.
 **404** không tìm thấy

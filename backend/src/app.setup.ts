@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import type { EnvironmentVariables } from './config/env.validation.js';
 
 /**
@@ -18,6 +19,8 @@ export function configureApp(app: INestApplication): void {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.enableCors({ origin: config.get('CORS_ORIGIN', { infer: true }) });
   app.enableShutdownHooks();

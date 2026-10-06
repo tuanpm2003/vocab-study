@@ -11,4 +11,16 @@ datasource db {
   provider = "postgresql"
 }
 
-// Chưa có model nào. Model đầu tiên (Language) được thêm ở task F1-04.
+
+model Language {
+  id        String   @id @default(cuid())
+  // Chưa có khóa ngoại: bảng User xuất hiện ở Phase 12 (docs/DATABASE.md §5).
+  ownerId   String
+  name      String
+  code      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerId, name])
+  @@index([ownerId])
+}
