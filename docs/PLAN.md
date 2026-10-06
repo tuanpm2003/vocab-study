@@ -38,8 +38,8 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 |---|---|:---:|---|:---:|:---:|:---:|:---:|
 | F0 | Nền tảng dự án | 1 | §4 | 13 | 13 | 100% | — |
 | F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 14 | 100% | — |
-| F2 | Hệ thống level | 3 | §3.2 | 7 | 0 | 0% | — |
-| F3 | Collection | 3 | §3.3 | 7 | 0 | 0% | — |
+| F2 | Hệ thống level | 3 | §3.2 | 7 | 7 | 100% | — |
+| F3 | Collection | 3 | §3.3 | 7 | 7 | 100% | — |
 | F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 0 | 0% | — |
 | F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 0 | 0% | — |
 | F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 0 | 0% | — |
@@ -48,7 +48,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **27** | **27%** | |
+| | **Tổng** | | | **99** | **41** | **41%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -120,13 +120,13 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F2-01 | Model `LevelSystem`, `Level` (có `order`) + migration; Cascade từ Language | DB | Migration chạy; Prisma Studio thấy quan hệ Language → LevelSystem → Level | ⬜ |
-| F2-02 | Tạo LevelSystem **kèm** danh sách level trong một request (`$transaction`); liệt kê theo ngôn ngữ, level sắp theo `order`; kiểm tra ngôn ngữ thuộc owner | BE | Một request tạo được JLPT kèm N5→N1; ngôn ngữ của owner khác → 404 | ⬜ |
-| F2-03 | Sửa/xóa LevelSystem; mỗi ngôn ngữ chỉ có tối đa một `isDefault` | BE | Đặt default cho hệ thống B thì hệ thống A tự bỏ default | ⬜ |
-| F2-04 | Thêm/sửa/xóa level, đổi thứ tự; tên level là duy nhất trong một hệ thống | BE | Trùng tên → 409; đổi thứ tự thì danh sách trả về đúng thứ tự mới | ⬜ |
-| F2-05 | Unit + e2e test cho level system và level | Test | Pass, gồm cả test cascade và cách ly `ownerId` | ⬜ |
-| F2-06 | UI tạo hệ thống level: nhập mỗi dòng một level; có nút **mẫu** JLPT/HSK/CEFR chỉ để điền sẵn form, người dùng vẫn sửa được | FE | Tạo JLPT N5→N1 trong dưới 30 giây | ⬜ |
-| F2-07 | UI sửa, xóa, sắp xếp lại level | FE | Thay đổi hiển thị ngay trong trang chi tiết ngôn ngữ | ⬜ |
+| F2-01 | Model `LevelSystem`, `Level` (có `order`) + migration; Cascade từ Language | DB | Migration chạy; Prisma Studio thấy quan hệ Language → LevelSystem → Level | ✅ |
+| F2-02 | Tạo LevelSystem **kèm** danh sách level trong một request (`$transaction`); liệt kê theo ngôn ngữ, level sắp theo `order`; kiểm tra ngôn ngữ thuộc owner | BE | Một request tạo được JLPT kèm N5→N1; ngôn ngữ của owner khác → 404 | ✅ |
+| F2-03 | Sửa/xóa LevelSystem; mỗi ngôn ngữ chỉ có tối đa một `isDefault` | BE | Đặt default cho hệ thống B thì hệ thống A tự bỏ default | ✅ |
+| F2-04 | Thêm/sửa/xóa level, đổi thứ tự; tên level là duy nhất trong một hệ thống | BE | Trùng tên → 409; đổi thứ tự thì danh sách trả về đúng thứ tự mới | ✅ |
+| F2-05 | Unit + e2e test cho level system và level | Test | Pass, gồm cả test cascade và cách ly `ownerId` | ✅ |
+| F2-06 | UI tạo hệ thống level: nhập mỗi dòng một level; có nút **mẫu** JLPT/HSK/CEFR chỉ để điền sẵn form, người dùng vẫn sửa được | FE | Tạo JLPT N5→N1 trong dưới 30 giây | ✅ |
+| F2-07 | UI sửa, xóa, sắp xếp lại level | FE | Thay đổi hiển thị ngay trong trang chi tiết ngôn ngữ | ✅ |
 
 ---
 
@@ -137,13 +137,13 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F3-01 | Model `Collection` (`levelId` nullable, `kind` LESSON/TOPIC) + migration; Level bị xóa → `SetNull` | DB | Migration chạy; tạo được collection có và không có level | ⬜ |
-| F3-02 | CRUD + `GET /collections?languageId&levelId&kind` có phân trang (`levelId=null` lọc ra các chủ đề) | BE | Thử được mọi endpoint trên Swagger | ⬜ |
-| F3-03 | Quy tắc: `levelId` phải thuộc **cùng ngôn ngữ** với collection | BE | Gán level của tiếng Trung cho collection tiếng Nhật → 400 | ⬜ |
-| F3-04 | Unit + e2e test: collection xuyên level, xóa level thì collection còn nguyên (`levelId` về null), quy tắc F3-03, `ownerId` | Test | Tất cả pass | ⬜ |
-| F3-05 | Cây trong trang chi tiết ngôn ngữ: LevelSystem → Level → Collection, cộng nhóm "Topics" | FE | Hiện đúng cấu trúc `Japanese > N5 > Lesson 3` và `Japanese > Topics > Food` | ⬜ |
-| F3-06 | UI tạo/sửa/xóa collection (chọn một level, hoặc "Xuyên level") | FE | Tạo được cả LESSON lẫn TOPIC từ giao diện | ⬜ |
-| F3-07 | Khung trang chi tiết collection (danh sách từ bổ sung ở F6-07) | FE | Mở được từ cây; hiện tên, level, loại | ⬜ |
+| F3-01 | Model `Collection` (`levelId` nullable, `kind` LESSON/TOPIC) + migration; Level bị xóa → `SetNull` | DB | Migration chạy; tạo được collection có và không có level | ✅ |
+| F3-02 | CRUD + `GET /collections?languageId&levelId&kind` có phân trang (`levelId=null` lọc ra các chủ đề) | BE | Thử được mọi endpoint trên Swagger | ✅ |
+| F3-03 | Quy tắc: `levelId` phải thuộc **cùng ngôn ngữ** với collection | BE | Gán level của tiếng Trung cho collection tiếng Nhật → 400 | ✅ |
+| F3-04 | Unit + e2e test: collection xuyên level, xóa level thì collection còn nguyên (`levelId` về null), quy tắc F3-03, `ownerId` | Test | Tất cả pass | ✅ |
+| F3-05 | Cây trong trang chi tiết ngôn ngữ: LevelSystem → Level → Collection, cộng nhóm "Topics" | FE | Hiện đúng cấu trúc `Japanese > N5 > Lesson 3` và `Japanese > Topics > Food` | ✅ |
+| F3-06 | UI tạo/sửa/xóa collection (chọn một level, hoặc "Xuyên level") | FE | Tạo được cả LESSON lẫn TOPIC từ giao diện | ✅ |
+| F3-07 | Khung trang chi tiết collection (danh sách từ bổ sung ở F6-07) | FE | Mở được từ cây; hiện tên, level, loại | ✅ |
 
 ---
 
@@ -299,6 +299,20 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F3-07 | `/collections/[id]` mở từ cây, hiện tên, loại, level, số từ, link quay về ngôn ngữ; id lạ → 404 |
+| 2026-10-06 | F3-06 | Dialog collection: từ nhánh N5 mở sẵn Bài học/N5, từ nhóm Chủ đề mở sẵn Chủ đề/Xuyên level; tạo được cả hai loại |
+| 2026-10-06 | F3-05 | Cây trong `/languages/[id]`: `JLPT > N5 > Lesson 3` và nhóm `Chủ đề > Food` hiển thị đúng trên trình duyệt |
+| 2026-10-06 | F3-04 | Unit 13 test + e2e 18 test: xuyên level, xóa level thì collection còn (`levelId` → null), luật F3-03, ownerId; unit 55/55, e2e 67/67 |
+| 2026-10-06 | F3-03 | Gán level HSK 1 cho collection tiếng Nhật → 400 `Level không thuộc cùng ngôn ngữ với collection`; `languageId` không đổi được sau khi tạo |
+| 2026-10-06 | F3-02 | CRUD + `GET /collections?languageId&levelId&kind` phân trang; `levelId=null` lọc ra chủ đề; kiểm chứng bằng e2e |
+| 2026-10-06 | F3-01 | Model `Collection` (`levelId` nullable, `kind`), Level xóa → `SetNull`; e2e tạo được collection có và không có level |
+| 2026-10-06 | F2-07 | Trong trang ngôn ngữ: đổi tên (lỗi trùng hiện ngay trong dialog), xóa, mũi tên lên/xuống đổi thứ tự — thay đổi hiện ngay |
+| 2026-10-06 | F2-06 | Dialog tạo hệ thống: nút mẫu JLPT/HSK/CEFR điền sẵn tên + textarea mỗi dòng một level; thử trên trình duyệt: 2 lần bấm + Lưu ra JLPT N5→N1 |
+| 2026-10-06 | F2-05 | Unit 13 test + e2e 19 test cho level system/level, gồm cascade và cách ly ownerId; tất cả pass |
+| 2026-10-06 | F2-04 | Thêm/sửa/xóa level + `POST /level-systems/:id/levels/reorder` (endpoint phát sinh, đã ghi vào API.md); trùng tên → 409; reorder thiếu/thừa id → 400 |
+| 2026-10-06 | F2-03 | PATCH/DELETE `/level-systems/:id`; e2e: đặt default cho B thì A tự bỏ default, không ảnh hưởng ngôn ngữ khác |
+| 2026-10-06 | F2-02 | `POST /languages/:id/level-systems` tạo JLPT kèm N5→N1 trong một `$transaction`; ngôn ngữ của owner khác → 404; hệ thống đầu tiên tự thành default |
+| 2026-10-06 | F2-01 | Model `LevelSystem`, `Level` trong migration `add_level_systems_levels_collections`; e2e xác nhận xóa Language cascade xóa cả hai |
 | 2026-10-06 | F1-14 | `/languages/[id]` hiện tên ngôn ngữ; `/languages/khong-co` → màn hình 404 có nút về danh sách |
 | 2026-10-06 | F1-13 | Xóa qua hộp xác nhận (nêu số từ sẽ mất); tạo Korean rồi xóa → danh sách tự về 3 mục |
 | 2026-10-06 | F1-12 | Form RHF + Zod trong dialog; tạo trùng "Japanese" → ô tên báo `Ngôn ngữ "Japanese" đã tồn tại`, giá trị đã gõ còn nguyên |

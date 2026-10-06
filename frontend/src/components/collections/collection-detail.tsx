@@ -3,36 +3,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { LanguageTree } from "@/components/languages/language-tree";
 import { ErrorState, LoadingState, NotFoundState } from "@/components/states";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { languagesApi } from "@/lib/api";
+import { collectionsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { qk } from "@/lib/query-keys";
 
-export function LanguageDetail({ id }: { id: string }) {
+export function CollectionDetail({ id }: { id: string }) {
   const { data, error, isPending, refetch } = useQuery({
-    queryKey: qk.language(id),
-    queryFn: () => languagesApi.get(id),
-    // 404 là câu trả lời dứt khoát, thử lại chỉ làm chậm việc báo cho người dùng.
+    queryKey: qk.collection(id),
+    queryFn: () => collectionsApi.get(id),
     retry: (count, e) =>
       !(e instanceof ApiError && e.status === 404) && count < 1,
   });
-
-  const back = (
-    <Link
-      href="/languages"
-      className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-    >
-      <ChevronLeft className="size-4" aria-hidden /> Ngôn ngữ
-    </Link>
-  );
 
   if (isPending) return <LoadingState />;
   if (error instanceof ApiError && error.status === 404) {
     return (
       <NotFoundState
-        title="Không tìm thấy ngôn ngữ này"
+        title="Không tìm thấy bài học này"
         action={
           <Link href="/languages" className={buttonVariants()}>
             Về danh sách ngôn ngữ
@@ -45,14 +35,25 @@ export function LanguageDetail({ id }: { id: string }) {
 
   return (
     <>
-      {back}
+      <Link
+        href={`/languages/${data.languageId}`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="size-4" aria-hidden /> {data.language.name}
+      </Link>
       <div className="mt-2 mb-6">
         <h1 className="text-2xl font-semibold">{data.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {data.vocabularyCount} từ{data.code && ` · ${data.code}`}
-        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant="secondary">
+            {data.kind === "LESSON" ? "Bài học" : "Chủ đề"}
+          </Badge>
+          <Badge variant="outline">{data.level?.name ?? "Xuyên level"}</Badge>
+          <span>{data.vocabularyCount} từ</span>
+        </div>
+        {data.description && (
+          <p className="mt-3 whitespace-pre-line">{data.description}</p>
+        )}
       </div>
-      <LanguageTree languageId={data.id} levelSystems={data.levelSystems} />
     </>
   );
 }

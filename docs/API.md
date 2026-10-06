@@ -79,13 +79,16 @@ Frontend **phải** hỏi xác nhận kèm số lượng từ sẽ mất.
 
 ## Level Systems & Levels — Phase 3
 
-### ⬜ `GET /languages/:languageId/level-systems`
+### ✅ `GET /languages/:languageId/level-systems`
 **200** → mảng LevelSystem, mỗi cái kèm `levels` sắp theo `order`.
 Không phân trang — số lượng luôn rất nhỏ (1-2 hệ thống mỗi ngôn ngữ).
 *Đây là ngoại lệ duy nhất của quy tắc phân trang, và được ghi nhận có chủ đích.*
 
-### ⬜ `POST /languages/:languageId/level-systems`
-**Body:** `{ "name": string, "isDefault"?: boolean, "levels"?: [{ "name": string, "order": number }] }`
+### ✅ `POST /languages/:languageId/level-systems`
+**Body:** `{ "name": string, "isDefault"?: boolean, "levels"?: [{ "name": string, "order"?: number }] }`
+
+`order` bỏ trống thì lấy theo vị trí trong mảng. Hệ thống **đầu tiên** của một ngôn ngữ tự
+thành default. Tên level trùng nhau trong cùng request → 400.
 
 Cho phép tạo cả hệ thống + danh sách level trong **một request**. Lý do UX: người dùng
 tạo "JLPT" rồi phải gọi thêm 5 request để tạo N5..N1 là trải nghiệm tệ. Backend bọc trong
@@ -93,8 +96,18 @@ tạo "JLPT" rồi phải gọi thêm 5 request để tạo N5..N1 là trải ng
 
 **201** → LevelSystem kèm levels
 
-### ⬜ `PATCH /level-systems/:id` · ⬜ `DELETE /level-systems/:id`
-### ⬜ `POST /level-systems/:id/levels` · ⬜ `PATCH /levels/:id` · ⬜ `DELETE /levels/:id`
+### ✅ `PATCH /level-systems/:id` · ✅ `DELETE /level-systems/:id`
+`PATCH` nhận `{ name?, isDefault? }`. Đặt `isDefault: true` sẽ gỡ default của các hệ thống
+khác **trong cùng ngôn ngữ** (mỗi ngôn ngữ tối đa một default).
+
+### ✅ `POST /level-systems/:id/levels` · ✅ `PATCH /levels/:id` · ✅ `DELETE /levels/:id`
+Tên level là duy nhất trong một hệ thống → trùng trả **409**.
+
+### ✅ `POST /level-systems/:id/levels/reorder`
+**Body:** `{ "levelIds": string[] }` — **toàn bộ** id level của hệ thống theo thứ tự mới.
+**200** → LevelSystem kèm levels. Thiếu, thừa hoặc có id lạ → **400** (không ghi gì).
+*Endpoint phát sinh ở Phase 3:* đổi chỗ hai level bằng hai lệnh `PATCH order` riêng lẻ có thể
+dừng giữa chừng và để lại hai level cùng `order`.
 
 Xóa Level → `Collection.levelId` và `Vocabulary.levelId` được set `null`,
 **không** xóa collection hay từ vựng.
@@ -103,13 +116,13 @@ Xóa Level → `Collection.levelId` và `Vocabulary.levelId` được set `null`
 
 ## Collections — Phase 3
 
-### ⬜ `GET /collections`
+### ✅ `GET /collections`
 **Query:** `languageId` (bắt buộc), `levelId` (`null` để lấy collection xuyên level),
 `kind` (`LESSON|TOPIC`), `page`, `limit`
 
 **200** → envelope, mỗi item kèm `vocabularyCount`
 
-### ⬜ `POST /collections`
+### ✅ `POST /collections`
 **Body:**
 ```json
 { "languageId": "clx1", "levelId": "clx5 | null", "name": "Lesson 3",
@@ -117,9 +130,13 @@ Xóa Level → `Collection.levelId` và `Vocabulary.levelId` được set `null`
 ```
 `levelId: null` là **hợp lệ và có chủ đích** — đó là collection xuyên level (Topic).
 
-**201** / **400** / **404** (language hoặc level không tồn tại)
+**201** / **400** (gồm cả trường hợp level thuộc **ngôn ngữ khác**) / **404** (language hoặc
+level không tồn tại)
 
-### ⬜ `GET /collections/:id` · ⬜ `PATCH /collections/:id` · ⬜ `DELETE /collections/:id`
+### ✅ `GET /collections/:id` · ✅ `PATCH /collections/:id` · ✅ `DELETE /collections/:id`
+
+`PATCH` không nhận `languageId` — collection không chuyển ngôn ngữ được sau khi tạo.
+`levelId: null` gỡ collection khỏi level.
 
 Xóa Collection **không** xóa từ vựng — chỉ xóa các dòng trong bảng nối
 `VocabularyCollection`. Một từ thuộc 3 collection, xóa 1 collection thì từ vẫn còn ở 2 cái kia.

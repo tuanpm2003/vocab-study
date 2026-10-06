@@ -21,6 +21,64 @@ model Language {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  levelSystems LevelSystem[]
+  collections  Collection[]
+
   @@unique([ownerId, name])
   @@index([ownerId])
+}
+
+// LevelSystem, Level, Collection không có cột ownerId: quyền sở hữu đi theo Language.
+// Mọi truy vấn phải lọc qua quan hệ, ví dụ `where: { language: { ownerId } }`.
+model LevelSystem {
+  id         String   @id @default(cuid())
+  languageId String
+  name       String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  levels   Level[]
+
+  @@index([languageId])
+}
+
+model Level {
+  id            String   @id @default(cuid())
+  levelSystemId String
+  name          String
+  order         Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  levelSystem LevelSystem  @relation(fields: [levelSystemId], references: [id], onDelete: Cascade)
+  collections Collection[]
+
+  @@unique([levelSystemId, name])
+  @@index([levelSystemId])
+}
+
+enum CollectionKind {
+  LESSON
+  TOPIC
+}
+
+model Collection {
+  id          String         @id @default(cuid())
+  languageId  String
+  // null = collection xuyên level ("Food"). Đây là điểm mấu chốt của ADR-003.
+  levelId     String?
+  name        String
+  kind        CollectionKind @default(LESSON)
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  // SetNull: xóa một level không được làm biến mất bài học của nó.
+  level    Level?   @relation(fields: [levelId], references: [id], onDelete: SetNull)
+
+  @@index([languageId])
+  @@index([levelId])
 }

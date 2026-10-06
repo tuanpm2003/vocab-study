@@ -8,7 +8,8 @@ import {
   type Paginated,
   type PaginationDto,
 } from '../common/dto/pagination.dto.js';
-import { Prisma, type Language } from '../generated/prisma/client.js';
+import { isUniqueViolation } from '../common/prisma-errors.js';
+import type { Language, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateLanguageDto } from './dto/create-language.dto.js';
 import type { UpdateLanguageDto } from './dto/update-language.dto.js';
@@ -35,11 +36,19 @@ function toResponse(language: Language): LanguageResponse {
   };
 }
 
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === 'P2002'
-  );
+const withLevelSystems = {
+  levelSystems: {
+    include: { levels: { orderBy: { order: 'asc' } } },
+    orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
+  },
+} satisfies Prisma.LanguageInclude;
+
+type LanguageWithLevelSystems = Prisma.LanguageGetPayload<{
+  include: typeof withLevelSystems;
+}>;
+
+export interface LanguageDetailResponse extends LanguageResponse {
+  levelSystems: LanguageWithLevelSystems['levelSystems'];
 }
 
 @Injectable()
@@ -63,14 +72,26 @@ export class LanguagesService {
     return paginate(items.map(toResponse), total, query);
   }
 
-  async findOne(id: string, ownerId: string): Promise<LanguageResponse> {
+  /** Kiểm tra tồn tại + quyền sở hữu. Module con gọi trước khi tạo dữ liệu dưới một ngôn ngữ. */
+  async assertExists(id: string, ownerId: string): Promise<Language> {
     const language = await this.prisma.language.findFirst({
       where: { id, ownerId },
     });
     if (!language) {
       throw new NotFoundException(`Không tìm thấy ngôn ngữ với id ${id}`);
     }
-    return toResponse(language);
+    return language;
+  }
+
+  async findOne(id: string, ownerId: string): Promise<LanguageDetailResponse> {
+    const language = await this.prisma.language.findFirst({
+      where: { id, ownerId },
+      include: withLevelSystems,
+    });
+    if (!language) {
+      throw new NotFoundException(`Không tìm thấy ngôn ngữ với id ${id}`);
+    }
+    return { ...toResponse(language), levelSystems: language.levelSystems };
   }
 
   async create(
@@ -92,7 +113,7 @@ export class LanguagesService {
     ownerId: string,
     dto: UpdateLanguageDto,
   ): Promise<LanguageResponse> {
-    await this.findOne(id, ownerId);
+    await this.assertExists(id, ownerId);
     try {
       const language = await this.prisma.language.update({
         where: { id, ownerId },

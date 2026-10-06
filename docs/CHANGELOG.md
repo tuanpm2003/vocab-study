@@ -11,6 +11,26 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 3] — Level Systems, Levels, Collections — 2026-10-06
+
+### Added
+- Model `LevelSystem`, `Level`, `Collection` (+ enum `CollectionKind`) và migration
+- Module `level-systems`: tạo hệ thống kèm level trong một transaction, một default mỗi
+  ngôn ngữ, CRUD level, `POST /level-systems/:id/levels/reorder`
+- Module `collections`: CRUD + lọc `languageId` / `levelId` (`null` = xuyên level) / `kind`;
+  luật "level phải cùng ngôn ngữ với collection"
+- `GET /languages/:id` trả kèm `levelSystems` → `levels`
+- Frontend: cây LevelSystem → Level → Collection + nhóm Chủ đề, dialog tạo hệ thống có
+  mẫu JLPT/HSK/CEFR, dialog collection, trang `/collections/[id]`
+- Test: +26 unit, +37 e2e
+
+### Notes
+- Ba bảng mới **không có cột `ownerId`**: quyền sở hữu đi theo `Language`, mọi truy vấn lọc
+  qua quan hệ (`where: { language: { ownerId } }`).
+- Level của owner khác trả 404 chứ không phải 400 — không để lộ rằng id đó có thật.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 2] — Language Management — 2026-10-06
 
 ### Added
