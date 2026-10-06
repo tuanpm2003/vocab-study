@@ -3,6 +3,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
+  IsTimeZone,
   IsUrl,
   Max,
   Min,
@@ -33,6 +34,13 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   LOCAL_OWNER_ID: string;
+
+  // "Hôm nay" trên Dashboard cắt theo múi giờ này, không theo UTC (ADR-011).
+  @IsTimeZone({
+    message:
+      'APP_TIMEZONE phải là tên múi giờ IANA hợp lệ, ví dụ Asia/Ho_Chi_Minh',
+  })
+  APP_TIMEZONE: string = 'Asia/Ho_Chi_Minh';
 }
 
 export function validateEnv(config: Record<string, unknown>) {

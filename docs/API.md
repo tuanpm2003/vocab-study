@@ -262,8 +262,8 @@ là tổng số từ cần ôn trong phạm vi.
 MVP: trả từ có `status` ∈ `NEW | LEARNING`, sắp theo `lastReviewedAt` tăng dần (lâu nhất trước).
 Phase 11: đổi thành lọc `dueAt <= now()`. **Contract không đổi** — chỉ logic bên trong đổi.
 
-### ⬜ `GET /learning/stats` — Phase 10
-**Query:** `from`, `to` (ISO date, mặc định: hôm nay)
+### ✅ `GET /learning/stats` — Phase 10
+**Query:** không có. (`from`/`to` của bản thiết kế Phase 0 chưa làm — chưa có màn hình nào cần.)
 
 **200**
 ```json
@@ -272,14 +272,17 @@ Phase 11: đổi thành lọc `dueAt <= now()`. **Contract không đổi** — c
   "byLanguage": [
     { "languageId": "clx1", "name": "Japanese", "reviewed": 20, "correct": 15, "incorrect": 5 }
   ],
-  "totals": { "vocabulary": 690, "new": 120, "learning": 340, "review": 180, "mastered": 50 },
+  "totals": { "languages": 3, "vocabulary": 690, "new": 120, "learning": 340, "review": 180, "mastered": 50 },
   "dueCount": 63,
   "streak": 7
 }
 ```
-`today` tính theo **múi giờ của người dùng**, không phải UTC — nếu dùng UTC, người ở
-Việt Nam sẽ thấy thống kê reset lúc 7 giờ sáng. Frontend gửi kèm offset, hoặc backend
-cấu hình `APP_TIMEZONE=Asia/Ho_Chi_Minh`.
+`today` và `streak` tính theo múi giờ `APP_TIMEZONE` của backend (mặc định
+`Asia/Ho_Chi_Minh`), không theo UTC — xem ADR-011.
+
+- `accuracy` là `null` khi hôm nay chưa ôn từ nào.
+- `dueCount` = `new` + `learning`, cùng định nghĩa với `GET /learning/due`.
+- `streak`: số ngày liên tiếp có ôn; hôm nay chưa ôn thì vẫn tính tới hôm qua.
 
 ---
 

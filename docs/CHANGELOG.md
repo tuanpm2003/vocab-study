@@ -11,6 +11,26 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 10] — Dashboard — 2026-10-06
+
+### Added
+- ADR-011: "hôm nay" tính theo `APP_TIMEZONE` (biến môi trường mới, có mặc định)
+- `GET /learning/stats`; `learning/time-zone.ts` (`dayRange`, `countStreak` — hàm thuần)
+- Dashboard thay cho trang walking skeleton: 3 hành động chính, số liệu hôm nay, chuỗi ngày
+  học, kho từ theo trạng thái; hướng dẫn 3 bước cho người dùng mới
+- Test: +27 unit, +11 e2e, +6 frontend
+
+### Removed
+- Component `HealthStatus` của Phase 1 (trang chủ nay là Dashboard; lỗi kết nối backend
+  vẫn được báo kèm cách khắc phục)
+
+### Notes
+- `stats` không nhận `from`/`to` như bản thiết kế Phase 0 — chưa có màn hình nào cần.
+- Mốc ngày truyền vào SQL dưới dạng chuỗi UTC ép `::timestamp`, để phép so sánh không phụ
+  thuộc múi giờ của phiên kết nối Postgres.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 9] — Learning Progress & Review Log — 2026-10-06
 
 ### Added

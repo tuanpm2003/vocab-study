@@ -196,3 +196,27 @@ export type Rating = "AGAIN" | "HARD" | "GOOD" | "EASY";
 export type ReviewInput =
   | { vocabularyId: string; mode: "FLASHCARD"; rating: Rating }
   | { vocabularyId: string; mode: "MULTIPLE_CHOICE"; isCorrect: boolean };
+
+export interface ReviewTally {
+  reviewed: number;
+  correct: number;
+  incorrect: number;
+}
+
+export interface Stats {
+  today: ReviewTally & {
+    /** 0..1; null khi hôm nay chưa ôn từ nào. */
+    accuracy: number | null;
+  };
+  byLanguage: (ReviewTally & { languageId: string; name: string })[];
+  totals: {
+    languages: number;
+    vocabulary: number;
+    new: number;
+    learning: number;
+    review: number;
+    mastered: number;
+  };
+  dueCount: number;
+  streak: number;
+}

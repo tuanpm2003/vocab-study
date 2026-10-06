@@ -15,6 +15,7 @@ import type {
   ReviewInput,
   Session,
   SessionParams,
+  Stats,
   Vocabulary,
   VocabularyInput,
   VocabularyQuery,
@@ -97,6 +98,7 @@ export const vocabulariesApi = {
 };
 
 export const learningApi = {
+  stats: () => apiFetch<Stats>("/learning/stats"),
   due: (params: { languageId?: string; limit: number }) =>
     apiFetch<DueSession>(`/learning/due?${toQueryString(params)}`),
   review: (input: ReviewInput) =>

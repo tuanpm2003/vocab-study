@@ -454,3 +454,53 @@ là phán đoán, chưa dựa trên dữ liệu — không có khái niệm th�
 Phase 11. Khi có thuật toán SRS thật, `status` nên được suy ra từ `intervalDays`, và
 `correctStreak` có thể bỏ. Xem lại sớm hơn nếu sau 1–2 tuần dùng thật (F11-05) thấy từ lên
 `MASTERED` quá nhanh.
+
+---
+
+## ADR-011 — "Hôm nay" tính theo múi giờ cấu hình ở backend (`APP_TIMEZONE`)
+
+- **Ngày:** 2026-10-06 · **Trạng thái:** Accepted · **Phase:** 10
+- **Người quyết định:** Claude Code, theo ủy quyền "tự ra quyết định" của chủ dự án
+  (2026-10-06). Chủ dự án nên đọc lại mục này khi nghiệm thu (F11).
+
+### Bối cảnh
+Dashboard cần "hôm nay đã ôn bao nhiêu từ" và "chuỗi ngày học liên tiếp". Database lưu
+`reviewedAt` theo UTC. Nếu cắt ngày theo UTC, người ở Việt Nam (UTC+7) sẽ thấy thống kê
+"hôm nay" reset lúc **7 giờ sáng**, và buổi học lúc 6 giờ sáng bị tính vào hôm qua.
+
+### Các phương án đã cân nhắc
+1. **Cắt ngày theo UTC.** Đơn giản nhất, và sai với mọi người dùng không sống ở UTC.
+2. **Frontend gửi kèm offset** (`?tzOffset=-420`). Đúng cho người dùng di chuyển, nhưng mỗi
+   request phải mang theo offset, backend phải tin một con số do client gửi, và chuỗi ngày
+   học có thể nhảy lung tung khi offset đổi giữa chừng.
+3. **Backend cấu hình một múi giờ** qua biến môi trường `APP_TIMEZONE`.
+
+### Quyết định
+Phương án 3. `APP_TIMEZONE` là tên múi giờ IANA, mặc định `Asia/Ho_Chi_Minh`, được kiểm tra
+lúc khởi động (tên sai → app dừng với thông báo rõ).
+
+- Ranh giới ngày tính bằng hàm thuần `dayRange(now, timeZone)` trong
+  `backend/src/learning/time-zone.ts` — trả về hai mốc UTC `[start, end)` của "hôm nay".
+- Chuỗi ngày học: database quy đổi `reviewedAt` sang ngày địa phương
+  (`AT TIME ZONE`), hàm thuần `countStreak()` đếm số ngày liên tiếp.
+- **Chuỗi chưa đứt khi hôm nay chưa học:** nếu hôm nay chưa ôn nhưng hôm qua có, chuỗi vẫn
+  được tính tới hôm qua. Chuỗi chỉ về 0 khi bỏ trọn một ngày.
+- `accuracy` là `null` (không phải `0`) khi hôm nay chưa ôn từ nào — "chưa có dữ liệu" khác
+  với "sai hết".
+- `GET /learning/stats` **không** nhận `from`/`to` như bản thiết kế Phase 0: chưa có màn
+  hình nào cần khoảng ngày tùy ý.
+
+### Lý do
+MVP có đúng một người dùng ở đúng một múi giờ. Một biến môi trường giải quyết trọn vấn đề
+mà không thêm tham số nào vào API. Tách phần tính ngày thành hàm thuần nhận `now` làm tham
+số để test được ranh giới (23:59 / 00:00) mà không phải giả lập đồng hồ hệ thống.
+
+### Hệ quả
+**Tích cực:** thống kê đúng với cảm nhận của người dùng; logic ngày giờ test được trọn vẹn.
+**Cái giá phải trả:** đi công tác sang múi giờ khác thì "hôm nay" vẫn theo giờ Việt Nam cho
+tới khi đổi cấu hình. Múi giờ có DST (không phải Việt Nam) có hai ngày mỗi năm dài 23/25
+giờ — `dayRange` xử lý đúng mốc đầu/cuối, có test cho `America/New_York`.
+
+### Khi nào nên xem lại
+Phase 12 (multi-user): múi giờ phải thành thuộc tính của từng `User`, không còn là cấu hình
+chung của server.

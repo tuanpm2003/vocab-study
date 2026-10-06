@@ -46,9 +46,9 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F7 | Flashcard | 7 | §3.6 | 6 | 6 | 100% | — |
 | F8 | Trắc nghiệm | 8 | §3.6 | 4 | 4 | 100% | — |
 | F9 | Learning Progress | 9 | §3.7 | 9 | 9 | 100% | — |
-| F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
+| F10 | Dashboard | 10 | §3.8 | 5 | 5 | 100% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **87** | **88%** | |
+| | **Tổng** | | | **99** | **92** | **93%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -263,11 +263,11 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F10-01 | Chốt cách tính "hôm nay" theo múi giờ (`APP_TIMEZONE=Asia/Ho_Chi_Minh`) và ghi thành ADR | Docs | Có ADR; bạn đã duyệt | ⬜ |
-| F10-02 | `GET /learning/stats`: hôm nay (đã ôn/đúng/sai/tỷ lệ), theo từng ngôn ngữ, tổng theo trạng thái, số từ cần ôn, streak | BE | Số liệu khớp với truy vấn SQL kiểm tra tay | ⬜ |
-| F10-03 | Test: ranh giới ngày theo múi giờ (ôn lúc 6h59 và 7h00 sáng), tỷ lệ đúng khi chưa ôn từ nào, streak | Test | Tất cả pass | ⬜ |
-| F10-04 | Giao diện Dashboard ở `/`: "Today's Learning" theo ngôn ngữ, các số tổng, 3 nút hành động lớn | FE | Học một phiên rồi quay lại → số liệu cập nhật | ⬜ |
-| F10-05 | Trạng thái trống cho người dùng mới (chưa có ngôn ngữ nào → hướng dẫn bước đầu tiên) | FE | Database rỗng → trang chủ chỉ rõ việc cần làm tiếp theo | ⬜ |
+| F10-01 | Chốt cách tính "hôm nay" theo múi giờ (`APP_TIMEZONE=Asia/Ho_Chi_Minh`) và ghi thành ADR | Docs | Có ADR; bạn đã duyệt | ✅ |
+| F10-02 | `GET /learning/stats`: hôm nay (đã ôn/đúng/sai/tỷ lệ), theo từng ngôn ngữ, tổng theo trạng thái, số từ cần ôn, streak | BE | Số liệu khớp với truy vấn SQL kiểm tra tay | ✅ |
+| F10-03 | Test: ranh giới ngày theo múi giờ (ôn lúc 6h59 và 7h00 sáng), tỷ lệ đúng khi chưa ôn từ nào, streak | Test | Tất cả pass | ✅ |
+| F10-04 | Giao diện Dashboard ở `/`: "Today's Learning" theo ngôn ngữ, các số tổng, 3 nút hành động lớn | FE | Học một phiên rồi quay lại → số liệu cập nhật | ✅ |
+| F10-05 | Trạng thái trống cho người dùng mới (chưa có ngôn ngữ nào → hướng dẫn bước đầu tiên) | FE | Database rỗng → trang chủ chỉ rõ việc cần làm tiếp theo | ✅ |
 
 ---
 
@@ -299,6 +299,11 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F10-05 | Người dùng mới: database rỗng → "Thêm ngôn ngữ" là bước duy nhất có nút; có ngôn ngữ chưa có từ → "Thêm từ"; 6 component test (frontend 41/41) |
+| 2026-10-06 | F10-04 | Dashboard ở `/`: 3 thẻ hành động lớn, Hôm nay theo ngôn ngữ, chuỗi ngày, kho từ theo trạng thái; sau phiên ôn 4 lượt trên trình duyệt trang chủ hiện 4 / 3 / 1 / 75% |
+| 2026-10-06 | F10-03 | 27 unit test cho `time-zone.ts` (ranh giới 6:59/7:00 sáng, nửa đêm, cuối tháng/năm, DST 23h/25h, streak) + 11 e2e (ranh giới từng mili-giây, accuracy null, ownerId, số truy vấn cố định) |
+| 2026-10-06 | F10-02 | `GET /learning/stats`: today / byLanguage / totals / dueCount / streak bằng COUNT và GROUP BY trong database; e2e đối chiếu với dữ liệu dựng tay (8 lượt, 6 đúng, 0.75) và `dueCount` khớp `/learning/due` |
+| 2026-10-06 | F10-01 | ADR-011: "hôm nay" theo `APP_TIMEZONE` (mặc định Asia/Ho_Chi_Minh, validate lúc khởi động). Quyết định bởi Claude Code theo ủy quyền ngày 2026-10-06 — chủ dự án nên đọc lại khi nghiệm thu |
 | 2026-10-06 | F9-09 | `GET /vocabularies?status=` + dropdown "Lọc theo trạng thái" (lưu trên URL); `?status=LEARNING` ra đúng 2 từ vừa ôn |
 | 2026-10-06 | F9-08 | Danh sách hiện nhãn trạng thái + "N lần · đúng · sai"; trang sửa từ có khối Tiến độ (trạng thái, số lần, đúng/sai, lần ôn cuối) — khớp database |
 | 2026-10-06 | F9-07 | Nút **Ôn tập** trên thanh điều hướng → `/study/session?source=due` mở thẳng phiên flashcard các từ cần ôn (một lần bấm) |
