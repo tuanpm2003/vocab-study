@@ -68,6 +68,63 @@ export interface Collection {
   updatedAt: string;
 }
 
+export interface Vocabulary {
+  id: string;
+  term: string;
+  meaning: string;
+  reading: string | null;
+  romanization: string | null;
+  exampleSentence: string | null;
+  exampleTranslation: string | null;
+  notes: string | null;
+  extra: Record<string, unknown> | null;
+  language: NamedRef & { code: string | null };
+  level: NamedRef | null;
+  collections: NamedRef[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VocabularyWarning {
+  code: "POSSIBLE_DUPLICATE";
+  message: string;
+  existingIds: string[];
+}
+
+export type CreatedVocabulary = Vocabulary & { warnings?: VocabularyWarning[] };
+
+export interface VocabularyInput {
+  languageId: string;
+  levelId: string | null;
+  collectionIds: string[];
+  term: string;
+  meaning: string;
+  reading: string | null;
+  romanization: string | null;
+  exampleSentence: string | null;
+  exampleTranslation: string | null;
+  notes: string | null;
+}
+
+export const VOCABULARY_SORTS = [
+  "createdAt:desc",
+  "createdAt:asc",
+  "updatedAt:desc",
+  "term:asc",
+  "term:desc",
+] as const;
+export type VocabularySort = (typeof VOCABULARY_SORTS)[number];
+
+export interface VocabularyQuery {
+  page: number;
+  limit: number;
+  search: string;
+  languageId: string;
+  levelId: string;
+  collectionId: string;
+  sort: VocabularySort;
+}
+
 export interface CollectionInput {
   languageId: string;
   levelId: string | null;

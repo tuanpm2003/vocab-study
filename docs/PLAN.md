@@ -41,14 +41,14 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F2 | Hệ thống level | 3 | §3.2 | 7 | 7 | 100% | — |
 | F3 | Collection | 3 | §3.3 | 7 | 7 | 100% | — |
 | F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 9 | 100% | — |
-| F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 0 | 0% | — |
+| F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 10 | 91% | — |
 | F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 0 | 0% | — |
 | F7 | Flashcard | 7 | §3.6 | 6 | 0 | 0% | — |
 | F8 | Trắc nghiệm | 8 | §3.6 | 4 | 0 | 0% | — |
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **50** | **51%** | |
+| | **Tổng** | | | **99** | **60** | **61%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -173,16 +173,16 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F5-01 | Cài môi trường test frontend (Vitest + Testing Library) | Test | `npm run test` ở `frontend/` chạy được một test mẫu | ⬜ |
-| F5-02 | Trang `/vocabulary/new`: dropdown phụ thuộc nhau Language → Level → Collection (chọn nhiều collection) | FE | Đổi ngôn ngữ thì danh sách level và collection tự nạp lại; không có request `/undefined` | ⬜ |
-| F5-03 | Các field: term, meaning, reading, romanization, câu ví dụ, bản dịch, ghi chú; nhãn gợi ý theo ngôn ngữ (ví dụ `ja` → "Kana", `zh` → "Pinyin") | FE | Chọn tiếng Nhật thì nhãn đổi đúng | ⬜ |
-| F5-04 | Lưu xong: **giữ** Language/Level/Collection, xóa các field còn lại, con trỏ quay về ô `term` | FE | Lưu xong gõ được từ tiếp theo ngay, không cần click | ⬜ |
-| F5-05 | Phím tắt `Ctrl+Enter` để lưu | FE | Lưu được mà tay không rời bàn phím | ⬜ |
-| F5-06 | Hiện cảnh báo trùng từ bằng toast có link tới từ cũ, **không chặn** việc nhập tiếp | FE | Thêm từ trùng → thấy cảnh báo, form vẫn sẵn sàng cho từ tiếp theo | ⬜ |
-| F5-07 | Nhớ Language/Level/Collection dùng lần cuối (localStorage) | FE | Đóng rồi mở lại trang → ngữ cảnh cũ vẫn được chọn sẵn | ⬜ |
-| F5-08 | Từ trang collection bấm "Thêm từ" → form mở với ngữ cảnh điền sẵn | FE | Bấm từ `N5 > Lesson 3` → form đã chọn sẵn Japanese / N5 / Lesson 3 | ⬜ |
-| F5-09 | Trang sửa từ `/vocabulary/[id]/edit`, dùng lại cùng form | FE | Sửa nghĩa và đổi collection của một từ có sẵn | ⬜ |
-| F5-10 | Component test: giữ ngữ cảnh sau khi lưu, focus về `term`, `Ctrl+Enter` | Test | Tất cả pass | ⬜ |
+| F5-01 | Cài môi trường test frontend (Vitest + Testing Library) | Test | `npm run test` ở `frontend/` chạy được một test mẫu | ✅ |
+| F5-02 | Trang `/vocabulary/new`: dropdown phụ thuộc nhau Language → Level → Collection (chọn nhiều collection) | FE | Đổi ngôn ngữ thì danh sách level và collection tự nạp lại; không có request `/undefined` | ✅ |
+| F5-03 | Các field: term, meaning, reading, romanization, câu ví dụ, bản dịch, ghi chú; nhãn gợi ý theo ngôn ngữ (ví dụ `ja` → "Kana", `zh` → "Pinyin") | FE | Chọn tiếng Nhật thì nhãn đổi đúng | ✅ |
+| F5-04 | Lưu xong: **giữ** Language/Level/Collection, xóa các field còn lại, con trỏ quay về ô `term` | FE | Lưu xong gõ được từ tiếp theo ngay, không cần click | ✅ |
+| F5-05 | Phím tắt `Ctrl+Enter` để lưu | FE | Lưu được mà tay không rời bàn phím | ✅ |
+| F5-06 | Hiện cảnh báo trùng từ bằng toast có link tới từ cũ, **không chặn** việc nhập tiếp | FE | Thêm từ trùng → thấy cảnh báo, form vẫn sẵn sàng cho từ tiếp theo | ✅ |
+| F5-07 | Nhớ Language/Level/Collection dùng lần cuối (localStorage) | FE | Đóng rồi mở lại trang → ngữ cảnh cũ vẫn được chọn sẵn | ✅ |
+| F5-08 | Từ trang collection bấm "Thêm từ" → form mở với ngữ cảnh điền sẵn | FE | Bấm từ `N5 > Lesson 3` → form đã chọn sẵn Japanese / N5 / Lesson 3 | ✅ |
+| F5-09 | Trang sửa từ `/vocabulary/[id]/edit`, dùng lại cùng form | FE | Sửa nghĩa và đổi collection của một từ có sẵn | ✅ |
+| F5-10 | Component test: giữ ngữ cảnh sau khi lưu, focus về `term`, `Ctrl+Enter` | Test | Tất cả pass | ✅ |
 | F5-11 | **Nghiệm thu:** tự nhập 20 từ thật liên tục chỉ dùng bàn phím | FE | Bạn tự làm được và thấy nhanh. Đây là kiểm tra G5, AI không tự đánh dấu task này | ⬜ |
 
 ---
@@ -299,6 +299,16 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F5-10 | 15 component test pass: giữ ngữ cảnh, focus, nhập 3 từ chỉ bằng Tab+Enter, Ctrl+Enter, dropdown phụ thuộc, cảnh báo trùng, chế độ sửa |
+| 2026-10-06 | F5-09 | `/vocabulary/[id]/edit` dùng lại `VocabularyForm`: khóa ngôn ngữ, sửa nghĩa và đổi collection (đã lưu nghĩa mới qua trình duyệt; sửa thêm lỗi stale-closure khi bấm chip liên tiếp) |
+| 2026-10-06 | F5-08 | Trang collection có nút "Thêm từ vào đây" → form mở với Japanese / N5 / Lesson 3 điền sẵn, con trỏ ở ô Từ |
+| 2026-10-06 | F5-07 | Ngữ cảnh lưu vào localStorage ngay khi đổi; mở lại `/vocabulary/new` thấy Japanese / N5 / Lesson 3 chọn sẵn; id đã bị xóa thì tự dọn |
+| 2026-10-06 | F5-06 | Thêm `行く` lần hai → toast "Từ này đã có trong Lesson 3" kèm link `/vocabulary/<id>/edit`; từ vẫn được lưu, form trống sẵn sàng |
+| 2026-10-06 | F5-05 | `Ctrl+Enter` (Cmd+Enter) lưu từ mọi ô kể cả textarea; Enter thường trong textarea không lưu |
+| 2026-10-06 | F5-04 | Lưu xong giữ ngữ cảnh, xóa ô, focus về `Từ`. Test bắt được bug thật: `form.setFocus` sau `reset()` không tìm thấy field → đổi sang ref riêng |
+| 2026-10-06 | F5-03 | Đủ 7 field; nhãn theo mã ngôn ngữ: ja → Kana/Romaji, zh → Pinyin, en → IPA và ẩn ô romanization |
+| 2026-10-06 | F5-02 | `/vocabulary/new`: Language → Level → Collection (chip chọn nhiều); dùng `enabled` nên không có request `/undefined` (kiểm tra bằng Resource Timing trên trình duyệt) |
+| 2026-10-06 | F5-01 | Vitest + Testing Library + jsdom ở `frontend/` (`npm run test`); bỏ `@vitejs/plugin-react` vì xung đột peer dependency với Babel của Next — Vitest tự biên dịch JSX |
 | 2026-10-06 | F4-09 | Seed 30 từ cho 3 ngôn ngữ kèm level system và collection, có từ thuộc 3 collection và cặp đồng tự `行`/`bank`; chạy 2 lần vẫn 30 từ |
 | 2026-10-06 | F4-08 | Unit 17 test + e2e 42 test cho vocabulary (N-N, cảnh báo trùng, Unicode, `limit>100`, ownerId); unit 72/72, e2e 109/109 |
 | 2026-10-06 | F4-07 | `vocabularyCount` của `/languages` và `/collections` lấy bằng `_count`; e2e: Japanese 2, Chinese 0, Food 2, Lesson 3 1 |

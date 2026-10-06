@@ -15,7 +15,7 @@ interface PrimaryAction {
 
 // Ba hành động quan trọng nhất của app (CLAUDE.md §1): luôn tới được trong một lần bấm.
 const PRIMARY_ACTIONS: PrimaryAction[] = [
-  { href: "/vocabulary/new", label: "Thêm từ", icon: Plus, available: false },
+  { href: "/vocabulary/new", label: "Thêm từ", icon: Plus, available: true },
   { href: "/study", label: "Học", icon: GraduationCap, available: false },
   {
     href: "/study/session?source=due",

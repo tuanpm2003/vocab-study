@@ -9,6 +9,10 @@ import type {
   LevelSystem,
   LevelSystemInput,
   Paginated,
+  CreatedVocabulary,
+  Vocabulary,
+  VocabularyInput,
+  VocabularyQuery,
 } from "@/types/api";
 
 function json(method: string, body: unknown): RequestInit {
@@ -63,4 +67,26 @@ export const collectionsApi = {
   update: (id: string, input: Omit<CollectionInput, "languageId">) =>
     apiFetch<Collection>(`/collections/${id}`, json("PATCH", input)),
   remove: (id: string) => apiFetch<void>(`/collections/${id}`, del),
+};
+
+/** Bỏ các tham số rỗng: `?search=` vô nghĩa và làm URL dài không cần thiết. */
+export function toQueryString(
+  params: Record<string, string | number | undefined>,
+): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") search.set(key, String(value));
+  }
+  return search.toString();
+}
+
+export const vocabulariesApi = {
+  list: (query: Partial<VocabularyQuery>) =>
+    apiFetch<Paginated<Vocabulary>>(`/vocabularies?${toQueryString(query)}`),
+  get: (id: string) => apiFetch<Vocabulary>(`/vocabularies/${id}`),
+  create: (input: VocabularyInput) =>
+    apiFetch<CreatedVocabulary>("/vocabularies", json("POST", input)),
+  update: (id: string, input: Omit<VocabularyInput, "languageId">) =>
+    apiFetch<Vocabulary>(`/vocabularies/${id}`, json("PATCH", input)),
+  remove: (id: string) => apiFetch<void>(`/vocabularies/${id}`, del),
 };

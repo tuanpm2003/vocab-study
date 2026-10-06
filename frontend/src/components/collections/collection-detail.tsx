@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { ErrorState, LoadingState, NotFoundState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { collectionsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { qk } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
+import { contextToParams } from "@/lib/vocabulary-context";
 
 export function CollectionDetail({ id }: { id: string }) {
   const { data, error, isPending, refetch } = useQuery({
@@ -53,6 +55,16 @@ export function CollectionDetail({ id }: { id: string }) {
         {data.description && (
           <p className="mt-3 whitespace-pre-line">{data.description}</p>
         )}
+        <Link
+          href={`/vocabulary/new?${contextToParams({
+            languageId: data.languageId,
+            levelId: data.levelId ?? "",
+            collectionIds: [data.id],
+          })}`}
+          className={cn(buttonVariants(), "mt-4 h-10 px-4")}
+        >
+          <Plus aria-hidden /> Thêm từ vào đây
+        </Link>
       </div>
     </>
   );

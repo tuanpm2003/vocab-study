@@ -8,4 +8,7 @@ export const qk = {
   collectionsByLanguage: (languageId: string) =>
     ["collections", "by-language", languageId] as const,
   collection: (id: string) => ["collections", "detail", id] as const,
+  vocabularies: ["vocabularies"] as const,
+  vocabularyList: (query: object) => ["vocabularies", "list", query] as const,
+  vocabulary: (id: string) => ["vocabularies", "detail", id] as const,
 };

@@ -11,6 +11,27 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 5] — Quick Add Vocabulary — 2026-10-06
+
+### Added
+- Môi trường test frontend: Vitest + Testing Library + jsdom
+- `VocabularyForm` dùng chung cho tạo và sửa: dropdown phụ thuộc Language → Level →
+  Collection (chọn nhiều), nhãn ô theo ngôn ngữ, `Ctrl+Enter`, giữ ngữ cảnh sau khi lưu
+- Trang `/vocabulary/new` và `/vocabulary/[id]/edit`
+- Nhớ ngữ cảnh lần cuối bằng localStorage; nhận ngữ cảnh qua URL từ trang collection
+- Toast cảnh báo trùng từ có link tới từ đã có (không chặn nhập tiếp)
+- 15 component test
+
+### Fixed (phát hiện bởi test, trước khi commit)
+- Con trỏ không quay về ô "Từ" sau khi lưu: `reset()` của React Hook Form xóa sổ đăng ký
+  field nên `setFocus()` gọi ngay sau không có tác dụng → dùng ref riêng
+- Bấm hai chip collection liên tiếp có thể mất một lựa chọn (đọc giá trị của lần render cũ)
+
+### Notes
+- **F5-11 chưa đánh ✅**: nghiệm thu "tự nhập 20 từ thật" là việc của chủ dự án.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 4] — Vocabulary API — 2026-10-06
 
 ### Added
