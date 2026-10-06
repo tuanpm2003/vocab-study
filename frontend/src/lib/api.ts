@@ -10,6 +10,8 @@ import type {
   LevelSystemInput,
   Paginated,
   CreatedVocabulary,
+  Session,
+  SessionParams,
   Vocabulary,
   VocabularyInput,
   VocabularyQuery,
@@ -89,4 +91,9 @@ export const vocabulariesApi = {
   update: (id: string, input: Omit<VocabularyInput, "languageId">) =>
     apiFetch<Vocabulary>(`/vocabularies/${id}`, json("PATCH", input)),
   remove: (id: string) => apiFetch<void>(`/vocabularies/${id}`, del),
+};
+
+export const learningApi = {
+  session: (params: SessionParams) =>
+    apiFetch<Session>(`/learning/session?${toQueryString({ ...params })}`),
 };

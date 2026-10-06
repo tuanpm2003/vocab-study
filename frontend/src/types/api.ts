@@ -132,3 +132,21 @@ export interface CollectionInput {
   kind: CollectionKind;
   description: string | null;
 }
+
+export type StudyMode = "flashcard" | "multiple_choice";
+
+export interface SessionParams {
+  mode: StudyMode;
+  languageId: string;
+  levelId: string;
+  collectionId: string;
+  limit: number;
+}
+
+export interface SessionItem {
+  vocabulary: Vocabulary;
+}
+
+export interface Session {
+  items: SessionItem[];
+}

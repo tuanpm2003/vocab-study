@@ -43,12 +43,12 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 9 | 100% | — |
 | F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 10 | 91% | — |
 | F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 8 | 100% | — |
-| F7 | Flashcard | 7 | §3.6 | 6 | 0 | 0% | — |
+| F7 | Flashcard | 7 | §3.6 | 6 | 6 | 100% | — |
 | F8 | Trắc nghiệm | 8 | §3.6 | 4 | 0 | 0% | — |
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **68** | **69%** | |
+| | **Tổng** | | | **99** | **74** | **75%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -214,12 +214,12 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F7-01 | `GET /learning/session?mode=flashcard` lấy bộ từ theo phạm vi (language/level/collection), thứ tự ngẫu nhiên, có `limit`; kèm test | BE | Trả đúng số từ, đúng phạm vi, lọc `ownerId`; test pass | ⬜ |
-| F7-02 | Trang `/study`: chọn phạm vi, chế độ học, số từ | FE | Bắt đầu được một phiên học trong tối đa 2 lần bấm | ⬜ |
-| F7-03 | Thẻ: mặt trước là `term`; "Hiện đáp án" (phím Space); mặt sau đủ reading/romanization/nghĩa/ví dụ; chữ CJK cỡ lớn | FE | Lật được bằng phím Space; chữ Hán đọc rõ trên điện thoại | ⬜ |
-| F7-04 | Nút Again / Hard / Good / Easy (phím 1–4); "Again" đưa thẻ về cuối hàng đợi của phiên | FE | Học hết phiên chỉ bằng bàn phím; thẻ "Again" xuất hiện lại | ⬜ |
-| F7-05 | Màn hình tổng kết phiên | FE | Hiện số thẻ và số lần chọn mỗi mức đánh giá | ⬜ |
-| F7-06 | Component test: lật thẻ, phím tắt, cơ chế đưa lại thẻ "Again" | Test | Tất cả pass | ⬜ |
+| F7-01 | `GET /learning/session?mode=flashcard` lấy bộ từ theo phạm vi (language/level/collection), thứ tự ngẫu nhiên, có `limit`; kèm test | BE | Trả đúng số từ, đúng phạm vi, lọc `ownerId`; test pass | ✅ |
+| F7-02 | Trang `/study`: chọn phạm vi, chế độ học, số từ | FE | Bắt đầu được một phiên học trong tối đa 2 lần bấm | ✅ |
+| F7-03 | Thẻ: mặt trước là `term`; "Hiện đáp án" (phím Space); mặt sau đủ reading/romanization/nghĩa/ví dụ; chữ CJK cỡ lớn | FE | Lật được bằng phím Space; chữ Hán đọc rõ trên điện thoại | ✅ |
+| F7-04 | Nút Again / Hard / Good / Easy (phím 1–4); "Again" đưa thẻ về cuối hàng đợi của phiên | FE | Học hết phiên chỉ bằng bàn phím; thẻ "Again" xuất hiện lại | ✅ |
+| F7-05 | Màn hình tổng kết phiên | FE | Hiện số thẻ và số lần chọn mỗi mức đánh giá | ✅ |
+| F7-06 | Component test: lật thẻ, phím tắt, cơ chế đưa lại thẻ "Again" | Test | Tất cả pass | ✅ |
 
 ---
 
@@ -299,6 +299,12 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F7-06 | 11 test: 5 cho logic hàm thuần (`flashcard-session.ts`) + 6 component test (lật, phím tắt, Again quay lại, Ctrl bị bỏ qua); frontend 26/26 |
+| 2026-10-06 | F7-05 | Màn tổng kết: số thẻ + số lần mỗi mức đánh giá, nút Học phiên mới / Chọn phạm vi khác |
+| 2026-10-06 | F7-04 | Quên/Khó/Được/Dễ bằng phím 1–4 (chỉ sau khi lật); Quên đưa thẻ về cuối hàng đợi — học hết 20 thẻ trên trình duyệt chỉ bằng phím |
+| 2026-10-06 | F7-03 | Thẻ: mặt trước chỉ có từ (60px mobile / 72px desktop), Space hoặc Enter lật ra cách đọc · nghĩa · ví dụ · ghi chú |
+| 2026-10-06 | F7-02 | Trang `/study`: chế độ, phạm vi phụ thuộc, số từ; nút Bắt đầu được focus sẵn → Học rồi Bắt đầu = 2 lần bấm |
+| 2026-10-06 | F7-01 | `GET /learning/session?mode=flashcard`: chọn ngẫu nhiên bằng `ORDER BY random() LIMIT n` trong Postgres (SQL tham số hóa); e2e 11 test: đúng số từ, đúng phạm vi, ngẫu nhiên, ownerId |
 | 2026-10-06 | F6-08 | Resource Timing trên trình duyệt: mỗi lần mở trang đúng 1 request `/vocabularies?page=1&limit=20…` |
 | 2026-10-06 | F6-07 | Trang collection nhúng `VocabularyBrowser` với `collectionId` bị khóa: Lesson 3 hiện đúng các từ của bài, chỉ còn ô tìm + sắp xếp |
 | 2026-10-06 | F6-06 | Mỗi dòng có Sửa (sang `/vocabulary/[id]/edit`) và Xóa có hộp xác nhận; xóa `猫` → danh sách và số đếm tự cập nhật |

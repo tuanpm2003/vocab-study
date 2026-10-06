@@ -6,6 +6,7 @@ import { OwnerGuard } from './common/owner/owner.guard.js';
 import { validateEnv } from './config/env.validation.js';
 import { HealthModule } from './health/health.module.js';
 import { LanguagesModule } from './languages/languages.module.js';
+import { LearningModule } from './learning/learning.module.js';
 import { LevelSystemsModule } from './level-systems/level-systems.module.js';
 import { VocabulariesModule } from './vocabularies/vocabularies.module.js';
 
@@ -17,6 +18,7 @@ import { VocabulariesModule } from './vocabularies/vocabularies.module.js';
     LevelSystemsModule,
     CollectionsModule,
     VocabulariesModule,
+    LearningModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: OwnerGuard }],
 })

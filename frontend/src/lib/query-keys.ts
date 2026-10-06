@@ -11,4 +11,6 @@ export const qk = {
   vocabularies: ["vocabularies"] as const,
   vocabularyList: (query: object) => ["vocabularies", "list", query] as const,
   vocabulary: (id: string) => ["vocabularies", "detail", id] as const,
+  session: (params: object, round: number) =>
+    ["learning", "session", params, round] as const,
 };

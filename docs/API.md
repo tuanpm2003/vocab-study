@@ -219,7 +219,7 @@ lại), phải nằm trong `$transaction` — nếu xóa xong mà thêm lỗi, t
 
 ## Learning — Phase 7-9
 
-### ⬜ `GET /learning/session`
+### ✅ `GET /learning/session` *(flashcard: Phase 7 · multiple_choice: Phase 8)*
 **Mục đích:** lấy bộ từ cho một phiên học.
 **Query:** `mode` (`flashcard|multiple_choice`), `languageId`, `levelId`, `collectionId`,
 `limit` (mặc định 20)

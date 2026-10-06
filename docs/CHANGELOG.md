@@ -11,6 +11,22 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 7] — Flashcard — 2026-10-06
+
+### Added
+- Module `learning` + `GET /learning/session?mode=flashcard` (ngẫu nhiên trong database)
+- Trang `/study` (chọn phạm vi) và `/study/session`
+- `FlashcardSession`: lật thẻ, chấm 4 mức, thẻ "Quên" quay lại cuối hàng đợi, tổng kết
+- Logic phiên học là hàm thuần (`lib/flashcard-session.ts`); hook `useHotkeys`
+- Test: 11 e2e + 11 frontend
+
+### Notes
+- Bộ thẻ của một phiên không bao giờ refetch (`staleTime: Infinity`): backend trả thứ tự
+  ngẫu nhiên nên refetch giữa phiên sẽ đổi thẻ dưới tay người học.
+- Ở phase này kết quả **chưa được lưu** — nối vào ở Phase 9.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 6] — Vocabulary List — 2026-10-06
 
 ### Added

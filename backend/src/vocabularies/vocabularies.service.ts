@@ -16,7 +16,7 @@ import type {
 
 // Một include cố định cho mọi truy vấn: Prisma gom quan hệ bằng số truy vấn KHÔNG ĐỔI
 // theo số dòng — không có vòng lặp nào gọi database (tránh N+1).
-const include = {
+export const vocabularyInclude = {
   language: { select: { id: true, name: true, code: true } },
   level: { select: { id: true, name: true } },
   collections: {
@@ -25,7 +25,9 @@ const include = {
   },
 } satisfies Prisma.VocabularyInclude;
 
-type VocabularyRow = Prisma.VocabularyGetPayload<{ include: typeof include }>;
+export type VocabularyRow = Prisma.VocabularyGetPayload<{
+  include: typeof vocabularyInclude;
+}>;
 
 const ORDER_BY: Record<
   VocabularySort,
@@ -45,7 +47,7 @@ export interface VocabularyWarning {
   existingIds: string[];
 }
 
-function toResponse(row: VocabularyRow) {
+export function toVocabularyResponse(row: VocabularyRow) {
   return {
     id: row.id,
     term: row.term,
@@ -64,7 +66,7 @@ function toResponse(row: VocabularyRow) {
   };
 }
 
-export type VocabularyResponse = ReturnType<typeof toResponse>;
+export type VocabularyResponse = ReturnType<typeof toVocabularyResponse>;
 
 function toJson(
   extra: Record<string, unknown> | null | undefined,
@@ -104,7 +106,7 @@ export class VocabulariesService {
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.vocabulary.findMany({
         where,
-        include,
+        include: vocabularyInclude,
         // id làm tiêu chí phụ: hai từ cùng giá trị sắp xếp không được đổi chỗ giữa các trang.
         orderBy: [ORDER_BY[query.sort], { id: 'asc' }],
         skip: (query.page - 1) * query.limit,
@@ -112,11 +114,11 @@ export class VocabulariesService {
       }),
       this.prisma.vocabulary.count({ where }),
     ]);
-    return paginate(rows.map(toResponse), total, query);
+    return paginate(rows.map(toVocabularyResponse), total, query);
   }
 
   async findOne(id: string, ownerId: string): Promise<VocabularyResponse> {
-    return toResponse(await this.findRow(id, ownerId));
+    return toVocabularyResponse(await this.findRow(id, ownerId));
   }
 
   async create(
@@ -152,10 +154,10 @@ export class VocabulariesService {
           create: collectionIds.map((collectionId) => ({ collectionId })),
         },
       },
-      include,
+      include: vocabularyInclude,
     });
 
-    const response = toResponse(row);
+    const response = toVocabularyResponse(row);
     return warnings.length > 0 ? { ...response, warnings } : response;
   }
 
@@ -202,10 +204,10 @@ export class VocabulariesService {
           notes: dto.notes,
           extra: toJson(dto.extra),
         },
-        include,
+        include: vocabularyInclude,
       });
     });
-    return toResponse(row);
+    return toVocabularyResponse(row);
   }
 
   async remove(id: string, ownerId: string): Promise<void> {
@@ -220,7 +222,7 @@ export class VocabulariesService {
   private async findRow(id: string, ownerId: string): Promise<VocabularyRow> {
     const row = await this.prisma.vocabulary.findFirst({
       where: { id, ownerId },
-      include,
+      include: vocabularyInclude,
     });
     if (!row) {
       throw new NotFoundException(`Không tìm thấy từ vựng với id ${id}`);
