@@ -23,20 +23,29 @@ export interface LanguageResponse {
   updatedAt: Date;
 }
 
+// _count để database đếm bằng COUNT(*) — không bao giờ tải hết từ vựng về rồi .length.
+const withCount = {
+  _count: { select: { vocabularies: true } },
+} satisfies Prisma.LanguageInclude;
+
+type LanguageWithCount = Prisma.LanguageGetPayload<{
+  include: typeof withCount;
+}>;
+
 // ownerId cố ý không có trong response: client không gửi và không thấy nó (docs/API.md).
-function toResponse(language: Language): LanguageResponse {
+function toResponse(language: LanguageWithCount): LanguageResponse {
   return {
     id: language.id,
     name: language.name,
     code: language.code,
-    // Bảng Vocabulary chưa tồn tại — F4-07 thay bằng _count.
-    vocabularyCount: 0,
+    vocabularyCount: language._count.vocabularies,
     createdAt: language.createdAt,
     updatedAt: language.updatedAt,
   };
 }
 
 const withLevelSystems = {
+  ...withCount,
   levelSystems: {
     include: { levels: { orderBy: { order: 'asc' } } },
     orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
@@ -63,6 +72,7 @@ export class LanguagesService {
     const [items, total] = await this.prisma.$transaction([
       this.prisma.language.findMany({
         where,
+        include: withCount,
         orderBy: { name: 'asc' },
         skip: (query.page - 1) * query.limit,
         take: query.limit,
@@ -101,6 +111,7 @@ export class LanguagesService {
     try {
       const language = await this.prisma.language.create({
         data: { ownerId, name: dto.name, code: dto.code || null },
+        include: withCount,
       });
       return toResponse(language);
     } catch (error) {
@@ -121,6 +132,7 @@ export class LanguagesService {
           name: dto.name,
           code: dto.code === undefined ? undefined : dto.code || null,
         },
+        include: withCount,
       });
       return toResponse(language);
     } catch (error) {

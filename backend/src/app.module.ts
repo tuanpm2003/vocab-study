@@ -7,6 +7,7 @@ import { validateEnv } from './config/env.validation.js';
 import { HealthModule } from './health/health.module.js';
 import { LanguagesModule } from './languages/languages.module.js';
 import { LevelSystemsModule } from './level-systems/level-systems.module.js';
+import { VocabulariesModule } from './vocabularies/vocabularies.module.js';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LevelSystemsModule } from './level-systems/level-systems.module.js';
     LanguagesModule,
     LevelSystemsModule,
     CollectionsModule,
+    VocabulariesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: OwnerGuard }],
 })

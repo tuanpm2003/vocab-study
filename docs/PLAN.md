@@ -40,7 +40,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 14 | 100% | — |
 | F2 | Hệ thống level | 3 | §3.2 | 7 | 7 | 100% | — |
 | F3 | Collection | 3 | §3.3 | 7 | 7 | 100% | — |
-| F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 0 | 0% | — |
+| F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 9 | 100% | — |
 | F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 0 | 0% | — |
 | F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 0 | 0% | — |
 | F7 | Flashcard | 7 | §3.6 | 6 | 0 | 0% | — |
@@ -48,7 +48,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **41** | **41%** | |
+| | **Tổng** | | | **99** | **50** | **51%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -154,15 +154,15 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F4-01 | Model `Vocabulary` + bảng nối `VocabularyCollection` + migration + index (theo DATABASE.md) | DB | Migration chạy; Prisma Studio thấy bảng nối có `addedAt` | ⬜ |
-| F4-02 | DTO: `term` và `meaning` bắt buộc, các field khác tùy chọn, `collectionIds[]`, giới hạn độ dài, `extra` tối đa 4KB | BE | Thiếu `term` → 400; `extra` quá 4KB → 400 | ⬜ |
-| F4-03 | `POST /vocabularies`: tạo từ + các dòng bảng nối trong một `$transaction`; kiểm tra language/level/collection thuộc owner và cùng ngôn ngữ | BE | Tạo `食べる` thuộc 2 collection trong một request | ⬜ |
-| F4-04 | Cảnh báo mềm khi trùng từ (`warnings: POSSIBLE_DUPLICATE`), **không** trả 409 | BE | Thêm `行` lần hai → 201 kèm `warnings` chứa id từ cũ | ⬜ |
-| F4-05 | `GET/PATCH/DELETE /vocabularies/:id`; PATCH `collectionIds` thay toàn bộ danh sách trong transaction | BE | Đổi collection của một từ, không mất dữ liệu nếu có lỗi giữa chừng | ⬜ |
-| F4-06 | `GET /vocabularies`: phân trang + lọc (language/level/collection) + tìm trong term/meaning/reading (không phân biệt hoa thường) + `sort` có whitelist; không có N+1 query | BE | Tìm "taber" ra `食べる`; `sort=hack:asc` → 400; log query cho thấy số truy vấn cố định | ⬜ |
-| F4-07 | Bổ sung `vocabularyCount` cho `/languages` và `/collections` bằng `_count` | BE | Card ngôn ngữ ở F1 hiện đúng số từ | ⬜ |
-| F4-08 | Unit + e2e test: các ca N-N, cảnh báo trùng, tìm kiếm Unicode, `limit>100`, `ownerId` | Test | Tất cả pass | ⬜ |
-| F4-09 | Mở rộng seed: khoảng 30 từ mẫu cho 3 ngôn ngữ, có từ thuộc nhiều collection | DB | Seed idempotent; đủ dữ liệu để thử giao diện ở F5, F6 | ⬜ |
+| F4-01 | Model `Vocabulary` + bảng nối `VocabularyCollection` + migration + index (theo DATABASE.md) | DB | Migration chạy; Prisma Studio thấy bảng nối có `addedAt` | ✅ |
+| F4-02 | DTO: `term` và `meaning` bắt buộc, các field khác tùy chọn, `collectionIds[]`, giới hạn độ dài, `extra` tối đa 4KB | BE | Thiếu `term` → 400; `extra` quá 4KB → 400 | ✅ |
+| F4-03 | `POST /vocabularies`: tạo từ + các dòng bảng nối trong một `$transaction`; kiểm tra language/level/collection thuộc owner và cùng ngôn ngữ | BE | Tạo `食べる` thuộc 2 collection trong một request | ✅ |
+| F4-04 | Cảnh báo mềm khi trùng từ (`warnings: POSSIBLE_DUPLICATE`), **không** trả 409 | BE | Thêm `行` lần hai → 201 kèm `warnings` chứa id từ cũ | ✅ |
+| F4-05 | `GET/PATCH/DELETE /vocabularies/:id`; PATCH `collectionIds` thay toàn bộ danh sách trong transaction | BE | Đổi collection của một từ, không mất dữ liệu nếu có lỗi giữa chừng | ✅ |
+| F4-06 | `GET /vocabularies`: phân trang + lọc (language/level/collection) + tìm trong term/meaning/reading (không phân biệt hoa thường) + `sort` có whitelist; không có N+1 query | BE | Tìm "taber" ra `食べる`; `sort=hack:asc` → 400; log query cho thấy số truy vấn cố định | ✅ |
+| F4-07 | Bổ sung `vocabularyCount` cho `/languages` và `/collections` bằng `_count` | BE | Card ngôn ngữ ở F1 hiện đúng số từ | ✅ |
+| F4-08 | Unit + e2e test: các ca N-N, cảnh báo trùng, tìm kiếm Unicode, `limit>100`, `ownerId` | Test | Tất cả pass | ✅ |
+| F4-09 | Mở rộng seed: khoảng 30 từ mẫu cho 3 ngôn ngữ, có từ thuộc nhiều collection | DB | Seed idempotent; đủ dữ liệu để thử giao diện ở F5, F6 | ✅ |
 
 ---
 
@@ -299,6 +299,15 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F4-09 | Seed 30 từ cho 3 ngôn ngữ kèm level system và collection, có từ thuộc 3 collection và cặp đồng tự `行`/`bank`; chạy 2 lần vẫn 30 từ |
+| 2026-10-06 | F4-08 | Unit 17 test + e2e 42 test cho vocabulary (N-N, cảnh báo trùng, Unicode, `limit>100`, ownerId); unit 72/72, e2e 109/109 |
+| 2026-10-06 | F4-07 | `vocabularyCount` của `/languages` và `/collections` lấy bằng `_count`; e2e: Japanese 2, Chinese 0, Food 2, Lesson 3 1 |
+| 2026-10-06 | F4-06 | `GET /vocabularies`: tìm `taber`/`TABER`/`たべ` ra `食べる`; `sort=hack:asc` → 400; test đếm sự kiện query: `limit=1` và `limit=100` cùng số truy vấn |
+| 2026-10-06 | F4-05 | GET/PATCH/DELETE `/vocabularies/:id`; PATCH `collectionIds` thay toàn bộ trong `$transaction`; id sai → lỗi và danh sách cũ còn nguyên |
+| 2026-10-06 | F4-04 | Thêm `行` lần hai → 201 kèm `warnings[POSSIBLE_DUPLICATE]` chứa id từ cũ; không cảnh báo chéo ngôn ngữ / chéo owner |
+| 2026-10-06 | F4-03 | `POST /vocabularies` tạo từ + dòng bảng nối bằng nested create (một transaction); e2e tạo `食べる` thuộc 2 collection; level/collection khác ngôn ngữ → 400, của owner khác → 404 |
+| 2026-10-06 | F4-02 | DTO: `term`/`meaning` bắt buộc, giới hạn độ dài, `collectionIds[]` unique, `extra` ≤ 4096 byte (validator `MaxJsonBytes`); e2e: thiếu term → 400, extra 4KB+ → 400 |
+| 2026-10-06 | F4-01 | Model `Vocabulary` + bảng nối `VocabularyCollection` (có `addedAt`) + 3 index theo DATABASE.md; migration `add_vocabulary` |
 | 2026-10-06 | F3-07 | `/collections/[id]` mở từ cây, hiện tên, loại, level, số từ, link quay về ngôn ngữ; id lạ → 404 |
 | 2026-10-06 | F3-06 | Dialog collection: từ nhánh N5 mở sẵn Bài học/N5, từ nhóm Chủ đề mở sẵn Chủ đề/Xuyên level; tạo được cả hai loại |
 | 2026-10-06 | F3-05 | Cây trong `/languages/[id]`: `JLPT > N5 > Lesson 3` và nhóm `Chủ đề > Food` hiển thị đúng trên trình duyệt |

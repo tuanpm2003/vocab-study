@@ -11,6 +11,23 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 4] — Vocabulary API — 2026-10-06
+
+### Added
+- Model `Vocabulary` + bảng nối `VocabularyCollection`, migration `add_vocabulary`
+- Module `vocabularies`: CRUD, quan hệ N-N với collection, tìm kiếm không phân biệt hoa
+  thường trên `term` / `meaning` / `reading` / `romanization`, lọc, `sort` có whitelist
+- Cảnh báo mềm `POSSIBLE_DUPLICATE` (201, không phải 409)
+- `vocabularyCount` thật cho `/languages` và `/collections` (`_count`)
+- Seed mở rộng: 30 từ, 3 ngôn ngữ, level system và collection mẫu (`prisma/seed-data.ts`)
+- Test: +17 unit, +42 e2e — gồm test đếm số truy vấn để chứng minh không có N+1
+
+### Changed
+- `PrismaService` phát sự kiện `query` (không in log) để test và debug đếm được truy vấn
+- `search` tìm thêm cả `romanization` (API.md ban đầu chỉ nêu 3 cột) — gõ "taberu" phải ra 食べる
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 3] — Level Systems, Levels, Collections — 2026-10-06
 
 ### Added

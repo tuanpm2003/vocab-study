@@ -23,6 +23,7 @@ model Language {
 
   levelSystems LevelSystem[]
   collections  Collection[]
+  vocabularies Vocabulary[]
 
   @@unique([ownerId, name])
   @@index([ownerId])
@@ -53,7 +54,8 @@ model Level {
   updatedAt     DateTime @updatedAt
 
   levelSystem LevelSystem  @relation(fields: [levelSystemId], references: [id], onDelete: Cascade)
-  collections Collection[]
+  collections  Collection[]
+  vocabularies Vocabulary[]
 
   @@unique([levelSystemId, name])
   @@index([levelSystemId])
@@ -79,6 +81,49 @@ model Collection {
   // SetNull: xóa một level không được làm biến mất bài học của nó.
   level    Level?   @relation(fields: [levelId], references: [id], onDelete: SetNull)
 
+  vocabularies VocabularyCollection[]
+
   @@index([languageId])
   @@index([levelId])
+}
+
+// Một bảng cho MỌI ngôn ngữ (ADR-005). Field cần search/filter/sort → cột thật;
+// field chỉ để hiển thị và đặc thù ngôn ngữ → `extra`.
+model Vocabulary {
+  id                 String   @id @default(cuid())
+  ownerId            String
+  languageId         String
+  levelId            String?
+  term               String
+  meaning            String
+  reading            String?
+  romanization       String?
+  exampleSentence    String?
+  exampleTranslation String?
+  notes              String?
+  extra              Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  language    Language               @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  level       Level?                 @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  collections VocabularyCollection[]
+
+  @@index([ownerId, languageId])
+  // KHÔNG unique: từ đồng tự khác nghĩa là hợp lệ (行 = đi / hàng). Xem DATABASE.md §6.
+  @@index([languageId, term])
+  @@index([levelId])
+}
+
+// Bảng nối tường minh (ADR-004): một từ thuộc nhiều collection mà không phải nhân bản.
+model VocabularyCollection {
+  vocabularyId String
+  collectionId String
+  addedAt      DateTime @default(now())
+
+  vocabulary Vocabulary @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([vocabularyId, collectionId])
+  @@index([collectionId])
 }

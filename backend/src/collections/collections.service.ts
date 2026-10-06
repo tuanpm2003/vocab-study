@@ -16,6 +16,7 @@ import type {
 const include = {
   level: { select: { id: true, name: true } },
   language: { select: { id: true, name: true } },
+  _count: { select: { vocabularies: true } },
 } satisfies Prisma.CollectionInclude;
 
 type CollectionRow = Prisma.CollectionGetPayload<{ include: typeof include }>;
@@ -30,8 +31,7 @@ function toResponse(row: CollectionRow) {
     name: row.name,
     kind: row.kind,
     description: row.description,
-    // Bảng Vocabulary chưa tồn tại — F4-07 thay bằng _count.
-    vocabularyCount: 0,
+    vocabularyCount: row._count.vocabularies,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

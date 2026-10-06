@@ -145,17 +145,17 @@ Xóa Collection **không** xóa từ vựng — chỉ xóa các dòng trong bả
 
 ## Vocabulary — Phase 4
 
-### ⬜ `GET /vocabularies`
+### ✅ `GET /vocabularies`
 **Mục đích:** màn hình danh sách từ vựng với search + filter.
 
 **Query:**
 | Param | Kiểu | Ghi chú |
 |---|---|---|
 | `page` / `limit` | int | mặc định 1 / 20, `limit` tối đa **100** |
-| `search` | string | tìm trong `term`, `meaning`, `reading` (không phân biệt hoa thường) |
+| `search` | string | tìm trong `term`, `meaning`, `reading`, `romanization` (không phân biệt hoa thường) |
 | `languageId` / `levelId` / `collectionId` | string | filter |
 | `status` | enum | `NEW\|LEARNING\|REVIEW\|MASTERED` (từ Phase 9) |
-| `sort` | string | `createdAt:desc` (mặc định), `term:asc`, `updatedAt:desc` — **whitelist** |
+| `sort` | string | `createdAt`, `updatedAt`, `term` × `asc`/`desc`; mặc định `createdAt:desc` — **whitelist** |
 
 **200**
 ```json
@@ -180,7 +180,7 @@ Xóa Collection **không** xóa từ vựng — chỉ xóa các dòng trong bả
 ```
 `sort` **phải** được whitelist — nhận chuỗi tùy ý từ client rồi đưa vào `orderBy` là lỗ hổng.
 
-### ⬜ `POST /vocabularies`
+### ✅ `POST /vocabularies`
 **Body:**
 ```json
 {
@@ -208,7 +208,7 @@ Frontend hiển thị cảnh báo và để người dùng quyết định. Xem 
 
 Tạo Vocabulary + các dòng `VocabularyCollection` phải nằm trong cùng một `$transaction`.
 
-### ⬜ `GET /vocabularies/:id` · ⬜ `PATCH /vocabularies/:id` · ⬜ `DELETE /vocabularies/:id`
+### ✅ `GET /vocabularies/:id` · ✅ `PATCH /vocabularies/:id` · ✅ `DELETE /vocabularies/:id`
 
 `PATCH` với `collectionIds` sẽ **thay thế toàn bộ** danh sách collection (xóa hết rồi thêm
 lại), phải nằm trong `$transaction` — nếu xóa xong mà thêm lỗi, từ sẽ mất hết collection.

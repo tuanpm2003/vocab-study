@@ -21,6 +21,9 @@ export class PrismaService
       adapter: new PrismaPg({
         connectionString: config.get('DATABASE_URL', { infer: true }),
       }),
+      // Phát sự kiện 'query' (không in ra console). Nhờ nó test đếm được số truy vấn
+      // của một request để chứng minh không có N+1; khi debug: prisma.$on('query', ...).
+      log: [{ emit: 'event', level: 'query' }],
     });
   }
 
