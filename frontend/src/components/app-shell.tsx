@@ -25,7 +25,10 @@ const PRIMARY_ACTIONS: PrimaryAction[] = [
   },
 ];
 
-const NAV_LINKS = [{ href: "/languages", label: "Ngôn ngữ" }];
+const NAV_LINKS = [
+  { href: "/languages", label: "Ngôn ngữ" },
+  { href: "/vocabulary", label: "Từ vựng" },
+];
 
 function ActionLink({
   action,

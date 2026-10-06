@@ -11,6 +11,18 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 6] — Vocabulary List — 2026-10-06
+
+### Added
+- Trang `/vocabulary`: bảng (desktop) / thẻ (mobile), tìm kiếm debounce 300ms, lọc
+  Language → Level → Collection, sắp xếp, phân trang 20 từ/trang
+- `useVocabularyQuery`: toàn bộ trạng thái tìm/lọc/trang nằm trên URL
+- Sửa / xóa (có xác nhận) trên từng dòng
+- Trang collection liệt kê từ của nó bằng chính `VocabularyBrowser` (khóa `collectionId`)
+- Link "Từ vựng" trên thanh điều hướng
+
+Quality gates: G1 ✅ G2 ⊘ (không có logic mới ngoài hiển thị; kiểm chứng tay trên trình duyệt) G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 5] — Quick Add Vocabulary — 2026-10-06
 
 ### Added

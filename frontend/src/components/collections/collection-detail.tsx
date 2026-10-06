@@ -3,6 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Plus } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { VocabularyBrowser } from "@/components/vocabulary/vocabulary-browser";
 import { ErrorState, LoadingState, NotFoundState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -35,6 +37,12 @@ export function CollectionDetail({ id }: { id: string }) {
   }
   if (error) return <ErrorState error={error} onRetry={() => void refetch()} />;
 
+  const addHref = `/vocabulary/new?${contextToParams({
+    languageId: data.languageId,
+    levelId: data.levelId ?? "",
+    collectionIds: [data.id],
+  })}`;
+
   return (
     <>
       <Link
@@ -55,17 +63,16 @@ export function CollectionDetail({ id }: { id: string }) {
         {data.description && (
           <p className="mt-3 whitespace-pre-line">{data.description}</p>
         )}
-        <Link
-          href={`/vocabulary/new?${contextToParams({
-            languageId: data.languageId,
-            levelId: data.levelId ?? "",
-            collectionIds: [data.id],
-          })}`}
-          className={cn(buttonVariants(), "mt-4 h-10 px-4")}
-        >
+        <Link href={addHref} className={cn(buttonVariants(), "mt-4 h-10 px-4")}>
           <Plus aria-hidden /> Thêm từ vào đây
         </Link>
       </div>
+      <Suspense fallback={<LoadingState rows={5} />}>
+        <VocabularyBrowser
+          fixed={{ languageId: data.languageId, collectionId: data.id }}
+          addHref={addHref}
+        />
+      </Suspense>
     </>
   );
 }

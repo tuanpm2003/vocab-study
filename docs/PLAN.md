@@ -42,13 +42,13 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F3 | Collection | 3 | §3.3 | 7 | 7 | 100% | — |
 | F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 9 | 100% | — |
 | F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 10 | 91% | — |
-| F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 0 | 0% | — |
+| F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 8 | 100% | — |
 | F7 | Flashcard | 7 | §3.6 | 6 | 0 | 0% | — |
 | F8 | Trắc nghiệm | 8 | §3.6 | 4 | 0 | 0% | — |
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **60** | **61%** | |
+| | **Tổng** | | | **99** | **68** | **69%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -194,14 +194,14 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F6-01 | Trang `/vocabulary`: bảng trên desktop, dạng thẻ trên mobile | FE | Hiển thị gọn ở cả 375px và 1280px | ⬜ |
-| F6-02 | Ô tìm kiếm có debounce khoảng 300ms | FE | Gõ nhanh không bắn một request cho mỗi ký tự | ⬜ |
-| F6-03 | Bộ lọc Language / Level / Collection (phụ thuộc nhau) | FE | Kết hợp nhiều bộ lọc ra đúng kết quả | ⬜ |
-| F6-04 | Sắp xếp + phân trang | FE | Chuyển trang và đổi thứ tự hoạt động đúng | ⬜ |
-| F6-05 | Lưu trạng thái lọc/tìm/trang trên URL | FE | F5 (tải lại trang) hoặc chia sẻ link giữ nguyên bộ lọc | ⬜ |
-| F6-06 | Hành động trên từng dòng: sửa (sang F5-09), xóa (có xác nhận) | FE | Xóa xong danh sách tự cập nhật | ⬜ |
-| F6-07 | Trang chi tiết collection liệt kê từ của nó (dùng lại danh sách với `collectionId`) | FE | Mở `Lesson 3` thấy đúng các từ của bài đó | ⬜ |
-| F6-08 | Kiểm chứng không tải toàn bộ dữ liệu | Test | Tab Network: mỗi trang đúng một request với `limit=20` | ⬜ |
+| F6-01 | Trang `/vocabulary`: bảng trên desktop, dạng thẻ trên mobile | FE | Hiển thị gọn ở cả 375px và 1280px | ✅ |
+| F6-02 | Ô tìm kiếm có debounce khoảng 300ms | FE | Gõ nhanh không bắn một request cho mỗi ký tự | ✅ |
+| F6-03 | Bộ lọc Language / Level / Collection (phụ thuộc nhau) | FE | Kết hợp nhiều bộ lọc ra đúng kết quả | ✅ |
+| F6-04 | Sắp xếp + phân trang | FE | Chuyển trang và đổi thứ tự hoạt động đúng | ✅ |
+| F6-05 | Lưu trạng thái lọc/tìm/trang trên URL | FE | F5 (tải lại trang) hoặc chia sẻ link giữ nguyên bộ lọc | ✅ |
+| F6-06 | Hành động trên từng dòng: sửa (sang F5-09), xóa (có xác nhận) | FE | Xóa xong danh sách tự cập nhật | ✅ |
+| F6-07 | Trang chi tiết collection liệt kê từ của nó (dùng lại danh sách với `collectionId`) | FE | Mở `Lesson 3` thấy đúng các từ của bài đó | ✅ |
+| F6-08 | Kiểm chứng không tải toàn bộ dữ liệu | Test | Tab Network: mỗi trang đúng một request với `limit=20` | ✅ |
 
 > Bộ lọc **Status** cần bảng LearningProgress, nên được làm ở F9-09.
 
@@ -299,6 +299,14 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F6-08 | Resource Timing trên trình duyệt: mỗi lần mở trang đúng 1 request `/vocabularies?page=1&limit=20…` |
+| 2026-10-06 | F6-07 | Trang collection nhúng `VocabularyBrowser` với `collectionId` bị khóa: Lesson 3 hiện đúng các từ của bài, chỉ còn ô tìm + sắp xếp |
+| 2026-10-06 | F6-06 | Mỗi dòng có Sửa (sang `/vocabulary/[id]/edit`) và Xóa có hộp xác nhận; xóa `猫` → danh sách và số đếm tự cập nhật |
+| 2026-10-06 | F6-05 | Trạng thái nằm trên URL (`useVocabularyQuery`): mở thẳng `?languageId=…&sort=term:asc` → dropdown và danh sách khôi phục đúng |
+| 2026-10-06 | F6-04 | Sắp xếp 5 kiểu (whitelist) + Trước/Sau; 31 từ → trang 2/2 có 11 dòng; đổi bộ lọc tự về trang 1 |
+| 2026-10-06 | F6-03 | Lọc Language → Level → Collection phụ thuộc nhau: Japanese 13 từ → +N5 12 từ → +Food 5 từ; bỏ ngôn ngữ thì level/bài học bị khóa và xóa |
+| 2026-10-06 | F6-02 | `SearchInput` debounce 300ms: gõ nhanh t→ta→tab→tabe→taber chỉ bắn đúng 1 request `search=taber` |
+| 2026-10-06 | F6-01 | Trang `/vocabulary`: ở 375px hiện 20 thẻ (chữ từ 24px), bảng ẩn, không tràn ngang; ở 1280px hiện bảng 4 cột |
 | 2026-10-06 | F5-10 | 15 component test pass: giữ ngữ cảnh, focus, nhập 3 từ chỉ bằng Tab+Enter, Ctrl+Enter, dropdown phụ thuộc, cảnh báo trùng, chế độ sửa |
 | 2026-10-06 | F5-09 | `/vocabulary/[id]/edit` dùng lại `VocabularyForm`: khóa ngôn ngữ, sửa nghĩa và đổi collection (đã lưu nghĩa mới qua trình duyệt; sửa thêm lỗi stale-closure khi bấm chip liên tiếp) |
 | 2026-10-06 | F5-08 | Trang collection có nút "Thêm từ vào đây" → form mở với Japanese / N5 / Lesson 3 điền sẵn, con trỏ ở ô Từ |
