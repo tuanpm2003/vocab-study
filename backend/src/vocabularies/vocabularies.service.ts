@@ -101,6 +101,15 @@ export function toVocabularyResponse(row: VocabularyRow) {
 
 export type VocabularyResponse = ReturnType<typeof toVocabularyResponse>;
 
+/**
+ * Prisma dịch `contains` thành ILIKE '%…%' nhưng KHÔNG escape chuỗi tìm kiếm: người dùng gõ
+ * "%" sẽ khớp mọi từ, gõ "_" khớp một ký tự bất kỳ. Thêm dấu \ để chúng được tìm như ký tự thường.
+ * (Không phải lỗ hổng injection — giá trị vẫn là tham số — chỉ là kết quả tìm kiếm sai.)
+ */
+export function escapeLike(text: string): string {
+  return text.replace(/[\\%_]/g, (character) => `\\${character}`);
+}
+
 function toJson(
   extra: Record<string, unknown> | null | undefined,
 ): Prisma.InputJsonValue | typeof Prisma.DbNull | undefined {
@@ -128,7 +137,10 @@ export class VocabulariesService {
       where.collections = { some: { collectionId: query.collectionId } };
     }
     if (query.search) {
-      const contains = { contains: query.search, mode: 'insensitive' } as const;
+      const contains = {
+        contains: escapeLike(query.search),
+        mode: 'insensitive',
+      } as const;
       where.OR = [
         { term: contains },
         { meaning: contains },

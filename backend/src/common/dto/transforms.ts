@@ -12,6 +12,11 @@ export function emptyToNull({ value }: TransformFnParams): unknown {
   return trimmed === '' ? null : trimmed;
 }
 
+/** Dùng với @ValidateIf: chỉ bỏ qua validate khi field VẮNG MẶT, không bỏ qua khi là null. */
+export function isPresent(_object: unknown, value: unknown): boolean {
+  return value !== undefined;
+}
+
 /**
  * Trả lại giá trị GỐC client gửi, bỏ qua bước ép kiểu ngầm của ValidationPipe.
  * Bắt buộc cho field boolean: `enableImplicitConversion` ép `Boolean("false")` thành `true`

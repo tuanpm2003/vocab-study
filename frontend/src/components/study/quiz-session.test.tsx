@@ -173,3 +173,39 @@ describe("QuizSession", () => {
     expect(prompt()).toBe("ăn");
   });
 });
+
+describe("QuizSession — phím tắt không tranh phím với nút đang focus", () => {
+  it("Tab tới một đáp án rồi Enter: chọn đúng đáp án đó", async () => {
+    const onAnswer = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <QuizSession
+        items={[ITEMS[0] as QuizItem]}
+        onAnswer={onAnswer}
+        onRestart={vi.fn()}
+      />,
+    );
+
+    await user.tab();
+    await user.tab();
+    expect(choice(/ăn/)).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(onAnswer).toHaveBeenCalledTimes(1);
+    expect(onAnswer.mock.calls[0]?.[1]).toBe(true);
+  });
+
+  it("màn tổng kết: Enter trên nút “Làm bài mới” bấm được nút", async () => {
+    const onRestart = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <QuizSession items={[ITEMS[0] as QuizItem]} onRestart={onRestart} />,
+    );
+    await user.keyboard("2 ");
+    expect(screen.getByRole("button", { name: "Làm bài mới" })).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+
+    expect(onRestart).toHaveBeenCalledTimes(1);
+  });
+});

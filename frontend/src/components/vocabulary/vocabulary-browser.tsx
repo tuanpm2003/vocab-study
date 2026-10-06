@@ -174,8 +174,6 @@ export function VocabularyBrowser({
         )}
       >
         <SearchInput
-          // key: khi URL đổi từ bên ngoài (Back, "Xóa bộ lọc"), ô nhập lấy lại giá trị từ URL.
-          key={query.search}
           value={query.search}
           onChange={(search) => update({ search })}
         />

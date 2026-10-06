@@ -106,6 +106,7 @@ export function VocabularyForm({
   const queryClient = useQueryClient();
   const [savedCount, setSavedCount] = useState(0);
   const termRef = useRef<HTMLInputElement | null>(null);
+  const submitting = useRef(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -152,6 +153,9 @@ export function VocabularyForm({
 
   useEffect(() => {
     if (!collections.data) return;
+    // Danh sách bị cắt ở 100 bài học. Khi chưa có đủ, một id "không thấy" có thể vẫn tồn tại
+    // — dọn nó đi sẽ âm thầm gỡ từ khỏi bài học thứ 101 trở đi khi người dùng bấm Lưu.
+    if (collections.data.total > collections.data.items.length) return;
     const known = new Set(collections.data.items.map((c) => c.id));
     const kept = collectionIds.filter((id) => known.has(id));
     if (kept.length !== collectionIds.length) setValue("collectionIds", kept);
@@ -245,7 +249,20 @@ export function VocabularyForm({
     onError: (error) => form.setError("root", { message: error.message }),
   });
 
-  const submit = form.handleSubmit((values) => mutation.mutate(values));
+  // handleSubmit được gọi BÊN TRONG hàm xử lý sự kiện (không phải lúc render) vì nó đọc ref.
+  function submit(event?: React.BaseSyntheticEvent) {
+    return form.handleSubmit((values) => {
+      // Ref, không phải mutation.isPending: hai lần Ctrl+Enter liền nhau chạy trong cùng một
+      // lần render nên cùng thấy isPending = false, và sẽ tạo hai từ trùng nhau.
+      if (submitting.current) return;
+      submitting.current = true;
+      mutation.mutate(values, {
+        onSettled: () => {
+          submitting.current = false;
+        },
+      });
+    })(event);
+  }
   const termField = form.register("term");
   const { errors } = form.formState;
 

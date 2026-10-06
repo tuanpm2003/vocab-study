@@ -78,7 +78,10 @@ function CollectionForm({
         : collectionsApi.create({ languageId, ...body });
     },
     onSuccess: async (saved) => {
-      await queryClient.invalidateQueries({ queryKey: qk.collections });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.collections }),
+        queryClient.invalidateQueries({ queryKey: qk.vocabularies }),
+      ]);
       toast.success(
         collection ? `Đã cập nhật ${saved.name}` : `Đã thêm ${saved.name}`,
       );

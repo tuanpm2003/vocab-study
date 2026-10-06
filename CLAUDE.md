@@ -140,16 +140,16 @@ Quy tắc: field cần **search/filter/sort** → cột thật; field chỉ đ�
 | Phase | Nội dung | Trạng thái |
 |---|---|---|
 | 0 | Kiến trúc, stack, DB, API, quy trình AI-assisted | ✅ |
-| 1 | Setup: Docker/Postgres, NestJS, Prisma, Next.js, ESLint, Git, walking skeleton | ⬜ |
-| 2 | Language Management — lát cắt dọc đầy đủ (module mẫu) | ⬜ |
-| 3 | LevelSystem + Level + Collection (cùng pattern với Phase 2) | ⬜ |
-| 4 | Vocabulary CRUD + quan hệ N-N + pagination/search/filter | ⬜ |
-| 5 | UI thêm từ nhanh (giữ context Language/Level/Collection) | ⬜ |
-| 6 | Vocabulary list UI: search, filter, sort, phân trang | ⬜ |
-| 7 | Flashcard | ⬜ |
-| 8 | Multiple Choice | ⬜ |
-| 9 | Learning Progress + ReviewLog | ⬜ |
-| 10 | Dashboard | ⬜ |
+| 1 | Setup: Docker/Postgres, NestJS, Prisma, Next.js, ESLint, Git, walking skeleton | ✅ |
+| 2 | Language Management — lát cắt dọc đầy đủ (module mẫu) | ✅ |
+| 3 | LevelSystem + Level + Collection (cùng pattern với Phase 2) | ✅ |
+| 4 | Vocabulary CRUD + quan hệ N-N + pagination/search/filter | ✅ |
+| 5 | UI thêm từ nhanh (giữ context Language/Level/Collection) | ✅ |
+| 6 | Vocabulary list UI: search, filter, sort, phân trang | ✅ |
+| 7 | Flashcard | ✅ |
+| 8 | Multiple Choice | ✅ |
+| 9 | Learning Progress + ReviewLog | ✅ |
+| 10 | Dashboard | ✅ |
 | 11 | Spaced Repetition (nghiên cứu Leitner/SM-2/FSRS rồi mới chọn) | ⬜ |
 | 12 | Authentication (multi-user) | ⬜ |
 | 13 | AWS Deployment | ⬜ |

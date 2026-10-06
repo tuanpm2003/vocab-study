@@ -60,14 +60,15 @@ export const DUE_STATUSES: LearningStatus[] = ['NEW', 'LEARNING'];
 /** `rating` cho flashcard, `isCorrect` cho quiz — đúng một trong hai, khớp với `mode`. */
 function toReviewInput(dto: ReviewDto): ReviewInput {
   if (dto.mode === 'FLASHCARD') {
-    if (dto.rating === undefined || dto.isCorrect !== undefined) {
+    // `== null` bắt cả undefined lẫn null: client gửi `"isCorrect": null` nghĩa là "không có".
+    if (dto.rating == null || dto.isCorrect != null) {
       throw new BadRequestException(
         'mode FLASHCARD cần rating và không nhận isCorrect',
       );
     }
     return { rating: dto.rating };
   }
-  if (dto.isCorrect === undefined || dto.rating !== undefined) {
+  if (dto.isCorrect == null || dto.rating != null) {
     throw new BadRequestException(
       'mode MULTIPLE_CHOICE cần isCorrect và không nhận rating',
     );
@@ -103,18 +104,20 @@ export class LearningService {
    */
   async review(ownerId: string, dto: ReviewDto): Promise<ProgressResponse> {
     const input = toReviewInput(dto);
-    const vocabulary = await this.prisma.vocabulary.findFirst({
-      where: { id: dto.vocabularyId, ownerId },
-      select: { id: true },
-    });
-    if (!vocabulary) {
-      throw new NotFoundException(
-        `Không tìm thấy từ vựng với id ${dto.vocabularyId}`,
-      );
-    }
-
     const now = new Date();
     return this.prisma.$transaction(async (tx) => {
+      // FOR UPDATE khóa dòng Vocabulary tới hết transaction. Hai lần ôn cùng một từ tới gần
+      // như đồng thời sẽ xếp hàng ở đây, thay vì cùng đọc một tiến độ cũ rồi ghi đè lên
+      // nhau (mất một lần đếm). Câu này cũng là bước kiểm tra tồn tại + quyền sở hữu.
+      const [vocabulary] = await tx.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "Vocabulary"
+        WHERE id = ${dto.vocabularyId} AND "ownerId" = ${ownerId}
+        FOR UPDATE`;
+      if (!vocabulary) {
+        throw new NotFoundException(
+          `Không tìm thấy từ vựng với id ${dto.vocabularyId}`,
+        );
+      }
       const current = await tx.learningProgress.findFirst({
         where: { vocabularyId: vocabulary.id, ownerId },
       });
@@ -132,7 +135,7 @@ export class LearningService {
       });
       // upsert: lần ôn đầu tiên của một từ chính là lúc dòng tiến độ của nó ra đời.
       const saved = await tx.learningProgress.upsert({
-        where: { vocabularyId: vocabulary.id },
+        where: { vocabularyId: vocabulary.id, ownerId },
         create: {
           ownerId,
           vocabularyId: vocabulary.id,

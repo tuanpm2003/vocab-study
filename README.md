@@ -4,8 +4,9 @@ Web app cá nhân để quản lý và ghi nhớ từ vựng nhiều ngôn ngữ
 Tiếng Nhật, Tiếng Hàn...). Tổ chức từ vựng theo cấu trúc `Language > Level > Collection`,
 học bằng Flashcard và Quiz, theo dõi tiến độ trên Dashboard.
 
-> **Trạng thái:** Phase 1 — bộ khung chạy được (walking skeleton). Chưa có tính năng nghiệp vụ.
-> Tiến độ chi tiết: [docs/PLAN.md](docs/PLAN.md).
+> **Trạng thái:** MVP đã đủ tính năng (Phase 1–10): quản lý ngôn ngữ / level / bài học, thêm từ
+> nhanh, danh sách có tìm kiếm và lọc, Flashcard, Trắc nghiệm, tiến độ học, Dashboard.
+> Đang chờ chủ dự án nghiệm thu (nhóm F11). Tiến độ chi tiết: [docs/PLAN.md](docs/PLAN.md).
 
 ---
 
@@ -17,7 +18,7 @@ học bằng Flashcard và Quiz, theo dõi tiến độ trên Dashboard.
 | Backend | NestJS 12 (ESM) + TypeScript + class-validator + Swagger |
 | Database | PostgreSQL 16 (Docker) |
 | ORM | Prisma 7 (driver adapter `pg`) |
-| Test | Vitest (backend) |
+| Test | Vitest (backend unit + e2e), Vitest + Testing Library (frontend) |
 | Lint | oxlint (backend), ESLint (frontend), Prettier |
 
 Tại sao chọn từng thứ: [docs/DECISIONS.md](docs/DECISIONS.md) (ADR-001, ADR-009).
@@ -83,7 +84,32 @@ npm install
 npm run dev
 ```
 
-Mở http://localhost:3000 — trang phải hiện **"Backend: ok · DB: connected"** trong khung xanh.
+Mở http://localhost:3000 — trang phải hiện màn hình **"Chào mừng"** với ba bước bắt đầu
+(database còn trống), hoặc Dashboard nếu đã có từ vựng.
+
+### 4. Dữ liệu mẫu (tùy chọn)
+
+```powershell
+cd backend
+npx prisma db seed
+```
+
+Tạo 3 ngôn ngữ (Japanese, Chinese, English) kèm hệ thống level, vài bài học và 30 từ mẫu.
+Chạy lại bao nhiêu lần cũng không tạo bản ghi trùng.
+
+---
+
+## Dùng app
+
+| Việc | Ở đâu |
+|---|---|
+| Tạo ngôn ngữ, hệ thống level (JLPT/HSK/CEFR…), bài học và chủ đề | **Ngôn ngữ** → chọn một ngôn ngữ |
+| Thêm từ liên tục | **Thêm từ** — `Ctrl+Enter` để lưu, ngữ cảnh được giữ lại cho từ kế tiếp |
+| Tìm, lọc, sửa, xóa từ | **Từ vựng** |
+| Học một phạm vi bất kỳ | **Học** → Flashcard hoặc Trắc nghiệm |
+| Ôn những từ chưa thuộc | **Ôn tập** (một lần bấm từ mọi trang) |
+
+Phím tắt khi học: `Space` lật thẻ / sang câu, `1`–`4` chấm điểm hoặc chọn đáp án.
 
 ---
 
@@ -96,20 +122,27 @@ Mở http://localhost:3000 — trang phải hiện **"Backend: ok · DB: connect
 | Lint | `npm run lint` | `npm run lint` |
 | Kiểm tra format | `npm run format:check` | `npm run format:check` |
 | Tự sửa format | `npm run format` | `npm run format` |
-| Unit test | `npm run test` | — |
+| Unit / component test | `npm run test` | `npm run test` |
 | E2E test | `npm run test:e2e` (cần container test) | — |
 | Xem database | `npx prisma studio` | — |
+| Tạo migration sau khi sửa schema | `npx prisma migrate dev --name <ten>` rồi `npx prisma generate` | — |
+| Nạp dữ liệu mẫu | `npx prisma db seed` | — |
 
 ---
 
 ## Xử lý sự cố
 
-**Trang báo "Backend: ok · DB: disconnected"**
-Backend chạy nhưng không tới được database. Chạy `docker compose up -d` ở thư mục gốc, rồi
-bấm "Kiểm tra lại".
+**Trang báo "Không kết nối được backend"**
+Backend chưa chạy. `cd backend; npm run start:dev`, rồi bấm "Thử lại".
 
-**Trang báo "Backend: không phản hồi"**
-Backend chưa chạy. `cd backend; npm run start:dev`.
+**Trang báo "Có lỗi xảy ra — Lỗi máy chủ", hoặc `/health` trả 503**
+Backend chạy nhưng không tới được database. Chạy `docker compose up -d` ở thư mục gốc.
+Kiểm tra nhanh: http://localhost:4000/health phải trả `"database":"connected"`.
+
+**`npm run test:e2e` báo không kết nối được database**
+Container `vocab-postgres-test` chưa chạy (`docker compose up -d`). Database test nằm trên RAM
+nên mất sạch mỗi lần container khởi động lại — e2e tự chạy `prisma migrate deploy` trước khi
+test, bạn không cần làm tay.
 
 **Cổng 5432 đã bị chiếm**
 Máy phát triển có PostgreSQL 18 cài trực tiếp trên Windows (service `postgresql-x64-18`)

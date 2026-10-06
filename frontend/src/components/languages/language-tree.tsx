@@ -100,6 +100,8 @@ export function LanguageTree({
     Promise.all([
       queryClient.invalidateQueries({ queryKey: qk.language(languageId) }),
       queryClient.invalidateQueries({ queryKey: qk.collections }),
+      // Danh sách từ hiển thị tên level và tên bài học của từng từ.
+      queryClient.invalidateQueries({ queryKey: qk.vocabularies }),
     ]);
 
   const action = useMutation({

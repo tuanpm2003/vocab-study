@@ -11,6 +11,12 @@ import { LevelSystemsService } from './level-systems.service.js';
 
 const OWNER = 'owner-a';
 
+const whereLevel = (id: string) => ({
+  id,
+  levelSystemId: 'sys-1',
+  levelSystem: { language: { ownerId: OWNER } },
+});
+
 function system(levels: { id: string; order: number }[] = []) {
   return { id: 'sys-1', languageId: 'lang-1', name: 'JLPT', levels };
 }
@@ -218,9 +224,9 @@ describe('LevelSystemsService', () => {
       });
 
       expect(prismaMock.level.update.mock.calls.map((c) => c[0])).toEqual([
-        { where: { id: 'c', levelSystemId: 'sys-1' }, data: { order: 1 } },
-        { where: { id: 'a', levelSystemId: 'sys-1' }, data: { order: 2 } },
-        { where: { id: 'b', levelSystemId: 'sys-1' }, data: { order: 3 } },
+        { where: whereLevel('c'), data: { order: 1 } },
+        { where: whereLevel('a'), data: { order: 2 } },
+        { where: whereLevel('b'), data: { order: 3 } },
       ]);
     });
   });

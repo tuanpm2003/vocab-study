@@ -88,7 +88,9 @@ Không phân trang — số lượng luôn rất nhỏ (1-2 hệ thống mỗi n
 **Body:** `{ "name": string, "isDefault"?: boolean, "levels"?: [{ "name": string, "order"?: number }] }`
 
 `order` bỏ trống thì lấy theo vị trí trong mảng. Hệ thống **đầu tiên** của một ngôn ngữ tự
-thành default. Tên level trùng nhau trong cùng request → 400.
+thành default **khi không gửi `isDefault`**. Ràng buộc được bảo đảm là "mỗi ngôn ngữ có *tối đa*
+một default" — không phải "luôn có một": gửi `isDefault: false`, hoặc xóa hệ thống default,
+sẽ để ngôn ngữ không có default nào (chỉ ảnh hưởng nhãn và thứ tự hiển thị). Tên level trùng nhau trong cùng request → 400.
 
 Cho phép tạo cả hệ thống + danh sách level trong **một request**. Lý do UX: người dùng
 tạo "JLPT" rồi phải gọi thêm 5 request để tạo N5..N1 là trải nghiệm tệ. Backend bọc trong
@@ -151,8 +153,8 @@ Xóa Collection **không** xóa từ vựng — chỉ xóa các dòng trong bả
 **Query:**
 | Param | Kiểu | Ghi chú |
 |---|---|---|
-| `page` / `limit` | int | mặc định 1 / 20, `limit` tối đa **100** |
-| `search` | string | tìm trong `term`, `meaning`, `reading`, `romanization` (không phân biệt hoa thường) |
+| `page` / `limit` | int | mặc định 1 / 20, `limit` tối đa **100**, `page` tối đa 100 000 |
+| `search` | string | tìm trong `term`, `meaning`, `reading`, `romanization` (không phân biệt hoa thường; `%` và `_` được tìm như ký tự thường) |
 | `languageId` / `levelId` / `collectionId` | string | filter |
 | `status` | enum | `NEW\|LEARNING\|REVIEW\|MASTERED` (từ Phase 9) |
 | `sort` | string | `createdAt`, `updatedAt`, `term` × `asc`/`desc`; mặc định `createdAt:desc` — **whitelist** |
@@ -241,10 +243,10 @@ bộ từ vựng về máy client, vi phạm yêu cầu "không load toàn bộ 
 ### ✅ `POST /learning/review`
 **Body:**
 ```json
-{ "vocabularyId": "clx9", "mode": "FLASHCARD", "rating": "GOOD", "isCorrect": null }
+{ "vocabularyId": "clx9", "mode": "FLASHCARD", "rating": "GOOD" }
 ```
 `rating` cho flashcard, `isCorrect` cho quiz. Đúng một trong hai phải có, và phải khớp
-với `mode` — sai thì **400**. Từ không tồn tại → **404**. Quy tắc tính trạng thái: ADR-010.
+với `mode` — sai thì **400**. Field còn lại bỏ trống hoặc gửi `null` đều được. Từ không tồn tại → **404**. Quy tắc tính trạng thái: ADR-010.
 
 **201** → `{ vocabularyId, status, reviewCount, correctCount, incorrectCount, lastReviewedAt }`
 
@@ -283,6 +285,15 @@ Phase 11: đổi thành lọc `dueAt <= now()`. **Contract không đổi** — c
 - `accuracy` là `null` khi hôm nay chưa ôn từ nào.
 - `dueCount` = `new` + `learning`, cùng định nghĩa với `GET /learning/due`.
 - `streak`: số ngày liên tiếp có ôn; hôm nay chưa ôn thì vẫn tính tới hôm qua.
+
+---
+
+## Quy ước về `null` trong body
+
+- Field **vắng mặt** trong `PATCH` = không đổi.
+- `null` ở field **nullable** (`levelId`, `reading`, `notes`, `description`, `extra`…) = xóa giá trị.
+- `null` ở field **bắt buộc** (`name`, `term`, `meaning`, `isDefault`…) → **400**.
+- `null` ở `kind` và `order` (tùy chọn nhưng không nullable) = không đổi.
 
 ---
 

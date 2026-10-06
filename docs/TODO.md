@@ -17,7 +17,12 @@ Ký hiệu: ⬜ chưa làm · 🔄 đang làm · ✅ xong · ⏸️ hoãn có ch
 | ESLint 9 đã hết hỗ trợ (`npm warn deprecated eslint@9`), nhưng `eslint-config-next@16` vẫn ghim `^9` | Phase 1 | Khi `eslint-config-next` hỗ trợ ESLint 10 — nâng cả hai cùng lúc |
 | Backend dùng nháy đơn, frontend dùng nháy kép (mỗi bên theo mặc định của framework) | Phase 1 | Chỉ đồng bộ nếu gây khó chịu thật; không ảnh hưởng hành vi |
 | Prisma CLI `latest` trỏ tới `8.0.0-rc` — đang ghim `7.10.0` (ADR-009) | Phase 1 | Khi Prisma 8 ổn định — nâng CLI và client cùng lúc, có kế hoạch riêng |
-| `npm install` ở `backend/` báo 4 lỗ hổng mức high (`npm audit`), frontend 0 | Phase 1 (F0-13) | G4 của `/phase-verify` Phase 1 đánh giá; không chạy `npm audit fix --force` mù |
+| `npm audit --omit=dev` ở `backend/`: 4 high, đều nằm trong **Prisma CLI** (`deepmerge-ts`, `mysql2`) — chỉ chạy lúc `migrate`/`generate`, app dùng PostgreSQL nên không có đường khai thác. `npm audit fix` đề xuất hạ Prisma về 6 (breaking) — **không chạy** | G4 2026-10-06 | Khi Prisma 7.x có bản vá, cùng lúc với mục Prisma ở trên |
+| `npm audit --omit=dev` ở `frontend/`: 2 high ở `source-map-js` (công cụ build, không nhận input người dùng). Critical của `next` 16.3.5 (RCE `next/og`, app không dùng) đã hết sau khi nâng 16.3.6 | G4 2026-10-06 | Theo các bản vá tiếp theo của Next |
+| `enableImplicitConversion` ép kiểu ngầm ở **body**: `{"name": 123}` lưu thành `"123"`, `{"name": {}}` thành `"[object Object]"`. Boolean đã xử lý bằng `rawValue`; chuỗi và số thì chưa. Không vượt quyền, chỉ là dữ liệu rác từ client lỗi | G4 2026-10-06 | Phase 12 — bỏ implicit conversion toàn cục (query DTO đã có `@Type`) |
+| Field id (`languageId`, `collectionIds[]`, tham số `:id`…) chưa có `@MaxLength`; id dài bị lặp lại trong thông điệp 404 | G4 2026-10-06 | Phase 12 |
+| Form từ vựng và cây bài học chỉ tải 100 collection đầu của một ngôn ngữ. Đã chặn việc âm thầm gỡ bài học nằm ngoài 100, nhưng các bài đó không hiện để chọn | G3 2026-10-06 | Khi một ngôn ngữ thật sự vượt 100 bài học — thêm ô tìm bài học |
+| `GET /languages/:id` và `GET /languages/:id/level-systems` không phân trang; số level thêm lẻ vào một hệ thống không có trần | G4 2026-10-06 | Phase 12 (nhiều người dùng) |
 
 ---
 
@@ -53,7 +58,10 @@ có URL công khai.** Chi tiết ở skill `security-checklist`.
 - [ ] RDS trong private subnet, Security Group chỉ cho phép ECS task
 - [ ] CORS giới hạn đúng domain production
 - [ ] `HOST=0.0.0.0` chỉ đặt bên trong container phía sau load balancer — mặc định `127.0.0.1` (Phase 1)
-- [ ] Log không ghi thông tin nhạy cảm
+- [ ] Log không ghi thông tin nhạy cảm — cụ thể: `AllExceptionsFilter` ghi `exception.stack` cho lỗi 500, và lỗi validation của Prisma có thể chứa dữ liệu người dùng
+- [ ] Tắt hoặc bảo vệ Swagger `/api` ở production (hiện luôn bật trong `main.ts`)
+- [ ] Kiểm tra header `Host` (chống DNS rebinding) — hoặc để authentication giải quyết
+- [ ] 8 lệnh ghi "an toàn gián tiếp" (kiểm tra owner ở bước trước, không nằm trong chính câu lệnh ghi — bảng A của báo cáo G4 2026-10-06) phải xem lại nếu thêm tính năng chuyển/chia sẻ dữ liệu giữa người dùng
 - [ ] Backup tự động + **đã thử khôi phục một lần**
 - [ ] CloudWatch alarm cho lỗi 5xx **và cho chi phí**
 - [ ] Billing Alarm đặt ngay khi tạo tài khoản AWS, trước cả khi tạo tài nguyên đầu tiên

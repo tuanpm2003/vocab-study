@@ -11,10 +11,19 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  Max,
   Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { rawValue, trimString } from '../../common/dto/transforms.js';
+import {
+  isPresent,
+  rawValue,
+  trimString,
+} from '../../common/dto/transforms.js';
+
+// Cột `order` là INT4; không có trần thì một số quá lớn thành lỗi 500 ở database.
+const MAX_LEVEL_ORDER = 10_000;
 
 export class CreateLevelDto {
   @ApiProperty({ example: 'N5', maxLength: 50 })
@@ -28,10 +37,13 @@ export class CreateLevelDto {
   @IsOptional()
   @IsInt()
   @Min(0)
+  @Max(MAX_LEVEL_ORDER)
   order?: number;
 }
 
-export class UpdateLevelDto extends PartialType(CreateLevelDto) {}
+export class UpdateLevelDto extends PartialType(CreateLevelDto, {
+  skipNullProperties: false,
+}) {}
 
 export class CreateLevelSystemDto {
   @ApiProperty({ example: 'JLPT', maxLength: 50 })
@@ -61,7 +73,7 @@ export class CreateLevelSystemDto {
 
 export class UpdateLevelSystemDto {
   @ApiPropertyOptional({ maxLength: 50 })
-  @IsOptional()
+  @ValidateIf(isPresent)
   @Transform(trimString)
   @IsString()
   @IsNotEmpty({ message: 'Tên hệ thống level không được để trống' })
@@ -69,7 +81,7 @@ export class UpdateLevelSystemDto {
   name?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @ValidateIf(isPresent)
   @Transform(rawValue)
   @IsBoolean()
   isDefault?: boolean;

@@ -489,3 +489,61 @@ describe("VocabularyForm — chế độ sửa", () => {
     expect(loadContext()).toBeNull();
   });
 });
+
+describe("VocabularyForm — các lỗi do review chéo (G3) phát hiện", () => {
+  it("Ctrl+Enter hai lần liền khi request chưa về → chỉ tạo MỘT từ", async () => {
+    let finish: (value: CreatedVocabulary) => void = () => undefined;
+    vi.mocked(vocabulariesApi.create).mockImplementationOnce(
+      () => new Promise<CreatedVocabulary>((resolve) => (finish = resolve)),
+    );
+    const user = userEvent.setup();
+    renderWithQuery(<VocabularyForm initialContext={JA_CONTEXT} />);
+    await chip("Lesson 3");
+
+    await user.type(termInput(), "食べる");
+    await user.type(meaningInput(), "ăn");
+    await user.keyboard("{Control>}{Enter}{Enter}{/Control}");
+
+    await waitFor(() => expect(vocabulariesApi.create).toHaveBeenCalled());
+    expect(vocabulariesApi.create).toHaveBeenCalledTimes(1);
+
+    finish(saved("食べる"));
+    await waitFor(() => expect(termInput()).toHaveValue(""));
+    // Sau khi request xong, lưu từ kế tiếp vẫn hoạt động bình thường.
+    await user.keyboard("水{Tab}nước{Enter}");
+    await waitFor(() =>
+      expect(vocabulariesApi.create).toHaveBeenCalledTimes(2),
+    );
+  });
+
+  it("ngôn ngữ có hơn 100 bài học: KHÔNG gỡ bài học nằm ngoài 100 bài đã tải", async () => {
+    vi.mocked(collectionsApi.listByLanguage).mockResolvedValue({
+      items: COLLECTIONS.ja ?? [],
+      total: 146,
+      page: 1,
+      limit: 100,
+      totalPages: 2,
+    });
+    vi.mocked(vocabulariesApi.update).mockResolvedValue(saved("食べる"));
+    const existing = saved("食べる", {
+      id: "voc-1",
+      collections: [
+        { id: "ja-l3", name: "Lesson 3" },
+        { id: "bai-thu-120", name: "Bài 120" },
+      ],
+    });
+    const user = userEvent.setup();
+    renderWithQuery(<VocabularyForm vocabulary={existing} onSaved={vi.fn()} />);
+    await chip("Lesson 3");
+
+    await user.type(meaningInput(), " (cơm)");
+    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+
+    await waitFor(() =>
+      expect(vocabulariesApi.update).toHaveBeenCalledWith(
+        "voc-1",
+        expect.objectContaining({ collectionIds: ["ja-l3", "bai-thu-120"] }),
+      ),
+    );
+  });
+});

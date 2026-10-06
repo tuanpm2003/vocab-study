@@ -32,7 +32,13 @@ export function LanguageList() {
   const remove = useMutation({
     mutationFn: (language: Language) => languagesApi.remove(language.id),
     onSuccess: async (_, language) => {
-      await queryClient.invalidateQueries({ queryKey: qk.languages });
+      // Xóa ngôn ngữ cascade xóa cả bài học và từ vựng của nó: mọi danh sách đó đều đã cũ.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.languages }),
+        queryClient.invalidateQueries({ queryKey: qk.collections }),
+        queryClient.invalidateQueries({ queryKey: qk.vocabularies }),
+        queryClient.invalidateQueries({ queryKey: qk.learning }),
+      ]);
       toast.success(`Đã xóa ${language.name}`);
       close();
     },

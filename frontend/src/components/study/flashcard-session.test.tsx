@@ -196,3 +196,33 @@ describe("FlashcardSession", () => {
     expect(onRestart).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("FlashcardSession — phím tắt không tranh phím với nút đang focus", () => {
+  it("màn tổng kết: Enter trên nút “Học phiên mới” (đang focus sẵn) bấm được nút", async () => {
+    const onRestart = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <FlashcardSession
+        items={[CARDS[1] as Vocabulary]}
+        onRestart={onRestart}
+      />,
+    );
+    await user.keyboard(" 3");
+    expect(screen.getByRole("button", { name: "Học phiên mới" })).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+
+    expect(onRestart).toHaveBeenCalledTimes(1);
+  });
+
+  it("Tab tới nút “Hiện đáp án” rồi Space: lật đúng một lần, không lật-rồi-úp", async () => {
+    const user = userEvent.setup();
+    render(<FlashcardSession items={CARDS} onRestart={vi.fn()} />);
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: /Hiện đáp án/ })).toHaveFocus();
+    await user.keyboard(" ");
+
+    expect(screen.getByTestId("card-back")).toBeInTheDocument();
+  });
+});

@@ -27,37 +27,41 @@ function json(method: string, body: unknown): RequestInit {
 
 const del: RequestInit = { method: "DELETE" };
 
+/** id lấy từ URL của trình duyệt: encode để "a/../b" không thành một đường dẫn API khác. */
+const enc = encodeURIComponent;
+
 export const languagesApi = {
   // limit=100 là trần của backend. Một người học hiếm khi vượt quá vài ngôn ngữ,
   // nên trang Languages không cần điều khiển phân trang.
   list: () => apiFetch<Paginated<Language>>("/languages?limit=100"),
-  get: (id: string) => apiFetch<LanguageDetail>(`/languages/${id}`),
+  get: (id: string) => apiFetch<LanguageDetail>(`/languages/${enc(id)}`),
   create: (input: LanguageInput) =>
     apiFetch<Language>("/languages", json("POST", input)),
   update: (id: string, input: LanguageInput) =>
-    apiFetch<Language>(`/languages/${id}`, json("PATCH", input)),
-  remove: (id: string) => apiFetch<void>(`/languages/${id}`, del),
+    apiFetch<Language>(`/languages/${enc(id)}`, json("PATCH", input)),
+  remove: (id: string) => apiFetch<void>(`/languages/${enc(id)}`, del),
 };
 
 export const levelSystemsApi = {
   create: (languageId: string, input: LevelSystemInput) =>
     apiFetch<LevelSystem>(
-      `/languages/${languageId}/level-systems`,
+      `/languages/${enc(languageId)}/level-systems`,
       json("POST", input),
     ),
   update: (id: string, input: { name?: string; isDefault?: boolean }) =>
-    apiFetch<LevelSystem>(`/level-systems/${id}`, json("PATCH", input)),
-  remove: (id: string) => apiFetch<void>(`/level-systems/${id}`, del),
+    apiFetch<LevelSystem>(`/level-systems/${enc(id)}`, json("PATCH", input)),
+  remove: (id: string) => apiFetch<void>(`/level-systems/${enc(id)}`, del),
   addLevel: (id: string, name: string) =>
-    apiFetch<Level>(`/level-systems/${id}/levels`, json("POST", { name })),
+    apiFetch<Level>(`/level-systems/${enc(id)}/levels`, json("POST", { name })),
   reorderLevels: (id: string, levelIds: string[]) =>
     apiFetch<LevelSystem>(
-      `/level-systems/${id}/levels/reorder`,
+      `/level-systems/${enc(id)}/levels/reorder`,
       json("POST", { levelIds }),
     ),
   renameLevel: (levelId: string, name: string) =>
-    apiFetch<Level>(`/levels/${levelId}`, json("PATCH", { name })),
-  removeLevel: (levelId: string) => apiFetch<void>(`/levels/${levelId}`, del),
+    apiFetch<Level>(`/levels/${enc(levelId)}`, json("PATCH", { name })),
+  removeLevel: (levelId: string) =>
+    apiFetch<void>(`/levels/${enc(levelId)}`, del),
 };
 
 export const collectionsApi = {
@@ -65,14 +69,14 @@ export const collectionsApi = {
   // backend; vượt quá thì giao diện báo rõ thay vì âm thầm thiếu.
   listByLanguage: (languageId: string) =>
     apiFetch<Paginated<Collection>>(
-      `/collections?languageId=${encodeURIComponent(languageId)}&limit=100`,
+      `/collections?languageId=${enc(languageId)}&limit=100`,
     ),
-  get: (id: string) => apiFetch<Collection>(`/collections/${id}`),
+  get: (id: string) => apiFetch<Collection>(`/collections/${enc(id)}`),
   create: (input: CollectionInput) =>
     apiFetch<Collection>("/collections", json("POST", input)),
   update: (id: string, input: Omit<CollectionInput, "languageId">) =>
-    apiFetch<Collection>(`/collections/${id}`, json("PATCH", input)),
-  remove: (id: string) => apiFetch<void>(`/collections/${id}`, del),
+    apiFetch<Collection>(`/collections/${enc(id)}`, json("PATCH", input)),
+  remove: (id: string) => apiFetch<void>(`/collections/${enc(id)}`, del),
 };
 
 /** Bỏ các tham số rỗng: `?search=` vô nghĩa và làm URL dài không cần thiết. */
@@ -89,12 +93,12 @@ export function toQueryString(
 export const vocabulariesApi = {
   list: (query: Partial<VocabularyQuery>) =>
     apiFetch<Paginated<Vocabulary>>(`/vocabularies?${toQueryString(query)}`),
-  get: (id: string) => apiFetch<Vocabulary>(`/vocabularies/${id}`),
+  get: (id: string) => apiFetch<Vocabulary>(`/vocabularies/${enc(id)}`),
   create: (input: VocabularyInput) =>
     apiFetch<CreatedVocabulary>("/vocabularies", json("POST", input)),
   update: (id: string, input: Omit<VocabularyInput, "languageId">) =>
-    apiFetch<Vocabulary>(`/vocabularies/${id}`, json("PATCH", input)),
-  remove: (id: string) => apiFetch<void>(`/vocabularies/${id}`, del),
+    apiFetch<Vocabulary>(`/vocabularies/${enc(id)}`, json("PATCH", input)),
+  remove: (id: string) => apiFetch<void>(`/vocabularies/${enc(id)}`, del),
 };
 
 export const learningApi = {

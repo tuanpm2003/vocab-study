@@ -20,16 +20,31 @@ export function SearchInput({
   placeholder?: string;
 }) {
   const [text, setText] = useState(value);
+  // `emitted`: giá trị chính ô này vừa báo ra. `seen`: giá trị `value` của lần render trước.
+  const [emitted, setEmitted] = useState(value);
+  const [seen, setSeen] = useState(value);
+
+  // `value` đổi có hai nguồn: (1) dội lại từ chính lần debounce của ô này — KHÔNG được đụng
+  // vào `text`, vì người dùng có thể đã gõ thêm; (2) từ bên ngoài (nút Back, "Xóa bộ lọc")
+  // — phải chép vào ô. Không dùng `key` để dựng lại ô: remount làm mất focus giữa lúc đang gõ.
+  if (value !== seen) {
+    setSeen(value);
+    if (value !== emitted) {
+      setText(value);
+      setEmitted(value);
+    }
+  }
 
   useEffect(() => {
-    if (text.trim() === value) return;
+    const next = text.trim();
+    if (next === emitted) return;
     // Mỗi lần gõ thêm, effect chạy lại và cleanup hủy hẹn giờ cũ — đó chính là debounce.
-    const timer = window.setTimeout(
-      () => onChange(text.trim()),
-      SEARCH_DEBOUNCE_MS,
-    );
+    const timer = window.setTimeout(() => {
+      setEmitted(next);
+      onChange(next);
+    }, SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [text, value, onChange]);
+  }, [text, emitted, onChange]);
 
   return (
     <div className="relative">

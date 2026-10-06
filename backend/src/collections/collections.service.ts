@@ -95,7 +95,7 @@ export class CollectionsService {
         languageId: dto.languageId,
         levelId: dto.levelId ?? null,
         name: dto.name,
-        kind: dto.kind,
+        kind: dto.kind ?? undefined,
         description: dto.description ?? null,
       },
       include,
@@ -122,7 +122,8 @@ export class CollectionsService {
         // undefined = không đụng tới; null = gỡ khỏi level.
         levelId: dto.levelId,
         name: dto.name,
-        kind: dto.kind,
+        // kind không nullable: null từ client nghĩa là "không đổi".
+        kind: dto.kind ?? undefined,
         description: dto.description,
       },
       include,

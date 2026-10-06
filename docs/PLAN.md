@@ -36,21 +36,25 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 
 | # | Chức năng | Phase | Yêu cầu | Task | Xong | Tiến độ | Gate |
 |---|---|:---:|---|:---:|:---:|:---:|:---:|
-| F0 | Nền tảng dự án | 1 | §4 | 13 | 13 | 100% | — |
-| F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 14 | 100% | — |
-| F2 | Hệ thống level | 3 | §3.2 | 7 | 7 | 100% | — |
-| F3 | Collection | 3 | §3.3 | 7 | 7 | 100% | — |
-| F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 9 | 100% | — |
-| F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 10 | 91% | — |
-| F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 8 | 100% | — |
-| F7 | Flashcard | 7 | §3.6 | 6 | 6 | 100% | — |
-| F8 | Trắc nghiệm | 8 | §3.6 | 4 | 4 | 100% | — |
-| F9 | Learning Progress | 9 | §3.7 | 9 | 9 | 100% | — |
-| F10 | Dashboard | 10 | §3.8 | 5 | 5 | 100% | — |
-| F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **92** | **93%** | |
+| F0 | Nền tảng dự án | 1 | §4 | 13 | 13 | 100% | G1✅ G2✅ G5⬜ |
+| F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 14 | 100% | G1✅ G2✅ G5⬜ |
+| F2 | Hệ thống level | 3 | §3.2 | 7 | 7 | 100% | G1✅ G2✅ G5⬜ |
+| F3 | Collection | 3 | §3.3 | 7 | 7 | 100% | G1✅ G2✅ G5⬜ |
+| F4 | Từ vựng (backend) | 4 | §3.4, §3.9 | 9 | 9 | 100% | G1✅ G2✅ G5⬜ |
+| F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 10 | 91% | G1✅ G2✅ G5⬜ |
+| F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 8 | 100% | G1✅ G2✅ G5⬜ |
+| F7 | Flashcard | 7 | §3.6 | 6 | 6 | 100% | G1✅ G2✅ G5⬜ |
+| F8 | Trắc nghiệm | 8 | §3.6 | 4 | 4 | 100% | G1✅ G2✅ G5⬜ |
+| F9 | Learning Progress | 9 | §3.7 | 9 | 9 | 100% | G1✅ G2✅ G5⬜ |
+| F10 | Dashboard | 10 | §3.8 | 5 | 5 | 100% | G1✅ G2✅ G5⬜ |
+| F11 | Nghiệm thu MVP | — | §6 | 6 | 2 | 33% | G3✅ G4✅ G5⬜ |
+| | **Tổng** | | | **99** | **94** | **95%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
+
+> **Từ 2026-10-06** chủ dự án giao Claude Code tự hoàn thiện MVP, không dừng ở G0/G5 từng phase.
+> Vì vậy **G3 + G4 chạy gộp một lần trên toàn bộ codebase** (F11-03, kết quả ghi ở dòng F11),
+> và **G5 của mọi phase còn ⬜** — chỉ chủ dự án tự chạy app, tự đọc code mới đánh ✅ được (F11-01).
 
 ---
 
@@ -83,7 +87,7 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 > **Còn lại của Phase 1:**
 > - ~~F0-08~~ ✅ — đã sửa `TEST_DATABASE_URL` trong `backend/.env` sang `5435`; unit 2/2, e2e 1/1 pass
 > - ~~F0-13~~ ✅ — README đã kiểm chứng trên bản clone mới
-> - Phase 1 còn chờ: `/phase-verify` (G1–G4) và G5 (bạn tự chạy app, tự đọc code), rồi `/phase-close 1`
+> - G3/G4 của mọi phase được chạy gộp một lần trên toàn bộ codebase ở F11-03; G5 dồn về F11-01
 
 ---
 
@@ -280,10 +284,21 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 |---|---|---|---|:---:|
 | F11-01 | Chạy trọn luồng: tạo Language → Level → Collection → thêm 20 từ → tìm/lọc → Flashcard → Quiz → xem Progress → Dashboard. **Không chạm vào database** | — | Bạn tự làm hết luồng mà không gặp lỗi chặn | ⬜ |
 | F11-02 | Kiểm tra trên điện thoại (375px): 3 hành động chính, flashcard, quiz | FE | Dùng thoải mái bằng một tay | ⬜ |
-| F11-03 | `/phase-verify` trên **toàn bộ** codebase (G4 đối chiếu 100% lời gọi Prisma) | Test | Không còn phát hiện NGHIÊM TRỌNG hoặc CAO | ⬜ |
-| F11-04 | Đối chiếu tài liệu với code: API.md, DATABASE.md, README | Docs | Không còn chỗ lệch giữa tài liệu và code | ⬜ |
+| F11-03 | `/phase-verify` trên **toàn bộ** codebase (G4 đối chiếu 100% lời gọi Prisma) | Test | Không còn phát hiện NGHIÊM TRỌNG hoặc CAO | ✅ |
+| F11-04 | Đối chiếu tài liệu với code: API.md, DATABASE.md, README | Docs | Không còn chỗ lệch giữa tài liệu và code | ✅ |
 | F11-05 | Dùng thật 1 tuần; ghi các vấn đề gặp phải vào TODO.md | — | Có ít nhất 7 ngày dữ liệu trong `ReviewLog` | ⬜ |
 | F11-06 | Gắn tag `v0.1.0-mvp` | Infra | `git tag` có `v0.1.0-mvp` | ⬜ |
+
+---
+
+> **Bốn task còn ⬜ ở trên, cùng F5-11, là việc của chủ dự án** — AI không tự đánh dấu:
+> - **F5-11, F11-01** — tự chạy trọn luồng và tự nhập 20 từ thật (đây chính là G5 của mọi phase).
+> - **F11-02** — phần đo được đã kiểm ở 375×812 (2026-10-06): không trang nào tràn ngang; thanh
+>   3 hành động 125×56px luôn ở đáy; nút chấm flashcard 80×64px; đáp án quiz 343×56px; chữ từ
+>   60px; ô nhập 16px (iOS không tự phóng to). Còn "dùng thoải mái bằng một tay" phải thử trên
+>   điện thoại thật.
+> - **F11-05** — dùng thật một tuần.
+> - **F11-06** — gắn tag `v0.1.0-mvp` sau khi các mục trên xong: `git tag v0.1.0-mvp`.
 
 ---
 
@@ -299,6 +314,8 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F11-04 | Đối chiếu tài liệu với code: README (trạng thái, cách dùng, seed, xử lý sự cố), ARCHITECTURE (cây thư mục, tên module), API.md (mọi endpoint ✅, quy ước `null`, stats, due, reorder), DATABASE.md (`correctStreak`, `isCorrect`), Roadmap trong CLAUDE.md, cột Gate |
+| 2026-10-06 | F11-03 | G1–G4 trên toàn bộ codebase. G3 (`reviewer`): 0 nghiêm trọng, 1 cao (ô tìm kiếm mất focus) + 8 mục nhỏ — đã sửa hết, có test hồi quy. G4 (`security`): 0/53 lời gọi Prisma không an toàn về `ownerId`; nâng `next` 16.3.6. Sau sửa: unit 148, e2e 179, frontend 52, build production cả hai phía OK |
 | 2026-10-06 | F10-05 | Người dùng mới: database rỗng → "Thêm ngôn ngữ" là bước duy nhất có nút; có ngôn ngữ chưa có từ → "Thêm từ"; 6 component test (frontend 41/41) |
 | 2026-10-06 | F10-04 | Dashboard ở `/`: 3 thẻ hành động lớn, Hôm nay theo ngôn ngữ, chuỗi ngày, kho từ theo trạng thái; sau phiên ôn 4 lượt trên trình duyệt trang chủ hiện 4 / 3 / 1 / 75% |
 | 2026-10-06 | F10-03 | 27 unit test cho `time-zone.ts` (ranh giới 6:59/7:00 sáng, nửa đêm, cuối tháng/năm, DST 23h/25h, streak) + 11 e2e (ranh giới từng mili-giây, accuracy null, ownerId, số truy vấn cố định) |

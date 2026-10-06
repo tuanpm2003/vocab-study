@@ -55,6 +55,7 @@ export class CreateCollectionDto {
 // sẽ kéo theo mọi từ vựng bên trong sang sai ngôn ngữ.
 export class UpdateCollectionDto extends PartialType(
   OmitType(CreateCollectionDto, ['languageId'] as const),
+  { skipNullProperties: false },
 ) {}
 
 export class QueryCollectionDto extends PaginationDto {

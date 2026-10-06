@@ -108,6 +108,7 @@ export class CreateVocabularyDto {
 // languageId không đổi được: level và collection của từ đều thuộc ngôn ngữ đó.
 export class UpdateVocabularyDto extends PartialType(
   OmitType(CreateVocabularyDto, ['languageId'] as const),
+  { skipNullProperties: false },
 ) {}
 
 // Whitelist: chuỗi `sort` từ client KHÔNG BAO GIỜ đi thẳng vào orderBy.

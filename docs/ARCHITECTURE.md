@@ -122,26 +122,36 @@ Tieng-Trung-Khong-Kho/
 │   ├── prisma/
 │   │   ├── schema.prisma
 │   │   ├── migrations/
-│   │   └── seed.ts
+│   │   ├── seed.ts             logic seed (idempotent)
+│   │   └── seed-data.ts        nội dung seed
 │   ├── src/
 │   │   ├── main.ts
 │   │   ├── app.module.ts
+│   │   ├── app.setup.ts        ValidationPipe, filter, CORS — dùng chung cho main.ts và e2e
+│   │   ├── config/             validate biến môi trường lúc khởi động
 │   │   ├── prisma/             PrismaModule + PrismaService
-│   │   ├── common/             DTO chung, filter, decorator
+│   │   ├── common/             DTO chung, exception filter, OwnerGuard + @CurrentUser
+│   │   ├── health/             GET /health
 │   │   ├── languages/          ← module mẫu cho mọi module khác
-│   │   ├── levels/             (Phase 3) LevelSystem + Level
-│   │   ├── collections/        (Phase 3)
-│   │   ├── vocabulary/         (Phase 4)
-│   │   └── learning/           (Phase 9)
+│   │   ├── level-systems/      LevelSystem + Level
+│   │   ├── collections/
+│   │   ├── vocabularies/
+│   │   └── learning/           session, review, due, stats
+│   │       ├── multiple-choice.ts   ┐ logic nghiệp vụ viết thành HÀM THUẦN:
+│   │       ├── progress-rules.ts    ├ không database, không đồng hồ hệ thống,
+│   │       └── time-zone.ts         ┘ nên test phủ được mọi nhánh
 │   ├── test/
 │   └── .env
 │
 └── frontend/
     ├── src/
-    │   ├── app/                App Router
-    │   ├── components/
-    │   ├── lib/                api client, query keys
-    │   └── types/
+    │   ├── app/                App Router: /, /languages, /collections/[id],
+    │   │                       /vocabulary, /vocabulary/new, /study, /study/session
+    │   ├── components/         theo tính năng: languages/, collections/, vocabulary/,
+    │   │                       study/, dashboard/ — và ui/ (shadcn, không sửa tay)
+    │   ├── lib/                api-client, api, query-keys, hook, logic phiên học (hàm thuần)
+    │   ├── test/               setup và tiện ích cho component test
+    │   └── types/              kiểu dữ liệu khớp docs/API.md
     └── .env.local
 ```
 
@@ -167,12 +177,13 @@ Chỉ tạo module khi phase hiện tại thật sự cần. Không tạo sẵn 
 1. Người dùng gõ vào VocabularyForm (frontend/src/components/vocabulary/)
 2. React Hook Form + Zod validate phía client   ← chỉ để UX, KHÔNG thay thế backend
 3. useMutation gọi apiFetch('/vocabularies', POST)
-4. NestJS VocabularyController nhận request
+4. NestJS VocabulariesController nhận request
 5. ValidationPipe validate CreateVocabularyDto   ← đây mới là validate thật
 6. @CurrentUser() cung cấp ownerId
-7. VocabularyService:
+7. VocabulariesService:
+      - kiểm tra language / level / collection thuộc owner và cùng ngôn ngữ
       - kiểm tra từ trùng → chuẩn bị warnings
-      - prisma.$transaction: tạo Vocabulary + các dòng VocabularyCollection
+      - một lệnh create lồng nhau (= một transaction): Vocabulary + các dòng VocabularyCollection
 8. Trả 201 { ...vocabulary, warnings: [...] }
 9. onSuccess: reset form giữ lại Language/Level/Collection, focus về ô term
 10. invalidateQueries → danh sách từ vựng tự cập nhật
@@ -218,7 +229,7 @@ Core phải chạy được khi tắt hoàn toàn AI.
 
 ```
 backend/src/
-├── vocabulary/          ← core, không biết gì về AI
+├── vocabularies/        ← core, không biết gì về AI
 └── ai/                  ← (tương lai) module riêng
     ├── ai.module.ts
     ├── example-generator.service.ts
@@ -226,7 +237,7 @@ backend/src/
     └── tts.service.ts   (Amazon Polly)
 ```
 
-Cách kết nối: module `ai/` **gọi vào** `vocabulary/` để lấy dữ liệu, chứ `vocabulary/`
+Cách kết nối: module `ai/` **gọi vào** `vocabularies/` để lấy dữ liệu, chứ `vocabularies/`
 không bao giờ import từ `ai/`. Phụ thuộc chỉ đi một chiều. Nhờ vậy, xóa toàn bộ thư mục
 `ai/` không làm hỏng core.
 

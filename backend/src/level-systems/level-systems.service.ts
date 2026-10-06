@@ -146,7 +146,7 @@ export class LevelSystemsService {
     try {
       return await this.prisma.level.update({
         where: { id, levelSystem: { language: { ownerId } } },
-        data: { name: dto.name, order: dto.order },
+        data: { name: dto.name, order: dto.order ?? undefined },
       });
     } catch (error) {
       throw this.translateLevelError(error, dto.name);
@@ -180,7 +180,12 @@ export class LevelSystemsService {
     await this.prisma.$transaction(
       dto.levelIds.map((id, index) =>
         this.prisma.level.update({
-          where: { id, levelSystemId: systemId },
+          // Lọc owner ngay trong câu lệnh ghi, không chỉ dựa vào bước kiểm tra phía trên.
+          where: {
+            id,
+            levelSystemId: systemId,
+            levelSystem: { language: { ownerId } },
+          },
           data: { order: index + 1 },
         }),
       ),

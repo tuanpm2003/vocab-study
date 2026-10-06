@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { Prisma } from '../generated/prisma/client.js';
 import { LanguagesService } from '../languages/languages.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { VocabulariesService } from './vocabularies.service.js';
+import { escapeLike, VocabulariesService } from './vocabularies.service.js';
 
 const OWNER = 'owner-a';
 
@@ -117,6 +117,25 @@ describe('VocabulariesService', () => {
         { reading: contains },
         { romanization: contains },
       ]);
+    });
+
+    it('ký tự đại diện của LIKE trong chuỗi tìm kiếm được escape', async () => {
+      const backslash = String.fromCharCode(92);
+      expect(escapeLike('100%')).toBe(`100${backslash}%`);
+      expect(escapeLike('a_b')).toBe(`a${backslash}_b`);
+      expect(escapeLike(backslash)).toBe(backslash + backslash);
+      expect(escapeLike('食べる taberu')).toBe('食べる taberu');
+
+      await service.findAll(OWNER, {
+        page: 1,
+        limit: 20,
+        sort: 'createdAt:desc',
+        search: '50%',
+      });
+
+      expect(lastFindManyArgs().where['OR']).toContainEqual({
+        term: { contains: `50${backslash}%`, mode: 'insensitive' },
+      });
     });
 
     it('collectionId → lọc qua bảng nối; sort → orderBy từ whitelist + id', async () => {
