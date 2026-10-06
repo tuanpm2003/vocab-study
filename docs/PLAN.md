@@ -44,11 +44,11 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F5 | Thêm từ nhanh | 5 | §3.5 | 11 | 10 | 91% | — |
 | F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 8 | 100% | — |
 | F7 | Flashcard | 7 | §3.6 | 6 | 6 | 100% | — |
-| F8 | Trắc nghiệm | 8 | §3.6 | 4 | 0 | 0% | — |
+| F8 | Trắc nghiệm | 8 | §3.6 | 4 | 4 | 100% | — |
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **74** | **75%** | |
+| | **Tổng** | | | **99** | **78** | **79%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -230,10 +230,10 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F8-01 | `mode=multiple_choice`: mỗi câu gồm 1 đáp án đúng + 3 đáp án nhiễu cùng ngôn ngữ, không trùng nghĩa với đáp án đúng; xử lý trường hợp có ít hơn 4 từ | BE | Luôn đủ 4 lựa chọn khác nhau, hoặc báo lỗi rõ ràng khi không đủ từ | ⬜ |
-| F8-02 | Test logic sinh đáp án nhiễu, phủ **mọi nhánh** (ít từ, nghĩa trùng, cả hai kiểu câu hỏi) | Test | Tất cả pass | ⬜ |
-| F8-03 | Giao diện quiz: 4 lựa chọn (phím 1–4), báo đúng/sai ngay, hiện đáp án đúng khi chọn sai | FE | Làm hết phiên chỉ bằng bàn phím | ⬜ |
-| F8-04 | Tổng kết phiên quiz: số câu đúng/sai, danh sách từ trả lời sai | FE | Hiện đúng số liệu của phiên | ⬜ |
+| F8-01 | `mode=multiple_choice`: mỗi câu gồm 1 đáp án đúng + 3 đáp án nhiễu cùng ngôn ngữ, không trùng nghĩa với đáp án đúng; xử lý trường hợp có ít hơn 4 từ | BE | Luôn đủ 4 lựa chọn khác nhau, hoặc báo lỗi rõ ràng khi không đủ từ | ✅ |
+| F8-02 | Test logic sinh đáp án nhiễu, phủ **mọi nhánh** (ít từ, nghĩa trùng, cả hai kiểu câu hỏi) | Test | Tất cả pass | ✅ |
+| F8-03 | Giao diện quiz: 4 lựa chọn (phím 1–4), báo đúng/sai ngay, hiện đáp án đúng khi chọn sai | FE | Làm hết phiên chỉ bằng bàn phím | ✅ |
+| F8-04 | Tổng kết phiên quiz: số câu đúng/sai, danh sách từ trả lời sai | FE | Hiện đúng số liệu của phiên | ✅ |
 
 ---
 
@@ -299,6 +299,10 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F8-04 | Tổng kết quiz: đúng/sai, phần trăm, danh sách "Cần xem lại" gồm từ + nghĩa của các câu sai; 9 test frontend (35/35) |
+| 2026-10-06 | F8-03 | `QuizSession`: phím 1–4 chọn, báo đúng/sai ngay, chọn sai thì tô xanh đáp án đúng, Space/Enter sang câu; trả lời rồi không sửa được — làm hết 10 câu trên trình duyệt chỉ bằng phím |
+| 2026-10-06 | F8-02 | `multiple-choice.ts` là hàm thuần nhận nguồn ngẫu nhiên; 20 unit test phủ: ít từ (0/1/3/4 từ), trùng nghĩa, đồng tự, nhiễu trùng nhau, cả hai kiểu câu hỏi; + 8 e2e |
+| 2026-10-06 | F8-01 | `mode=multiple_choice` + `questionType` (chọn nghĩa / chọn từ): 1 đúng + 3 nhiễu cùng ngôn ngữ, bể nhiễu 60 từ/ngôn ngữ lấy bằng một truy vấn `row_number() OVER (PARTITION BY …)`; ngôn ngữ dưới 4 từ → 400 thông điệp rõ |
 | 2026-10-06 | F7-06 | 11 test: 5 cho logic hàm thuần (`flashcard-session.ts`) + 6 component test (lật, phím tắt, Again quay lại, Ctrl bị bỏ qua); frontend 26/26 |
 | 2026-10-06 | F7-05 | Màn tổng kết: số thẻ + số lần mỗi mức đánh giá, nút Học phiên mới / Chọn phạm vi khác |
 | 2026-10-06 | F7-04 | Quên/Khó/Được/Dễ bằng phím 1–4 (chỉ sau khi lật); Quên đưa thẻ về cuối hàng đợi — học hết 20 thẻ trên trình duyệt chỉ bằng phím |

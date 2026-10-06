@@ -135,16 +135,31 @@ export interface CollectionInput {
 
 export type StudyMode = "flashcard" | "multiple_choice";
 
+export type QuestionType = "term_to_meaning" | "meaning_to_term";
+
 export interface SessionParams {
   mode: StudyMode;
+  /** Chỉ dùng với mode = multiple_choice. */
+  questionType?: QuestionType;
   languageId: string;
   levelId: string;
   collectionId: string;
   limit: number;
 }
 
-export interface SessionItem {
+export interface QuizItem {
   vocabulary: Vocabulary;
+  questionType: QuestionType;
+  prompt: string;
+  choices: string[];
+  correctIndex: number;
+}
+
+/** Flashcard chỉ có `vocabulary`; trắc nghiệm có đủ các field của QuizItem. */
+export type SessionItem = Pick<QuizItem, "vocabulary"> & Partial<QuizItem>;
+
+export function isQuizItem(item: SessionItem): item is QuizItem {
+  return Array.isArray(item.choices) && typeof item.correctIndex === "number";
 }
 
 export interface Session {

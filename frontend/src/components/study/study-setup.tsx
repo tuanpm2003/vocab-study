@@ -10,15 +10,38 @@ import { Label } from "@/components/ui/label";
 import { collectionsApi, languagesApi, toQueryString } from "@/lib/api";
 import { qk } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
-import type { StudyMode } from "@/types/api";
+import type { QuestionType, StudyMode } from "@/types/api";
 
 const SIZES = [10, 20, 30, 50];
 
-const MODES: { value: StudyMode; label: string; hint: string }[] = [
+type ModeKey = "flashcard" | "quiz_meaning" | "quiz_term";
+
+const MODES: {
+  value: ModeKey;
+  label: string;
+  hint: string;
+  mode: StudyMode;
+  questionType?: QuestionType;
+}[] = [
   {
     value: "flashcard",
     label: "Flashcard",
     hint: "Lật thẻ, tự chấm mức độ nhớ",
+    mode: "flashcard",
+  },
+  {
+    value: "quiz_meaning",
+    label: "Trắc nghiệm: chọn nghĩa",
+    hint: "Thấy từ, chọn nghĩa đúng trong 4 đáp án",
+    mode: "multiple_choice",
+    questionType: "term_to_meaning",
+  },
+  {
+    value: "quiz_term",
+    label: "Trắc nghiệm: chọn từ",
+    hint: "Thấy nghĩa, chọn từ đúng trong 4 đáp án",
+    mode: "multiple_choice",
+    questionType: "meaning_to_term",
   },
 ];
 
@@ -27,7 +50,7 @@ export function StudySetup() {
   const [languageId, setLanguageId] = useState("");
   const [levelId, setLevelId] = useState("");
   const [collectionId, setCollectionId] = useState("");
-  const [mode, setMode] = useState<StudyMode>("flashcard");
+  const [mode, setMode] = useState<ModeKey>("flashcard");
   const [limit, setLimit] = useState(20);
 
   const languages = useQuery({
@@ -46,8 +69,16 @@ export function StudySetup() {
   });
 
   function start() {
+    const selected = MODES.find((option) => option.value === mode);
     router.push(
-      `/study/session?${toQueryString({ mode, languageId, levelId, collectionId, limit })}`,
+      `/study/session?${toQueryString({
+        mode: selected?.mode ?? "flashcard",
+        questionType: selected?.questionType,
+        languageId,
+        levelId,
+        collectionId,
+        limit,
+      })}`,
     );
   }
 
@@ -70,7 +101,7 @@ export function StudySetup() {
     >
       <fieldset className="grid gap-2">
         <legend className="mb-2 text-sm font-medium">Chế độ</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-3">
           {MODES.map((option) => (
             <label
               key={option.value}

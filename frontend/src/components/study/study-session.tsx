@@ -5,18 +5,26 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
-import { buttonVariants } from "@/components/ui/button";
 import { FlashcardSession } from "@/components/study/flashcard-session";
+import { QuizSession } from "@/components/study/quiz-session";
+import { buttonVariants } from "@/components/ui/button";
 import { learningApi } from "@/lib/api";
+import { ApiError } from "@/lib/api-client";
 import { qk } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
-import type { SessionParams, StudyMode } from "@/types/api";
+import { isQuizItem, type SessionParams } from "@/types/api";
 
 function parseParams(params: URLSearchParams): SessionParams {
   const limit = Number(params.get("limit"));
-  const mode: StudyMode = "flashcard";
   return {
-    mode,
+    mode:
+      params.get("mode") === "multiple_choice"
+        ? "multiple_choice"
+        : "flashcard",
+    questionType:
+      params.get("questionType") === "meaning_to_term"
+        ? "meaning_to_term"
+        : "term_to_meaning",
     languageId: params.get("languageId") ?? "",
     levelId: params.get("levelId") ?? "",
     collectionId: params.get("collectionId") ?? "",
@@ -39,6 +47,9 @@ export function StudySession() {
     gcTime: 0,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    // 400 = "chưa đủ từ để làm trắc nghiệm": thử lại cũng không khác.
+    retry: (count, e) =>
+      !(e instanceof ApiError && e.status === 400) && count < 1,
   });
 
   const backLink = (
@@ -49,8 +60,18 @@ export function StudySession() {
       Chọn phạm vi khác
     </Link>
   );
+  const restart = () => setRound((r) => r + 1);
 
   if (session.isPending) return <LoadingState rows={3} />;
+  if (session.error instanceof ApiError && session.error.status === 400) {
+    return (
+      <EmptyState
+        title="Chưa làm trắc nghiệm được"
+        description={session.error.message}
+        action={backLink}
+      />
+    );
+  }
   if (session.error) {
     return (
       <ErrorState
@@ -79,12 +100,23 @@ export function StudySession() {
     );
   }
 
+  if (params.mode === "multiple_choice") {
+    return (
+      <QuizSession
+        key={round}
+        items={session.data.items.filter(isQuizItem)}
+        onRestart={restart}
+        summaryFooter={backLink}
+      />
+    );
+  }
+
   return (
     <FlashcardSession
       // key: phiên mới = component mới, mọi state của phiên cũ bị bỏ.
       key={round}
       items={session.data.items.map((item) => item.vocabulary)}
-      onRestart={() => setRound((r) => r + 1)}
+      onRestart={restart}
       summaryFooter={backLink}
     />
   );

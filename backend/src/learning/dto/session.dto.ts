@@ -9,6 +9,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { QUESTION_TYPES, type QuestionType } from '../multiple-choice.js';
 
 export const SESSION_MODES = ['flashcard', 'multiple_choice'] as const;
 export type SessionMode = (typeof SESSION_MODES)[number];
@@ -47,4 +48,15 @@ export class SessionQueryDto extends ScopeDto {
     message: `mode phải là một trong: ${SESSION_MODES.join(', ')}`,
   })
   mode: SessionMode;
+
+  @ApiPropertyOptional({
+    enum: QUESTION_TYPES,
+    default: 'term_to_meaning',
+    description: 'Chỉ có tác dụng với mode=multiple_choice',
+  })
+  @IsOptional()
+  @IsIn(QUESTION_TYPES, {
+    message: `questionType phải là một trong: ${QUESTION_TYPES.join(', ')}`,
+  })
+  questionType: QuestionType = 'term_to_meaning';
 }

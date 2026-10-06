@@ -11,6 +11,22 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 8] — Multiple Choice — 2026-10-06
+
+### Added
+- `GET /learning/session?mode=multiple_choice&questionType=term_to_meaning|meaning_to_term`
+- `learning/multiple-choice.ts`: sinh câu hỏi 4 lựa chọn bằng hàm thuần (20 unit test)
+- `QuizSession` + tổng kết có danh sách từ trả lời sai; hai chế độ quiz trong trang `/study`
+- Test: +20 unit, +8 e2e, +9 frontend
+
+### Notes
+- Từ **đồng tự** với từ đang hỏi (行 "đi" / 行 "hàng") bị loại khỏi đáp án nhiễu: nghĩa của nó
+  cũng là một đáp án đúng.
+- Phạm vi hẹp (một bài 2 từ) vẫn làm quiz được: đáp án nhiễu lấy từ cả ngôn ngữ, không chỉ
+  từ trong phạm vi.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 7] — Flashcard — 2026-10-06
 
 ### Added
