@@ -110,7 +110,7 @@ npm run lint
 | 3000 | Next.js |
 | 4000 | NestJS |
 | 5434 | PostgreSQL dev (Docker) — KHÔNG phải 5432, xem CLAUDE.md §9 |
-| 5433 | PostgreSQL test (Docker) |
+| 5435 | PostgreSQL test (Docker) |
 | 5555 | Prisma Studio |
 
 ## Nguyên tắc làm việc

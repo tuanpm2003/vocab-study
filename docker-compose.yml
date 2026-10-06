@@ -40,8 +40,10 @@ services:
     environment:
       <<: *pg-env
       POSTGRES_DB: vocab_test
+    # 5435 (không phải 5433): máy này đã có container Postgres của một dự án khác
+    # giữ 5433. Dự án không nên buộc phải tắt dự án khác mới chạy được test.
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:5435:5432"
     # Dữ liệu test nằm trên RAM: nhanh hơn, và tự mất khi container dừng — đúng ý đồ.
     tmpfs:
       - /var/lib/postgresql/data

@@ -52,7 +52,7 @@ Cột `STATUS` của cả `vocab-postgres` và `vocab-postgres-test` phải là 
 | Container | Cổng trên máy | Dùng cho |
 |---|---|---|
 | `vocab-postgres` | **5434** | dữ liệu thật khi phát triển |
-| `vocab-postgres-test` | 5433 | e2e test — dữ liệu nằm trên RAM, mất khi dừng container |
+| `vocab-postgres-test` | 5435 | e2e test — dữ liệu nằm trên RAM, mất khi dừng container |
 
 > Cổng dev là **5434, không phải 5432** — xem mục "Xử lý sự cố".
 
@@ -119,10 +119,24 @@ sai chỗ.
 
 **Docker Desktop mở lên rồi tự tắt**
 Xem file `%LOCALAPPDATA%\Docker\backend.error.json`. Nếu lỗi nhắc tới
-`...\Docker\run\dockerInference` hoặc `userAnalyticsOtlpHttp.sock` với thông báo
-"The file cannot be accessed by the system": đó là file socket cũ bị kẹt từ lần chạy trước.
-Thoát hẳn Docker Desktop, xóa hai file trong `%LOCALAPPDATA%\Docker\run\`, rồi mở lại.
-Nếu không xóa được, khởi động lại Windows rồi thử lại.
+`...\Docker\run\dockerInference` với thông báo "The file cannot be accessed by the system":
+thủ phạm là dịch vụ **Docker Model Runner**, thứ dự án này không dùng. Nó cố mở một file socket
+cũ đang kẹt, mở không được thì kéo sập cả Docker Desktop. Cách sửa gọn nhất là tắt hẳn dịch vụ đó
+thay vì đi xóa file: mở `%APPDATA%\Docker\settings-store.json`, đổi `"EnableDockerAI": true`
+thành `false`, rồi mở lại Docker Desktop. (Tương đương với tắt **Settings → AI** trong giao diện
+Docker Desktop, nhưng làm được cả khi Docker không mở lên nổi để vào Settings.)
+
+**`docker compose up -d` báo "port is already allocated"**
+Một dịch vụ khác trên máy đang giữ cổng đó. Tìm thủ phạm:
+
+```powershell
+docker ps --format "{{.Names}}`t{{.Ports}}"
+netstat -ano | Select-String ":5435 "
+```
+
+Nếu là container của một dự án khác, **đừng tắt nó** — đổi cổng của dự án này trong
+`docker-compose.yml` và `backend/.env` sang một cổng rảnh. Dự án không nên buộc phải tắt dự án khác
+mới chạy được.
 
 **Backend dừng ngay với "Biến môi trường không hợp lệ"**
 Thiếu `backend/.env` hoặc thiếu biến. So sánh với `backend/.env.example`.

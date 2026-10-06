@@ -58,7 +58,7 @@ của E2E.
 # docker-compose.yml
 postgres-test:
   image: postgres:16-alpine
-  ports: ["5433:5432"]            # ← port KHÁC với dev (5434)
+  ports: ["5435:5432"]            # ← port KHÁC với dev (5434)
   environment:
     POSTGRES_DB: vocab_test
 ```
@@ -68,7 +68,7 @@ gán nó vào `DATABASE_URL` trước khi app khởi động, và **từ chối 
 không kết thúc bằng `_test`.
 
 ```powershell
-docker compose up -d          # cần container postgres-test (cổng 5433)
+docker compose up -d          # cần container postgres-test (cổng 5435)
 cd backend
 npm run test:e2e
 ```

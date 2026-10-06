@@ -65,12 +65,12 @@ Dùng một database **riêng**, không dùng chung với dev:
 # docker-compose.yml — service thứ hai
 postgres-test:
   image: postgres:16-alpine
-  ports: ["5433:5432"]
+  ports: ["5435:5432"]
   environment: { POSTGRES_DB: vocab_test, ... }
 ```
 
 ```powershell
-$env:DATABASE_URL = "postgresql://...@localhost:5433/vocab_test"
+$env:DATABASE_URL = "postgresql://...@localhost:5435/vocab_test"
 npx prisma migrate deploy
 npm run test:e2e
 ```
@@ -149,4 +149,4 @@ cd frontend; npm run test
 | Test chỉ chạy happy path rồi tuyên bố "đã test" | Dùng checklist trường hợp biên ở trên |
 | **Sửa code nguồn để test xanh** | Test fail nghĩa là có bug hoặc test sai — xác định rõ cái nào trước khi sửa |
 | Mock quá sâu tới mức test không còn kiểm chứng gì | Nếu test chỉ xác nhận "mock đã được gọi", nó không có giá trị |
-| Test dùng database dev | Dùng DB test riêng ở port 5433 |
+| Test dùng database dev | Dùng DB test riêng ở port 5435 |

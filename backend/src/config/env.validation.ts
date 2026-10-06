@@ -25,7 +25,9 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   DATABASE_URL: string;
 
-  @IsUrl({ require_tld: false })
+  // require_protocol: trình duyệt gửi Origin kèm "http://". Thiếu nó, CORS so khớp
+  // không bao giờ trúng và lỗi chỉ lộ ra ở trình duyệt, rất khó lần ngược.
+  @IsUrl({ require_tld: false, require_protocol: true })
   CORS_ORIGIN: string;
 
   @IsString()

@@ -36,7 +36,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 
 | # | Chức năng | Phase | Yêu cầu | Task | Xong | Tiến độ | Gate |
 |---|---|:---:|---|:---:|:---:|:---:|:---:|
-| F0 | Nền tảng dự án | 1 | §4 | 13 | 7 | 54% | — |
+| F0 | Nền tảng dự án | 1 | §4 | 13 | 13 | 100% | — |
 | F1 | Quản lý ngôn ngữ | 2 | §3.1 | 14 | 0 | 0% | — |
 | F2 | Hệ thống level | 3 | §3.2 | 7 | 0 | 0% | — |
 | F3 | Collection | 3 | §3.3 | 7 | 0 | 0% | — |
@@ -48,7 +48,7 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **7** | **7%** | |
+| | **Tổng** | | | **99** | **13** | **13%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -62,28 +62,28 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
 | F0-01 | `git init`, `.gitignore` (node_modules, .env, dist, .next), commit tài liệu Phase 0 | Infra | `git log` có commit đầu tiên; `git check-ignore backend/.env` xác nhận `.env` bị bỏ qua | ✅ |
-| F0-02 | `docker-compose.yml`: Postgres dev (5434 — 5432 đã bị PostgreSQL 18 cài sẵn chiếm) + test (5433), bind `127.0.0.1`, có volume | Infra | `docker compose ps` cho thấy cả hai container healthy | ⬜ |
+| F0-02 | `docker-compose.yml`: Postgres dev (5434 — 5432 đã bị PostgreSQL 18 cài sẵn chiếm) + test (5435), bind `127.0.0.1`, có volume | Infra | `docker compose ps` cho thấy cả hai container healthy | ✅ |
 | F0-03 | Khởi tạo NestJS trong `backend/`, TypeScript strict | BE | `npm run start:dev` chạy, `http://localhost:4000` phản hồi | ✅ |
 | F0-04 | `ConfigModule` + `.env` / `.env.example` (`DATABASE_URL`, `PORT`, `LOCAL_OWNER_ID`, `CORS_ORIGIN`) | BE | App đọc cấu hình từ env; grep không thấy secret nào trong `src/` | ✅ |
 | F0-05 | `ValidationPipe` toàn cục (`whitelist`, `forbidNonWhitelisted`, `transform`), CORS cho `localhost:3000`, Swagger | BE | Swagger UI mở được tại `/api` | ✅ |
-| F0-06 | Cài Prisma, `PrismaModule` + `PrismaService` (có shutdown hook) | DB | `npx prisma validate` pass; app kết nối được DB khi khởi động | ⬜ |
-| F0-07 | `GET /health` kiểm tra kết nối DB bằng `SELECT 1` | BE | Trả 200 `{status:"ok", database:"connected"}`; tắt Docker → trả 503 | ⬜ |
-| F0-08 | Cấu hình Vitest cho unit + e2e (e2e dùng DB test 5433, có chốt chặn không cho chạy nhầm vào DB dev) — ADR-009 | Test | `npm run test` và `npm run test:e2e` đều chạy, test `/health` pass | ⬜ |
+| F0-06 | Cài Prisma, `PrismaModule` + `PrismaService` (có shutdown hook) | DB | `npx prisma validate` pass; app kết nối được DB khi khởi động | ✅ |
+| F0-07 | `GET /health` kiểm tra kết nối DB bằng `SELECT 1` | BE | Trả 200 `{status:"ok", database:"connected"}`; tắt Docker → trả 503 | ✅ |
+| F0-08 | Cấu hình Vitest cho unit + e2e (e2e dùng DB test 5435, có chốt chặn không cho chạy nhầm vào DB dev) — ADR-009 | Test | `npm run test` và `npm run test:e2e` đều chạy, test `/health` pass | ✅ |
 | F0-09 | Khởi tạo Next.js trong `frontend/` (App Router, TS strict, Tailwind) | FE | `npm run dev` chạy tại `http://localhost:3000` | ✅ |
 | F0-10 | shadcn/ui + TanStack Query provider + `lib/api-client.ts` (`ApiError`) + `.env.local.example` | FE | Build pass; `apiFetch` gọi được backend | ✅ |
-| F0-11 | Walking skeleton: trang chủ gọi `/health` và hiển thị trạng thái | FE | Trình duyệt hiện "Backend: ok · DB: connected"; tắt backend → hiện thông báo lỗi dễ hiểu | ⬜ |
+| F0-11 | Walking skeleton: trang chủ gọi `/health` và hiển thị trạng thái | FE | Trình duyệt hiện "Backend: ok · DB: connected"; tắt backend → hiện thông báo lỗi dễ hiểu | ✅ |
 | F0-12 | Linter + Prettier: backend oxlint, frontend ESLint (ADR-009); `no-floating-promises` và `no-explicit-any` = error | Infra | `npm run lint` pass ở cả `backend/` và `frontend/` | ✅ |
-| F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | Làm theo README trên một thư mục clone mới → app chạy được | ⬜ |
+| F0-13 | README: hướng dẫn cài đặt từ đầu | Docs | Làm theo README trên một thư mục clone mới → app chạy được | ✅ |
 
-> **⛔ Đang bị chặn bởi Docker (2026-09-19).** Docker Desktop sập ngay khi mở do file socket cũ
-> trong `%LOCALAPPDATA%\Docker\run\` (cách sửa: README → "Xử lý sự cố"). Code của các task dưới đây
-> **đã viết xong**, chỉ còn bước kiểm chứng cần database:
-> - **F0-02** — `docker compose up -d`, cả hai container `healthy`
-> - **F0-06** — backend log `Kết nối database: OK` khi khởi động
-> - **F0-07** — `/health` trả 200 (nhánh 503 đã kiểm chứng)
-> - **F0-08** — `npm run test:e2e` pass (unit test đã pass; chốt chặn `_test` đã kiểm chứng)
-> - **F0-11** — trang chủ hiện "Backend: ok · DB: connected" (2 trạng thái lỗi đã kiểm chứng)
-> - **F0-13** — bước `docker compose` trong README (các bước còn lại kiểm chứng trên bản clone mới)
+> **Docker đã gỡ được (2026-09-21).** Nguyên nhân thật không phải file socket kẹt mà là dịch vụ
+> Docker Model Runner: đặt `"EnableDockerAI": false` trong `%APPDATA%\Docker\settings-store.json`
+> là Docker khởi động bình thường (README → "Xử lý sự cố"). Cổng DB test đổi 5433 → **5435**
+> vì container Postgres của một dự án khác đang giữ 5433.
+>
+> **Còn lại của Phase 1:**
+> - ~~F0-08~~ ✅ — đã sửa `TEST_DATABASE_URL` trong `backend/.env` sang `5435`; unit 2/2, e2e 1/1 pass
+> - ~~F0-13~~ ✅ — README đã kiểm chứng trên bản clone mới
+> - Phase 1 còn chờ: `/phase-verify` (G1–G4) và G5 (bạn tự chạy app, tự đọc code), rồi `/phase-close 1`
 
 ---
 
@@ -299,6 +299,12 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-09-21 | F0-13 | Clone mới vào thư mục tạm, làm đúng 3 bước README: compose healthy, `npm install` tự sinh Prisma Client, `/health` ok·connected, Swagger 200, trang chủ "Backend: ok · DB: connected". Chạy ở cổng 4001/3001 bằng biến môi trường vì server dev của bạn đang giữ 4000/3000 |
+| 2026-09-21 | F0-08 | Sửa `TEST_DATABASE_URL` trong `backend/.env` 5433 → 5435 (trước đó e2e trả 503); `npm run test` 2/2 pass, `npm run test:e2e` 1/1 pass |
+| 2026-09-21 | F0-11 | Trang `/` hiện "Backend: ok · DB: connected" trên trình duyệt thật (2 trạng thái lỗi đã kiểm chứng trước đó) |
+| 2026-09-21 | F0-07 | `GET /health` → 200 `{status:"ok",database:"connected"}`; Swagger `/api` → 200 (nhánh 503 đã kiểm chứng trước đó) |
+| 2026-09-21 | F0-06 | `npx prisma validate` pass; backend khởi động log `[PrismaService] Kết nối database: OK` |
+| 2026-09-21 | F0-02 | Gỡ Docker bằng cách tắt `EnableDockerAI` (không phải xóa socket); đổi cổng DB test 5433 → **5435** vì container Postgres của dự án khác đang giữ 5433; cả hai container healthy |
 | 2026-09-19 | F0-12 | backend oxlint + frontend ESLint (type-aware); no-explicit-any & no-floating-promises = error, đã chứng minh bắt lỗi bằng file thử; Prettier + format:check cả hai |
 | 2026-09-19 | F0-10 | shadcn/ui (base-nova) + TanStack Query + apiFetch/ApiError; gọi /health qua CORS thành công; sửa lỗi font --font-sans tự tham chiếu |
 | 2026-09-19 | F0-09 | Next.js 16.3.5 (App Router, TS strict, Tailwind 4) chạy ở 3000; tắt agentRules; bỏ .gitignore của Next (nuốt .env.*.example) |

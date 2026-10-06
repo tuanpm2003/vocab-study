@@ -17,6 +17,7 @@ Ký hiệu: ⬜ chưa làm · 🔄 đang làm · ✅ xong · ⏸️ hoãn có ch
 | ESLint 9 đã hết hỗ trợ (`npm warn deprecated eslint@9`), nhưng `eslint-config-next@16` vẫn ghim `^9` | Phase 1 | Khi `eslint-config-next` hỗ trợ ESLint 10 — nâng cả hai cùng lúc |
 | Backend dùng nháy đơn, frontend dùng nháy kép (mỗi bên theo mặc định của framework) | Phase 1 | Chỉ đồng bộ nếu gây khó chịu thật; không ảnh hưởng hành vi |
 | Prisma CLI `latest` trỏ tới `8.0.0-rc` — đang ghim `7.10.0` (ADR-009) | Phase 1 | Khi Prisma 8 ổn định — nâng CLI và client cùng lúc, có kế hoạch riêng |
+| `npm install` ở `backend/` báo 4 lỗ hổng mức high (`npm audit`), frontend 0 | Phase 1 (F0-13) | G4 của `/phase-verify` Phase 1 đánh giá; không chạy `npm audit fix --force` mù
 | Trang `/` hiện là walking skeleton (kiểm tra `/health`) | Phase 1 | F10-04 thay bằng Dashboard; có thể giữ khối health ở góc trang |
 
 ---
