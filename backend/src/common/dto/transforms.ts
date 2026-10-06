@@ -11,3 +11,12 @@ export function emptyToNull({ value }: TransformFnParams): unknown {
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
 }
+
+/**
+ * Trả lại giá trị GỐC client gửi, bỏ qua bước ép kiểu ngầm của ValidationPipe.
+ * Bắt buộc cho field boolean: `enableImplicitConversion` ép `Boolean("false")` thành `true`
+ * TRƯỚC khi @IsBoolean chạy, nên chuỗi "false" hay "yes" lọt qua và bị hiểu là true.
+ */
+export function rawValue({ obj, key }: TransformFnParams): unknown {
+  return (obj as Record<string, unknown>)[key];
+}

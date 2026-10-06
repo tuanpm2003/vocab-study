@@ -4,7 +4,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { toQueryString } from "@/lib/api";
 import {
+  LEARNING_STATUSES,
   VOCABULARY_SORTS,
+  type LearningStatus,
   type VocabularyQuery,
   type VocabularySort,
 } from "@/types/api";
@@ -14,6 +16,10 @@ const DEFAULT_SORT: VocabularySort = "createdAt:desc";
 
 function parseSort(value: string | null): VocabularySort {
   return VOCABULARY_SORTS.find((sort) => sort === value) ?? DEFAULT_SORT;
+}
+
+function parseStatus(value: string | null): LearningStatus | "" {
+  return LEARNING_STATUSES.find((status) => status === value) ?? "";
 }
 
 function parsePage(value: string | null): number {
@@ -41,6 +47,7 @@ export function useVocabularyQuery(fixed: Partial<VocabularyQuery> = {}) {
       languageId: params.get("languageId") ?? "",
       levelId: params.get("levelId") ?? "",
       collectionId: params.get("collectionId") ?? "",
+      status: parseStatus(params.get("status")),
       sort: parseSort(params.get("sort")),
       ...(JSON.parse(fixedKey) as Partial<VocabularyQuery>),
     }),
@@ -57,6 +64,7 @@ export function useVocabularyQuery(fixed: Partial<VocabularyQuery> = {}) {
         languageId: "languageId" in locked ? "" : next.languageId,
         levelId: "levelId" in locked ? "" : next.levelId,
         collectionId: "collectionId" in locked ? "" : next.collectionId,
+        status: next.status,
         // Giá trị mặc định không cần nằm trên URL.
         sort: next.sort === DEFAULT_SORT ? "" : next.sort,
         page: next.page === 1 ? "" : next.page,

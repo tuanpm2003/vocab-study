@@ -172,7 +172,8 @@ Xóa Collection **không** xóa từ vựng — chỉ xóa các dòng trong bả
       { "id": "clx7", "name": "Lesson 3" },
       { "id": "clx8", "name": "Food" }
     ],
-    "progress": { "status": "LEARNING", "reviewCount": 8 },
+    "progress": { "status": "LEARNING", "reviewCount": 8, "correctCount": 6,
+                  "incorrectCount": 2, "lastReviewedAt": "..." },
     "createdAt": "...", "updatedAt": "..."
   }],
   "total": 253, "page": 1, "limit": 20, "totalPages": 13
@@ -221,28 +222,31 @@ lại), phải nằm trong `$transaction` — nếu xóa xong mà thêm lỗi, t
 
 ### ✅ `GET /learning/session` *(flashcard: Phase 7 · multiple_choice: Phase 8)*
 **Mục đích:** lấy bộ từ cho một phiên học.
-**Query:** `mode` (`flashcard|multiple_choice`), `languageId`, `levelId`, `collectionId`,
-`limit` (mặc định 20)
+**Query:** `mode` (`flashcard|multiple_choice`), `questionType`
+(`term_to_meaning|meaning_to_term`, chỉ cho trắc nghiệm), `languageId`, `levelId`,
+`collectionId`, `limit` (1-100, mặc định 20)
 
 **200** — với `multiple_choice`, backend sinh sẵn đáp án nhiễu:
 ```json
 { "items": [{
     "vocabulary": { "id": "clx9", "term": "食べる", "meaning": "to eat", "reading": "たべる" },
-    "choices": ["Ăn", "Uống", "Ngủ", "Đi"],
+    "questionType": "term_to_meaning", "prompt": "食べる",
+    "choices": ["Uống", "Ăn", "Ngủ", "Đi"],
     "correctIndex": 1
   }] }
 ```
 Sinh đáp án nhiễu ở **backend**, không ở frontend — nếu làm ở frontend thì phải tải toàn
 bộ từ vựng về máy client, vi phạm yêu cầu "không load toàn bộ database lên frontend".
 
-### ⬜ `POST /learning/review`
+### ✅ `POST /learning/review`
 **Body:**
 ```json
 { "vocabularyId": "clx9", "mode": "FLASHCARD", "rating": "GOOD", "isCorrect": null }
 ```
-`rating` cho flashcard, `isCorrect` cho quiz. Đúng một trong hai phải có.
+`rating` cho flashcard, `isCorrect` cho quiz. Đúng một trong hai phải có, và phải khớp
+với `mode` — sai thì **400**. Từ không tồn tại → **404**. Quy tắc tính trạng thái: ADR-010.
 
-**201** → `LearningProgress` sau khi cập nhật.
+**201** → `{ vocabularyId, status, reviewCount, correctCount, incorrectCount, lastReviewedAt }`
 
 Backend làm trong một `$transaction`:
 1. Tạo một dòng `ReviewLog`
@@ -250,8 +254,11 @@ Backend làm trong một `$transaction`:
 3. Cập nhật `reviewCount`, `correctCount`/`incorrectCount`, `lastReviewedAt`, `status`
 4. *(Phase 11)* tính `dueAt`, `intervalDays`, `easeFactor` theo thuật toán SRS
 
-### ⬜ `GET /learning/due`
-**Query:** `languageId`, `limit`
+### ✅ `GET /learning/due`
+**Query:** `languageId`, `levelId`, `collectionId`, `limit` (1-100, mặc định 20)
+**200** → `{ items: [{ vocabulary }], total }` — cùng shape với phiên flashcard, thêm `total`
+là tổng số từ cần ôn trong phạm vi.
+
 MVP: trả từ có `status` ∈ `NEW | LEARNING`, sắp theo `lastReviewedAt` tăng dần (lâu nhất trước).
 Phase 11: đổi thành lọc `dueAt <= now()`. **Contract không đổi** — chỉ logic bên trong đổi.
 

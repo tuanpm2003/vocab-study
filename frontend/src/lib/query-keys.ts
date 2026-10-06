@@ -11,6 +11,10 @@ export const qk = {
   vocabularies: ["vocabularies"] as const,
   vocabularyList: (query: object) => ["vocabularies", "list", query] as const,
   vocabulary: (id: string) => ["vocabularies", "detail", id] as const,
+  // Gốc "study-session" tách hẳn khỏi "learning": ghi một lần ôn sẽ invalidate "learning",
+  // và bộ thẻ của phiên đang học tuyệt đối không được refetch theo.
   session: (params: object, round: number) =>
-    ["learning", "session", params, round] as const,
+    ["study-session", params, round] as const,
+  learning: ["learning"] as const,
+  dueCount: ["learning", "due-count"] as const,
 };

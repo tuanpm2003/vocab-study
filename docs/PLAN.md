@@ -45,10 +45,10 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F6 | Danh sách, tìm kiếm, lọc | 6 | §3.9 | 8 | 8 | 100% | — |
 | F7 | Flashcard | 7 | §3.6 | 6 | 6 | 100% | — |
 | F8 | Trắc nghiệm | 8 | §3.6 | 4 | 4 | 100% | — |
-| F9 | Learning Progress | 9 | §3.7 | 9 | 0 | 0% | — |
+| F9 | Learning Progress | 9 | §3.7 | 9 | 9 | 100% | — |
 | F10 | Dashboard | 10 | §3.8 | 5 | 0 | 0% | — |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 0 | 0% | — |
-| | **Tổng** | | | **99** | **78** | **79%** | |
+| | **Tổng** | | | **99** | **87** | **88%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -244,15 +244,15 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 | ID | Task | Tầng | Xong khi | TT |
 |---|---|---|---|:---:|
-| F9-01 | Chốt quy tắc chuyển trạng thái `NEW → LEARNING → REVIEW → MASTERED` và ghi thành ADR **trước khi code** | Docs | Có ADR trong DECISIONS.md, bạn đã duyệt | ⬜ |
-| F9-02 | Model `LearningProgress` (tạo sẵn các cột SRS nhưng để trống) + `ReviewLog` + enum + migration | DB | Migration chạy; Prisma Studio thấy hai bảng | ⬜ |
-| F9-03 | `POST /learning/review`: trong một transaction, ghi `ReviewLog` + upsert `LearningProgress` + cập nhật bộ đếm + trạng thái | BE | Ôn một từ → một dòng log mới, bộ đếm tăng đúng | ⬜ |
-| F9-04 | Test: bộ đếm, lần ôn đầu tạo progress mới, mọi nhánh chuyển trạng thái, `ownerId` | Test | Tất cả pass | ⬜ |
-| F9-05 | Nối Flashcard và Quiz với `/learning/review` (gửi ngầm, không bắt người dùng chờ) | FE | Học xong một phiên → Prisma Studio có đủ số dòng `ReviewLog` | ⬜ |
-| F9-06 | `GET /learning/due` (MVP: trạng thái NEW/LEARNING, từ lâu chưa ôn nhất lên trước) | BE | Trả đúng danh sách; có test | ⬜ |
-| F9-07 | Nút **Review Due Words** trên thanh điều hướng mở phiên flashcard với các từ cần ôn | FE | Một lần bấm là bắt đầu ôn | ⬜ |
-| F9-08 | Hiện tiến độ ở danh sách và trang chi tiết từ (nhãn trạng thái, số lần ôn/đúng/sai, lần ôn cuối) | FE | Số liệu khớp với database | ⬜ |
-| F9-09 | Bật bộ lọc **Status** trong danh sách từ vựng (F6) | FE+BE | Lọc `status=LEARNING` ra đúng từ | ⬜ |
+| F9-01 | Chốt quy tắc chuyển trạng thái `NEW → LEARNING → REVIEW → MASTERED` và ghi thành ADR **trước khi code** | Docs | Có ADR trong DECISIONS.md, bạn đã duyệt | ✅ |
+| F9-02 | Model `LearningProgress` (tạo sẵn các cột SRS nhưng để trống) + `ReviewLog` + enum + migration | DB | Migration chạy; Prisma Studio thấy hai bảng | ✅ |
+| F9-03 | `POST /learning/review`: trong một transaction, ghi `ReviewLog` + upsert `LearningProgress` + cập nhật bộ đếm + trạng thái | BE | Ôn một từ → một dòng log mới, bộ đếm tăng đúng | ✅ |
+| F9-04 | Test: bộ đếm, lần ôn đầu tạo progress mới, mọi nhánh chuyển trạng thái, `ownerId` | Test | Tất cả pass | ✅ |
+| F9-05 | Nối Flashcard và Quiz với `/learning/review` (gửi ngầm, không bắt người dùng chờ) | FE | Học xong một phiên → Prisma Studio có đủ số dòng `ReviewLog` | ✅ |
+| F9-06 | `GET /learning/due` (MVP: trạng thái NEW/LEARNING, từ lâu chưa ôn nhất lên trước) | BE | Trả đúng danh sách; có test | ✅ |
+| F9-07 | Nút **Review Due Words** trên thanh điều hướng mở phiên flashcard với các từ cần ôn | FE | Một lần bấm là bắt đầu ôn | ✅ |
+| F9-08 | Hiện tiến độ ở danh sách và trang chi tiết từ (nhãn trạng thái, số lần ôn/đúng/sai, lần ôn cuối) | FE | Số liệu khớp với database | ✅ |
+| F9-09 | Bật bộ lọc **Status** trong danh sách từ vựng (F6) | FE+BE | Lọc `status=LEARNING` ra đúng từ | ✅ |
 
 ---
 
@@ -299,6 +299,15 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-06 | F9-09 | `GET /vocabularies?status=` + dropdown "Lọc theo trạng thái" (lưu trên URL); `?status=LEARNING` ra đúng 2 từ vừa ôn |
+| 2026-10-06 | F9-08 | Danh sách hiện nhãn trạng thái + "N lần · đúng · sai"; trang sửa từ có khối Tiến độ (trạng thái, số lần, đúng/sai, lần ôn cuối) — khớp database |
+| 2026-10-06 | F9-07 | Nút **Ôn tập** trên thanh điều hướng → `/study/session?source=due` mở thẳng phiên flashcard các từ cần ôn (một lần bấm) |
+| 2026-10-06 | F9-06 | `GET /learning/due`: NEW (kể cả chưa có dòng tiến độ) + LEARNING, chưa ôn lần nào trước rồi tới ôn lâu nhất; trả kèm `total`; có e2e |
+| 2026-10-06 | F9-05 | Flashcard và Quiz gọi `/learning/review` qua `useReviewRecorder` (không await, lỗi báo toast một lần); phiên 3 thẻ trên trình duyệt → 4 request review, database khớp |
+| 2026-10-06 | F9-04 | `progress-rules.ts` là hàm thuần, 28 unit test phủ bộ đếm, chuỗi, mọi nhánh thăng/tụt; + 27 e2e. Test bắt được bug: `isCorrect: "yes"` bị ValidationPipe ép ngầm thành true → sửa bằng `rawValue` (áp dụng cả `isDefault`) |
+| 2026-10-06 | F9-03 | `POST /learning/review`: một transaction ghi `ReviewLog` + upsert `LearningProgress`; e2e: ôn 4 lần → 4 dòng log, một dòng tiến độ, bộ đếm 4/2/2 |
+| 2026-10-06 | F9-02 | Model `LearningProgress` (4 cột SRS để trống + cột mới `correctStreak`) + `ReviewLog` + 3 enum; migration `add_learning_progress_review_log` |
+| 2026-10-06 | F9-01 | ADR-010: chuyển trạng thái theo chuỗi đúng liên tiếp (2 → REVIEW, 5 → MASTERED, sai tụt một bậc). Quyết định bởi Claude Code theo ủy quyền "tự ra quyết định" ngày 2026-10-06 — chủ dự án nên đọc lại khi nghiệm thu |
 | 2026-10-06 | F8-04 | Tổng kết quiz: đúng/sai, phần trăm, danh sách "Cần xem lại" gồm từ + nghĩa của các câu sai; 9 test frontend (35/35) |
 | 2026-10-06 | F8-03 | `QuizSession`: phím 1–4 chọn, báo đúng/sai ngay, chọn sai thì tô xanh đáp án đúng, Space/Enter sang câu; trả lời rồi không sửa được — làm hết 10 câu trên trình duyệt chỉ bằng phím |
 | 2026-10-06 | F8-02 | `multiple-choice.ts` là hàm thuần nhận nguồn ngẫu nhiên; 20 unit test phủ: ít từ (0/1/3/4 từ), trùng nghĩa, đồng tự, nhiễu trùng nhau, cả hai kiểu câu hỏi; + 8 e2e |

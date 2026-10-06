@@ -109,6 +109,8 @@ describe('Level systems & levels (e2e)', () => {
         .send({ name: 'X', levels: [{ order: 1 }] })
         .expect(400);
       await api().post(url).send({ name: 'X', languageId: 'y' }).expect(400);
+      // chuỗi "false" không được ngầm hiểu thành true
+      await api().post(url).send({ name: 'X', isDefault: 'false' }).expect(400);
     });
 
     it('ngôn ngữ không tồn tại hoặc của owner khác → 404', async () => {

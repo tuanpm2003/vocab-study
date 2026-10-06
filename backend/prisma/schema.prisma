@@ -108,6 +108,9 @@ model Vocabulary {
   language    Language               @relation(fields: [languageId], references: [id], onDelete: Cascade)
   level       Level?                 @relation(fields: [levelId], references: [id], onDelete: SetNull)
   collections VocabularyCollection[]
+  // 1-1: mỗi từ có nhiều nhất một dòng tiến độ. Chưa có dòng nào = chưa ôn lần nào = NEW.
+  progress    LearningProgress?
+  reviewLogs  ReviewLog[]
 
   @@index([ownerId, languageId])
   // KHÔNG unique: từ đồng tự khác nghĩa là hợp lệ (行 = đi / hàng). Xem DATABASE.md §6.
@@ -126,4 +129,71 @@ model VocabularyCollection {
 
   @@id([vocabularyId, collectionId])
   @@index([collectionId])
+}
+
+enum LearningStatus {
+  NEW
+  LEARNING
+  REVIEW
+  MASTERED
+}
+
+enum ReviewMode {
+  FLASHCARD
+  MULTIPLE_CHOICE
+}
+
+enum ReviewRating {
+  AGAIN
+  HARD
+  GOOD
+  EASY
+}
+
+// Tách khỏi Vocabulary vì là hai loại dữ liệu khác bản chất: Vocabulary là KIẾN THỨC
+// (không đổi), LearningProgress là TRẢI NGHIỆM của người học (đổi sau mỗi lần ôn).
+model LearningProgress {
+  id             String         @id @default(cuid())
+  ownerId        String
+  // @unique → quan hệ 1-1. Phase 12 đổi thành @@unique([vocabularyId, ownerId]) là thành 1-N.
+  vocabularyId   String         @unique
+  status         LearningStatus @default(NEW)
+  reviewCount    Int            @default(0)
+  correctCount   Int            @default(0)
+  incorrectCount Int            @default(0)
+  // Số lần trả lời đúng liên tiếp — cơ sở chuyển trạng thái ở MVP (ADR-010).
+  correctStreak  Int            @default(0)
+  lastReviewedAt DateTime?
+
+  // --- Bốn cột dưới đây MVP KHÔNG đọc, KHÔNG ghi (ADR-007). Dành cho thuật toán SRS ở Phase 11. ---
+  dueAt        DateTime?
+  intervalDays Int       @default(0)
+  easeFactor   Float     @default(2.5)
+  repetitions  Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vocabulary Vocabulary @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, status])
+  @@index([ownerId, dueAt])
+}
+
+// Một dòng cho MỖI lần trả lời. LearningProgress chỉ giữ tổng tích lũy, từ đó không thể
+// biết "hôm nay đúng bao nhiêu câu" — Dashboard cần bảng này.
+model ReviewLog {
+  id           String        @id @default(cuid())
+  ownerId      String
+  vocabularyId String
+  mode         ReviewMode
+  rating       ReviewRating?
+  // Luôn có giá trị; với flashcard được suy ra từ rating (ADR-010).
+  isCorrect    Boolean
+  reviewedAt   DateTime      @default(now())
+
+  vocabulary Vocabulary @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, reviewedAt])
+  @@index([vocabularyId])
 }

@@ -11,12 +11,19 @@ import { buttonVariants } from "@/components/ui/button";
 import { learningApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { qk } from "@/lib/query-keys";
+import { useReviewRecorder } from "@/lib/use-review-recorder";
 import { cn } from "@/lib/utils";
-import { isQuizItem, type SessionParams } from "@/types/api";
+import { isQuizItem, type Session, type SessionParams } from "@/types/api";
 
-function parseParams(params: URLSearchParams): SessionParams {
+type Source = "scope" | "due";
+
+function parseParams(params: URLSearchParams): SessionParams & {
+  source: Source;
+} {
   const limit = Number(params.get("limit"));
   return {
+    // source=due: "Review Due Words" — luôn là flashcard trên các từ cần ôn.
+    source: params.get("source") === "due" ? "due" : "scope",
     mode:
       params.get("mode") === "multiple_choice"
         ? "multiple_choice"
@@ -34,13 +41,21 @@ function parseParams(params: URLSearchParams): SessionParams {
 
 export function StudySession() {
   const searchParams = useSearchParams();
-  const params = parseParams(searchParams);
-  // Tăng `round` = xin một bộ từ ngẫu nhiên mới cho cùng phạm vi.
+  const { source, ...params } = parseParams(searchParams);
+  const isDue = source === "due";
+  // Tăng `round` = xin một bộ từ mới cho cùng phạm vi.
   const [round, setRound] = useState(0);
+  const record = useReviewRecorder();
 
-  const session = useQuery({
-    queryKey: qk.session(params, round),
-    queryFn: () => learningApi.session(params),
+  const session = useQuery<Session>({
+    queryKey: qk.session({ source, ...params }, round),
+    queryFn: () =>
+      isDue
+        ? learningApi.due({
+            languageId: params.languageId,
+            limit: params.limit,
+          })
+        : learningApi.session(params),
     // Bộ thẻ của một phiên phải ĐỨNG YÊN: backend trả thứ tự ngẫu nhiên, nên bất kỳ lần
     // refetch nào (quay lại tab, mạng chập chờn) cũng sẽ đổi thẻ ngay giữa phiên.
     staleTime: Infinity,
@@ -57,7 +72,7 @@ export function StudySession() {
       href="/study"
       className={cn(buttonVariants({ variant: "outline" }), "h-11 px-5")}
     >
-      Chọn phạm vi khác
+      {isDue ? "Học phạm vi khác" : "Chọn phạm vi khác"}
     </Link>
   );
   const restart = () => setRound((r) => r + 1);
@@ -81,7 +96,13 @@ export function StudySession() {
     );
   }
   if (session.data.items.length === 0) {
-    return (
+    return isDue ? (
+      <EmptyState
+        title="Không còn từ nào cần ôn"
+        description="Mọi từ đều đã qua mức “Đang học”. Thêm từ mới, hoặc học lại một phạm vi bất kỳ."
+        action={backLink}
+      />
+    ) : (
       <EmptyState
         title="Không có từ nào trong phạm vi này"
         description="Thêm từ vào bài học, hoặc chọn một phạm vi rộng hơn."
@@ -100,11 +121,18 @@ export function StudySession() {
     );
   }
 
-  if (params.mode === "multiple_choice") {
+  if (!isDue && params.mode === "multiple_choice") {
     return (
       <QuizSession
         key={round}
         items={session.data.items.filter(isQuizItem)}
+        onAnswer={(vocabulary, isCorrect) =>
+          record({
+            vocabularyId: vocabulary.id,
+            mode: "MULTIPLE_CHOICE",
+            isCorrect,
+          })
+        }
         onRestart={restart}
         summaryFooter={backLink}
       />
@@ -116,6 +144,9 @@ export function StudySession() {
       // key: phiên mới = component mới, mọi state của phiên cũ bị bỏ.
       key={round}
       items={session.data.items.map((item) => item.vocabulary)}
+      onReview={(vocabulary, rating) =>
+        record({ vocabularyId: vocabulary.id, mode: "FLASHCARD", rating })
+      }
       onRestart={restart}
       summaryFooter={backLink}
     />

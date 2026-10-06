@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ErrorState, LoadingState, NotFoundState } from "@/components/states";
 import { buttonVariants } from "@/components/ui/button";
+import { StatusBadge } from "@/components/vocabulary/status-badge";
 import { VocabularyForm } from "@/components/vocabulary/vocabulary-form";
 import { vocabulariesApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
@@ -46,7 +47,39 @@ export function VocabularyEdit({ id }: { id: string }) {
       >
         <ChevronLeft className="size-4" aria-hidden /> Từ vựng
       </Link>
-      <h1 className="mt-2 mb-4 text-2xl font-semibold">Sửa từ</h1>
+      <h1 className="mt-2 mb-3 text-2xl font-semibold">Sửa từ</h1>
+      <dl
+        aria-label="Tiến độ học"
+        className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border bg-muted/30 px-3 py-2 text-sm"
+      >
+        <div className="flex items-center gap-2">
+          <dt className="text-muted-foreground">Trạng thái</dt>
+          <dd>
+            <StatusBadge progress={data.progress} />
+          </dd>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <dt className="text-muted-foreground">Đã ôn</dt>
+          <dd className="font-medium">{data.progress.reviewCount} lần</dd>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <dt className="text-muted-foreground">Đúng / sai</dt>
+          <dd className="font-medium">
+            {data.progress.correctCount} / {data.progress.incorrectCount}
+          </dd>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <dt className="text-muted-foreground">Lần ôn cuối</dt>
+          <dd className="font-medium">
+            {data.progress.lastReviewedAt
+              ? new Date(data.progress.lastReviewedAt).toLocaleString("vi-VN", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })
+              : "chưa ôn"}
+          </dd>
+        </div>
+      </dl>
       {/* key theo updatedAt: sau khi lưu, form được dựng lại từ dữ liệu mới nhất. */}
       <VocabularyForm
         key={data.updatedAt}

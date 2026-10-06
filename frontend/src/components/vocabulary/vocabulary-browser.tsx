@@ -15,12 +15,20 @@ import { NativeSelect } from "@/components/native-select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { StatusBadge } from "@/components/vocabulary/status-badge";
 import { SearchInput } from "@/components/vocabulary/search-input";
 import { collectionsApi, languagesApi, vocabulariesApi } from "@/lib/api";
+import { STATUS_LABELS } from "@/lib/learning-status";
 import { qk } from "@/lib/query-keys";
 import { useVocabularyQuery } from "@/lib/use-vocabulary-query";
 import { cn } from "@/lib/utils";
-import type { Vocabulary, VocabularyQuery, VocabularySort } from "@/types/api";
+import {
+  LEARNING_STATUSES,
+  type LearningStatus,
+  type Vocabulary,
+  type VocabularyQuery,
+  type VocabularySort,
+} from "@/types/api";
 
 const SORT_LABELS: Record<VocabularySort, string> = {
   "createdAt:desc": "Mới thêm trước",
@@ -61,7 +69,8 @@ function RowActions({
 
 function Tags({ vocabulary }: { vocabulary: Vocabulary }) {
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap items-center gap-1">
+      <StatusBadge progress={vocabulary.progress} showCounts />
       {vocabulary.level && (
         <Badge variant="outline">{vocabulary.level.name}</Badge>
       )}
@@ -148,6 +157,7 @@ export function VocabularyBrowser({
 
   const hasFilters =
     query.search !== "" ||
+    query.status !== "" ||
     (showScopeFilters &&
       (query.languageId !== "" ||
         query.levelId !== "" ||
@@ -159,8 +169,8 @@ export function VocabularyBrowser({
         className={cn(
           "grid gap-2",
           showScopeFilters
-            ? "sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]"
-            : "sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
+            ? "sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(5,minmax(0,1fr))]"
+            : "sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]",
         )}
       >
         <SearchInput
@@ -222,6 +232,20 @@ export function VocabularyBrowser({
           </>
         )}
         <NativeSelect
+          aria-label="Lọc theo trạng thái"
+          value={query.status}
+          onChange={(e) =>
+            update({ status: e.target.value as LearningStatus | "" })
+          }
+        >
+          <option value="">Mọi trạng thái</option>
+          {LEARNING_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {STATUS_LABELS[status]}
+            </option>
+          ))}
+        </NativeSelect>
+        <NativeSelect
           aria-label="Sắp xếp"
           value={query.sort}
           onChange={(e) => update({ sort: e.target.value as VocabularySort })}
@@ -260,6 +284,7 @@ export function VocabularyBrowser({
               onClick={() =>
                 update({
                   search: "",
+                  status: "",
                   languageId: "",
                   levelId: "",
                   collectionId: "",
@@ -309,7 +334,9 @@ export function VocabularyBrowser({
                 <tr>
                   <th className="px-3 py-2 font-medium">Từ</th>
                   <th className="px-3 py-2 font-medium">Nghĩa</th>
-                  <th className="px-3 py-2 font-medium">Level · Bài học</th>
+                  <th className="px-3 py-2 font-medium">
+                    Tiến độ · Level · Bài học
+                  </th>
                   <th className="px-3 py-2">
                     <span className="sr-only">Hành động</span>
                   </th>

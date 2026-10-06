@@ -389,3 +389,68 @@ hai thứ khớp nhau tự nhiên thay vì phải nối qua lớp tương thích
 ### Khi nào nên xem lại
 Khi Prisma CLI có bản 8 ổn định (tag `latest` trỏ về bản không phải RC) — lúc đó nâng cả
 hai gói cùng lúc, có kế hoạch riêng.
+
+---
+
+## ADR-010 — Quy tắc chuyển trạng thái học: chuỗi trả lời đúng liên tiếp
+
+- **Ngày:** 2026-10-06 · **Trạng thái:** Accepted · **Phase:** 9
+- **Người quyết định:** Claude Code, theo ủy quyền "tự ra quyết định" của chủ dự án
+  (2026-10-06). Chủ dự án nên đọc lại mục này khi nghiệm thu (F11).
+
+### Bối cảnh
+MVP cần bốn trạng thái `NEW → LEARNING → REVIEW → MASTERED` nhưng **chưa** có Spaced
+Repetition (ADR-007). Cần một quy tắc đủ đơn giản để giải thích bằng một câu, đủ đúng để
+"Review Due Words" chọn ra những từ thật sự chưa thuộc.
+
+### Các phương án đã cân nhắc
+1. **Theo tỷ lệ đúng tích lũy** (`correctCount / reviewCount`). Nhược: không hạ cấp được —
+   một từ đã đúng 20 lần thì sai 5 lần liền vẫn "MASTERED". Tỷ lệ tích lũy nhớ quá khứ quá lâu.
+2. **Theo số lần đúng tích lũy** (đúng 3 lần → REVIEW, 6 lần → MASTERED). Cùng nhược điểm,
+   và trả lời sai không có hậu quả gì.
+3. **Theo chuỗi trả lời đúng liên tiếp** (`correctStreak`), sai thì chuỗi về 0 và tụt một bậc.
+4. **Dùng luôn cột `repetitions` của SM-2** làm chuỗi. Nhược: vi phạm ADR-007 (MVP không
+   đọc/ghi cột SRS) và trói Phase 11 vào ý nghĩa mà MVP đã tự gán.
+
+### Quyết định
+Phương án 3, với **một cột mới `correctStreak`** trên `LearningProgress`.
+
+**Bước 1 — mỗi lần ôn quy về đúng/sai và cập nhật chuỗi:**
+
+| Nguồn | Kết quả | `correctStreak` |
+|---|---|---|
+| Flashcard `AGAIN` | sai | về 0 |
+| Flashcard `HARD` | đúng | giữ nguyên (nhớ ra nhưng chật vật: chưa tiến bộ) |
+| Flashcard `GOOD` | đúng | +1 |
+| Flashcard `EASY` | đúng | +2 |
+| Quiz đúng | đúng | +1 |
+| Quiz sai | sai | về 0 |
+
+**Bước 2 — trạng thái mới:**
+- **Sai:** tụt đúng một bậc — `MASTERED → REVIEW`, `REVIEW → LEARNING`, còn lại là `LEARNING`.
+- **Đúng:** mức theo chuỗi là `MASTERED` nếu chuỗi ≥ 5, `REVIEW` nếu ≥ 2, ngược lại
+  `LEARNING`. Trạng thái mới = mức **cao hơn** giữa trạng thái hiện tại và mức theo chuỗi
+  (trả lời đúng không bao giờ làm tụt bậc).
+- Từ chưa ôn lần nào là `NEW`; lần ôn đầu tiên luôn đưa nó ra khỏi `NEW`.
+
+Toàn bộ là một **hàm thuần** `applyReview()` trong `backend/src/learning/progress-rules.ts`.
+
+### Lý do
+Chuỗi liên tiếp phản ánh **trí nhớ hiện tại**, không phải lịch sử: quên là thấy ngay. Quy
+tắc giải thích được trong một câu ("đúng 2 lần liền thì sang Ôn tập, 5 lần liền thì Thuộc;
+sai thì tụt một bậc"). Tụt **một** bậc thay vì về thẳng `LEARNING` để một lần bấm nhầm
+không xóa công sức nhiều tuần.
+
+### Hệ quả
+**Tích cực:** quy tắc nằm trọn trong một hàm, test phủ mọi nhánh; Phase 11 thay hàm này
+bằng SM-2/FSRS mà **không đổi contract** của `POST /learning/review`.
+**Cái giá phải trả:** thêm một cột ngoài thiết kế Phase 0 (`correctStreak`). Ngưỡng 2 và 5
+là phán đoán, chưa dựa trên dữ liệu — không có khái niệm thời gian, nên 5 lần đúng trong
+5 phút cũng thành `MASTERED`.
+**`ReviewLog.isCorrect` luôn được ghi** (với flashcard: suy ra từ `rating`), khác với ghi chú
+"chỉ cho quiz" ở DATABASE.md bản Phase 0 — để Dashboard đếm đúng/sai bằng một cột duy nhất.
+
+### Khi nào nên xem lại
+Phase 11. Khi có thuật toán SRS thật, `status` nên được suy ra từ `intervalDays`, và
+`correctStreak` có thể bỏ. Xem lại sớm hơn nếu sau 1–2 tuần dùng thật (F11-05) thấy từ lên
+`MASTERED` quá nhanh.

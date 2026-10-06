@@ -1,3 +1,4 @@
+import { NEW_PROGRESS } from "@/test/factories";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -112,6 +113,7 @@ function saved(term: string, extra: Partial<CreatedVocabulary> = {}) {
     language: { id: "ja", name: "Japanese", code: "ja" },
     level: null,
     collections: [],
+    progress: NEW_PROGRESS,
     ...stamp,
     ...extra,
   } satisfies CreatedVocabulary;

@@ -21,7 +21,7 @@ const PRIMARY_ACTIONS: PrimaryAction[] = [
     href: "/study/session?source=due",
     label: "Ôn tập",
     icon: RotateCcw,
-    available: false,
+    available: true,
   },
 ];
 

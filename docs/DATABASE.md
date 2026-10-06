@@ -204,6 +204,7 @@ Ví dụ `extra`:
 | `vocabularyId` | String `@unique` | `@unique` → quan hệ 1-1 |
 | `status` | Enum `NEW \| LEARNING \| REVIEW \| MASTERED` `@default(NEW)` | |
 | `reviewCount`, `correctCount`, `incorrectCount` | Int `@default(0)` | |
+| `correctStreak` | Int `@default(0)` | Số lần đúng liên tiếp — cơ sở chuyển trạng thái (ADR-010). *Thêm ở Phase 9* |
 | `lastReviewedAt` | DateTime? | |
 | — **các cột dưới đây MVP KHÔNG dùng** — | | |
 | `dueAt` | DateTime? | Phase 11 |
@@ -224,7 +225,7 @@ trả về giá trị mới — và **không cần migration nào** trên dữ l
 | `id`, `ownerId`, `vocabularyId` | String | |
 | `mode` | Enum `FLASHCARD \| MULTIPLE_CHOICE` | |
 | `rating` | Enum `AGAIN \| HARD \| GOOD \| EASY`? | Cho flashcard |
-| `isCorrect` | Boolean? | Cho quiz |
+| `isCorrect` | Boolean | **Luôn có.** Quiz: client gửi. Flashcard: suy từ `rating` (`AGAIN` = sai) — ADR-010 |
 | `reviewedAt` | DateTime `@default(now())` | |
 
 Index: `@@index([ownerId, reviewedAt])`, `@@index([vocabularyId])`

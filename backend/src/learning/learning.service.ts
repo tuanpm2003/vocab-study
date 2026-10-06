@@ -1,4 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import type { LearningStatus } from '../generated/prisma/enums.js';
+import type { ReviewDto } from './dto/review.dto.js';
+import {
+  applyReview,
+  INITIAL_PROGRESS,
+  isCorrectReview,
+  type ReviewInput,
+} from './progress-rules.js';
 import {
   buildQuestion,
   CHOICE_COUNT,
@@ -11,6 +23,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import {
   toVocabularyResponse,
   vocabularyInclude,
+  whereStatusIn,
   type VocabularyResponse,
 } from '../vocabularies/vocabularies.service.js';
 import type { ScopeDto, SessionQueryDto } from './dto/session.dto.js';
@@ -26,6 +39,40 @@ export type SessionItem = {
 
 export interface SessionResponse {
   items: SessionItem[];
+}
+
+export interface DueResponse extends SessionResponse {
+  /** Tổng số từ cần ôn trong phạm vi (không chỉ `limit` từ được trả về). */
+  total: number;
+}
+
+export interface ProgressResponse {
+  vocabularyId: string;
+  status: LearningStatus;
+  reviewCount: number;
+  correctCount: number;
+  incorrectCount: number;
+  lastReviewedAt: Date | null;
+}
+
+export const DUE_STATUSES: LearningStatus[] = ['NEW', 'LEARNING'];
+
+/** `rating` cho flashcard, `isCorrect` cho quiz — đúng một trong hai, khớp với `mode`. */
+function toReviewInput(dto: ReviewDto): ReviewInput {
+  if (dto.mode === 'FLASHCARD') {
+    if (dto.rating === undefined || dto.isCorrect !== undefined) {
+      throw new BadRequestException(
+        'mode FLASHCARD cần rating và không nhận isCorrect',
+      );
+    }
+    return { rating: dto.rating };
+  }
+  if (dto.isCorrect === undefined || dto.rating !== undefined) {
+    throw new BadRequestException(
+      'mode MULTIPLE_CHOICE cần isCorrect và không nhận rating',
+    );
+  }
+  return { isCorrect: dto.isCorrect };
 }
 
 @Injectable()
@@ -47,6 +94,94 @@ export class LearningService {
         vocabularies,
         query.questionType,
       ),
+    };
+  }
+
+  /**
+   * Ghi nhận MỘT lần trả lời. Ba việc trong một transaction — hoặc cả ba, hoặc không gì:
+   * thêm dòng ReviewLog, tạo/cập nhật LearningProgress, tính trạng thái mới (ADR-010).
+   */
+  async review(ownerId: string, dto: ReviewDto): Promise<ProgressResponse> {
+    const input = toReviewInput(dto);
+    const vocabulary = await this.prisma.vocabulary.findFirst({
+      where: { id: dto.vocabularyId, ownerId },
+      select: { id: true },
+    });
+    if (!vocabulary) {
+      throw new NotFoundException(
+        `Không tìm thấy từ vựng với id ${dto.vocabularyId}`,
+      );
+    }
+
+    const now = new Date();
+    return this.prisma.$transaction(async (tx) => {
+      const current = await tx.learningProgress.findFirst({
+        where: { vocabularyId: vocabulary.id, ownerId },
+      });
+      const next = applyReview(current ?? INITIAL_PROGRESS, input);
+
+      await tx.reviewLog.create({
+        data: {
+          ownerId,
+          vocabularyId: vocabulary.id,
+          mode: dto.mode,
+          rating: dto.rating ?? null,
+          isCorrect: isCorrectReview(input),
+          reviewedAt: now,
+        },
+      });
+      // upsert: lần ôn đầu tiên của một từ chính là lúc dòng tiến độ của nó ra đời.
+      const saved = await tx.learningProgress.upsert({
+        where: { vocabularyId: vocabulary.id },
+        create: {
+          ownerId,
+          vocabularyId: vocabulary.id,
+          ...next,
+          lastReviewedAt: now,
+        },
+        update: { ...next, lastReviewedAt: now },
+      });
+      return {
+        vocabularyId: saved.vocabularyId,
+        status: saved.status,
+        reviewCount: saved.reviewCount,
+        correctCount: saved.correctCount,
+        incorrectCount: saved.incorrectCount,
+        lastReviewedAt: saved.lastReviewedAt,
+      };
+    });
+  }
+
+  /**
+   * Từ cần ôn. MVP: trạng thái NEW hoặc LEARNING, từ lâu chưa ôn nhất lên trước (từ chưa
+   * ôn lần nào đứng đầu). Phase 11 đổi thành `dueAt <= now()` — contract giữ nguyên.
+   */
+  async getDue(ownerId: string, scope: ScopeDto): Promise<DueResponse> {
+    const where: Prisma.VocabularyWhereInput = {
+      ownerId,
+      languageId: scope.languageId,
+      levelId: scope.levelId,
+      ...(scope.collectionId && {
+        collections: { some: { collectionId: scope.collectionId } },
+      }),
+      AND: [whereStatusIn(DUE_STATUSES)],
+    };
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.vocabulary.findMany({
+        where,
+        include: vocabularyInclude,
+        orderBy: [
+          { progress: { lastReviewedAt: { sort: 'asc', nulls: 'first' } } },
+          { createdAt: 'asc' },
+          { id: 'asc' },
+        ],
+        take: scope.limit,
+      }),
+      this.prisma.vocabulary.count({ where }),
+    ]);
+    return {
+      items: rows.map((row) => ({ vocabulary: toVocabularyResponse(row) })),
+      total,
     };
   }
 

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { paginate, type Paginated } from '../common/dto/pagination.dto.js';
 import { Prisma } from '../generated/prisma/client.js';
+import type { LearningStatus } from '../generated/prisma/enums.js';
 import { LanguagesService } from '../languages/languages.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
@@ -23,7 +24,31 @@ export const vocabularyInclude = {
     select: { collection: { select: { id: true, name: true } } },
     orderBy: { addedAt: 'asc' },
   },
+  progress: {
+    select: {
+      status: true,
+      reviewCount: true,
+      correctCount: true,
+      incorrectCount: true,
+      lastReviewedAt: true,
+    },
+  },
 } satisfies Prisma.VocabularyInclude;
+
+/**
+ * Từ chưa ôn lần nào KHÔNG có dòng LearningProgress, nhưng với người dùng nó là "NEW".
+ * Mọi chỗ lọc theo trạng thái phải đi qua hàm này để hai cách biểu diễn NEW luôn khớp nhau.
+ */
+export function whereStatusIn(
+  statuses: LearningStatus[],
+): Prisma.VocabularyWhereInput {
+  const hasProgress: Prisma.VocabularyWhereInput = {
+    progress: { status: { in: statuses } },
+  };
+  return statuses.includes('NEW')
+    ? { OR: [{ progress: null }, hasProgress] }
+    : hasProgress;
+}
 
 export type VocabularyRow = Prisma.VocabularyGetPayload<{
   include: typeof vocabularyInclude;
@@ -61,6 +86,14 @@ export function toVocabularyResponse(row: VocabularyRow) {
     language: row.language,
     level: row.level,
     collections: row.collections.map((link) => link.collection),
+    // Luôn có giá trị: client không phải phân biệt "chưa có dòng tiến độ" với "NEW".
+    progress: row.progress ?? {
+      status: 'NEW' as const,
+      reviewCount: 0,
+      correctCount: 0,
+      incorrectCount: 0,
+      lastReviewedAt: null,
+    },
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -102,6 +135,10 @@ export class VocabulariesService {
         { reading: contains },
         { romanization: contains },
       ];
+    }
+    if (query.status) {
+      // AND riêng, không gộp vào OR của search: NEW cũng cần một OR của chính nó.
+      where.AND = [whereStatusIn([query.status])];
     }
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.vocabulary.findMany({

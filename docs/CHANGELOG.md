@@ -11,6 +11,32 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 9] — Learning Progress & Review Log — 2026-10-06
+
+### Added
+- ADR-010: quy tắc chuyển trạng thái theo chuỗi trả lời đúng liên tiếp
+- Model `LearningProgress`, `ReviewLog` + enum; migration
+- `POST /learning/review` (transaction), `GET /learning/due`
+- `progress` trong mọi response từ vựng; `GET /vocabularies?status=`
+- Frontend: ghi kết quả ôn ngầm (`useReviewRecorder`), nút **Ôn tập**, nhãn trạng thái,
+  bộ lọc trạng thái, khối Tiến độ ở trang sửa từ
+- Test: +28 unit, +27 e2e
+
+### Changed
+- `LearningProgress` có thêm cột `correctStreak` (ngoài thiết kế Phase 0 — xem ADR-010)
+- `ReviewLog.isCorrect` luôn được ghi, kể cả với flashcard (suy từ `rating`)
+
+### Fixed
+- **Ép kiểu boolean ngầm:** `enableImplicitConversion` biến chuỗi `"false"`/`"yes"` thành
+  `true` trước khi `@IsBoolean` chạy. Field boolean trong body (`isCorrect`, `isDefault`) nay
+  dùng `@Transform(rawValue)` để validate giá trị gốc.
+
+### Notes
+- Query key của phiên học nằm ở gốc `study-session`, tách khỏi `learning`: ghi một lần ôn
+  invalidate `learning`, và bộ thẻ đang học không được refetch theo.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⊘
+
 ## [Phase 8] — Multiple Choice — 2026-10-06
 
 ### Added

@@ -1,8 +1,10 @@
 // Logic của một phiên flashcard, viết thành hàm thuần (không React, không API):
 // vào một state, ra một state mới. Nhờ vậy test được mọi nhánh mà không cần render gì.
 
-export const RATINGS = ["AGAIN", "HARD", "GOOD", "EASY"] as const;
-export type Rating = (typeof RATINGS)[number];
+import type { Rating } from "@/types/api";
+
+export type { Rating };
+export const RATINGS: readonly Rating[] = ["AGAIN", "HARD", "GOOD", "EASY"];
 
 export interface FlashcardState<T> {
   /** Thẻ đang học là queue[0]. */

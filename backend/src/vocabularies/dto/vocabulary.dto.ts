@@ -9,6 +9,7 @@ import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
+  IsEnum,
   IsIn,
   IsNotEmpty,
   IsObject,
@@ -18,6 +19,7 @@ import {
 } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto.js';
 import { emptyToNull, trimString } from '../../common/dto/transforms.js';
+import { LearningStatus } from '../../generated/prisma/enums.js';
 import { MaxJsonBytes } from '../../common/validators/max-json-bytes.validator.js';
 
 export const EXTRA_MAX_BYTES = 4096;
@@ -147,6 +149,14 @@ export class QueryVocabularyDto extends PaginationDto {
   @IsString()
   @IsNotEmpty()
   collectionId?: string;
+
+  @ApiPropertyOptional({
+    enum: LearningStatus,
+    description: 'NEW gồm cả từ chưa ôn lần nào',
+  })
+  @IsOptional()
+  @IsEnum(LearningStatus)
+  status?: LearningStatus;
 
   @ApiPropertyOptional({ enum: VOCABULARY_SORTS, default: 'createdAt:desc' })
   @IsOptional()

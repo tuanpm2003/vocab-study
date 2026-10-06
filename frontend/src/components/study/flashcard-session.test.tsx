@@ -1,3 +1,4 @@
+import { NEW_PROGRESS } from "@/test/factories";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -25,6 +26,7 @@ function vocab(term: string, extra: Partial<Vocabulary> = {}): Vocabulary {
     language: { id: "ja", name: "Japanese", code: "ja" },
     level: null,
     collections: [],
+    progress: NEW_PROGRESS,
     createdAt: "2026-10-06",
     updatedAt: "2026-10-06",
     ...extra,

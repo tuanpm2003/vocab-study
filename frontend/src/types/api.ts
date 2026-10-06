@@ -68,6 +68,22 @@ export interface Collection {
   updatedAt: string;
 }
 
+export const LEARNING_STATUSES = [
+  "NEW",
+  "LEARNING",
+  "REVIEW",
+  "MASTERED",
+] as const;
+export type LearningStatus = (typeof LEARNING_STATUSES)[number];
+
+export interface Progress {
+  status: LearningStatus;
+  reviewCount: number;
+  correctCount: number;
+  incorrectCount: number;
+  lastReviewedAt: string | null;
+}
+
 export interface Vocabulary {
   id: string;
   term: string;
@@ -81,6 +97,8 @@ export interface Vocabulary {
   language: NamedRef & { code: string | null };
   level: NamedRef | null;
   collections: NamedRef[];
+  /** Luôn có: từ chưa ôn lần nào là NEW với mọi bộ đếm bằng 0. */
+  progress: Progress;
   createdAt: string;
   updatedAt: string;
 }
@@ -122,6 +140,8 @@ export interface VocabularyQuery {
   languageId: string;
   levelId: string;
   collectionId: string;
+  /** "" = mọi trạng thái. */
+  status: LearningStatus | "";
   sort: VocabularySort;
 }
 
@@ -165,3 +185,14 @@ export function isQuizItem(item: SessionItem): item is QuizItem {
 export interface Session {
   items: SessionItem[];
 }
+
+export interface DueSession extends Session {
+  /** Tổng số từ cần ôn trong phạm vi, không chỉ số từ của phiên này. */
+  total: number;
+}
+
+export type Rating = "AGAIN" | "HARD" | "GOOD" | "EASY";
+
+export type ReviewInput =
+  | { vocabularyId: string; mode: "FLASHCARD"; rating: Rating }
+  | { vocabularyId: string; mode: "MULTIPLE_CHOICE"; isCorrect: boolean };

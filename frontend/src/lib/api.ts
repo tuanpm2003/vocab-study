@@ -10,6 +10,9 @@ import type {
   LevelSystemInput,
   Paginated,
   CreatedVocabulary,
+  DueSession,
+  Progress,
+  ReviewInput,
   Session,
   SessionParams,
   Vocabulary,
@@ -94,6 +97,13 @@ export const vocabulariesApi = {
 };
 
 export const learningApi = {
+  due: (params: { languageId?: string; limit: number }) =>
+    apiFetch<DueSession>(`/learning/due?${toQueryString(params)}`),
+  review: (input: ReviewInput) =>
+    apiFetch<Progress & { vocabularyId: string }>(
+      "/learning/review",
+      json("POST", input),
+    ),
   session: (params: SessionParams) =>
     apiFetch<Session>(`/learning/session?${toQueryString({ ...params })}`),
 };

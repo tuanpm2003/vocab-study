@@ -1,3 +1,4 @@
+import { NEW_PROGRESS } from "@/test/factories";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -31,6 +32,7 @@ function item(
       language: { id: "ja", name: "Japanese", code: "ja" },
       level: null,
       collections: [],
+      progress: NEW_PROGRESS,
       createdAt: "2026-10-06",
       updatedAt: "2026-10-06",
     },

@@ -14,7 +14,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { trimString } from '../../common/dto/transforms.js';
+import { rawValue, trimString } from '../../common/dto/transforms.js';
 
 export class CreateLevelDto {
   @ApiProperty({ example: 'N5', maxLength: 50 })
@@ -43,6 +43,7 @@ export class CreateLevelSystemDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(rawValue)
   @IsBoolean()
   isDefault?: boolean;
 
@@ -69,6 +70,7 @@ export class UpdateLevelSystemDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(rawValue)
   @IsBoolean()
   isDefault?: boolean;
 }
