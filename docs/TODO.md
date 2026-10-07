@@ -37,7 +37,6 @@ Những thứ **cố ý không làm**, kèm điều kiện để xem lại:
 | Mục | Lý do hoãn | Xem lại khi |
 |---|---|---|
 | Bảng `Tag` | `Collection` đã làm được việc của tag | Dùng app vài tháng vẫn thấy thiếu |
-| Bảng `User` | MVP một người dùng | Phase 12 |
 | Monorepo tooling (Turborepo / workspaces) | Solo dev, chỉ 2 app | Khi cần chia sẻ nhiều code giữa FE và BE |
 | API versioning (`/v1/`) | Không có client ngoài tầm kiểm soát | Phase 13, nếu app thành công khai |
 | E2E test (Playwright) | Chậm, hay vỡ vặt; G5 đã thay thế phần lớn | Sau MVP |
@@ -53,11 +52,18 @@ Những thứ **cố ý không làm**, kèm điều kiện để xem lại:
 Danh sách này do Quality Gate G4 sinh ra và bổ sung dần. **Phải xong hết trước khi app
 có URL công khai.** Chi tiết ở skill `security-checklist`.
 
-- [ ] Authentication thật (Phase 12) — **không deploy app không có auth ra internet**
-- [ ] `ownerId` trở thành khóa ngoại thật tới bảng `User`
+- [x] Authentication thật (Phase 12, ADR-013) — xong 2026-10-07
+- [x] `ownerId` trở thành khóa ngoại thật tới bảng `User` — xong 2026-10-07
 - [ ] `helmet` + HTTP security header
-- [ ] Rate limiting (`@nestjs/throttler`)
-- [ ] HTTPS bắt buộc + HSTS
+- [ ] Rate limiting cho **toàn bộ** API (`@nestjs/throttler` hiện mới gắn ở `/auth/login` và `/auth/register`); sau reverse proxy phải cấu hình `trust proxy` để giới hạn theo IP thật
+- [ ] HTTPS bắt buộc + HSTS — cookie phiên chỉ có cờ `secure` khi `NODE_ENV=production`
+- [ ] **Tạo tài khoản của mình TRƯỚC khi app có URL công khai**, rồi đặt `REGISTRATION_ENABLED=false`: nếu dòng giữ chỗ dữ liệu cũ chưa được nhận, người lạ đầu tiên đăng ký sẽ lấy toàn bộ dữ liệu
+- [ ] `JWT_SECRET` thật, lưu ở Secrets Manager; `NODE_ENV=production` phải được đặt (nếu không, backend chạy với khóa tạm và cookie không `secure`)
+- [ ] Quên mật khẩu / đổi mật khẩu / xác minh email; thu hồi phiên (refresh token hoặc bảng Session)
+- [ ] Chống dò mật khẩu **theo tài khoản**, không chỉ theo IP: 10 lần/phút/IP vẫn là 14.400 lần đoán mỗi ngày. Thêm giới hạn theo email (ví dụ 5 lần sai / 15 phút, tăng dần) và bộ đếm dùng chung giữa các instance (hiện nằm trong RAM)
+- [ ] `trust proxy` đúng số hop của CloudFront/ALB: chưa đặt thì mọi request cùng một IP (một người khóa đăng nhập của tất cả); đặt bừa thì giả `X-Forwarded-For` là né được
+- [ ] Đổi tên cookie thành `__Host-access_token` để subdomain khác không ghi đè được
+- [ ] Đặt lại mật khẩu bằng một lệnh CLI thay cho cách sửa tay trong Prisma Studio (README → "Quên mật khẩu")
 - [ ] Mật khẩu DB mạnh, lưu ở Secrets Manager
 - [ ] RDS trong private subnet, Security Group chỉ cho phép ECS task
 - [ ] CORS giới hạn đúng domain production

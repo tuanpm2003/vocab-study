@@ -24,6 +24,18 @@ Ký hiệu: ⬜ chưa làm · ✅ đã implement và có test
 Mọi endpoint đều **ngầm định lọc theo `ownerId`** lấy từ `@CurrentUser()`.
 Client không gửi và không thấy `ownerId`.
 
+**Từ Phase 12 mọi endpoint đều cần đăng nhập**, trừ `GET /health` và ba endpoint
+`/auth/register`, `/auth/login`, `/auth/logout`. Phiên đăng nhập là một cookie `httpOnly` tên
+`access_token` — trình duyệt tự gửi kèm, JavaScript không đọc được. Frontend phải gọi `fetch`
+với `credentials: "include"`. Không có cookie hợp lệ → **401** `"Bạn cần đăng nhập"`.
+`ownerId` chính là `id` của người đang đăng nhập.
+
+**Chống CSRF** — áp cho mọi request không phải GET/HEAD/OPTIONS:
+- có header `Origin` khác `CORS_ORIGIN` → **403** `"Request từ nguồn không được phép"`;
+- có body mà `Content-Type` không phải `application/json` → **415**.
+
+Client không phải trình duyệt (curl, script) không gửi `Origin` nên không bị ảnh hưởng.
+
 ---
 
 ## Health — Phase 1
@@ -36,6 +48,39 @@ Kiểm tra app sống và database kết nối được. Cần cho health check 
 { "status": "ok", "database": "connected", "timestamp": "2026-09-18T10:00:00.000Z" }
 ```
 **503** khi không kết nối được database.
+
+---
+
+## Auth — Phase 12
+
+Thiết kế và lý do: ADR-013.
+
+### ✅ `POST /auth/register` *(công khai, giới hạn tần suất)*
+**Body:** `{ "email": string, "password": string (8–128), "displayName"?: string (≤50) | null }`
+
+**201** → đặt cookie phiên và trả:
+```json
+{ "user": { "id": "clx…", "email": "ban@example.com", "displayName": null, "createdAt": "…" },
+  "claimedExistingData": false }
+```
+`claimedExistingData: true` khi đây là tài khoản đầu tiên và nó vừa nhận dữ liệu có từ trước
+khi app có đăng nhập. Việc nhận chỉ xảy ra khi backend nghe trên loopback (máy local). Token **không bao giờ** nằm trong body.
+
+**400** email/mật khẩu không hợp lệ hoặc có field lạ · **403** đăng ký đang tắt
+(`REGISTRATION_ENABLED=false`) · **409** email đã đăng ký · **429** quá giới hạn tần suất
+
+### ✅ `POST /auth/login` *(công khai, giới hạn tần suất)*
+**Body:** `{ "email": string, "password": string }`
+**200** → đặt cookie phiên, trả cùng shape với register.
+**401** `"Email hoặc mật khẩu không đúng"` — cùng một thông điệp cho email không tồn tại và
+mật khẩu sai. **429** quá `AUTH_RATE_LIMIT_PER_MINUTE` lần/phút từ một IP.
+
+### ✅ `POST /auth/logout` *(công khai)*
+**204**, xóa cookie. Luôn thành công, kể cả khi chưa đăng nhập.
+
+### ✅ `GET /auth/me`
+**200** → `{ id, email, displayName, createdAt }` · **401** chưa đăng nhập, phiên hết hạn, hoặc
+tài khoản đã bị xóa.
 
 ---
 

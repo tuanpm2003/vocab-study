@@ -230,3 +230,16 @@ export interface Stats {
   dueCount: number;
   streak: number;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  displayName: string | null;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  /** Đăng ký này vừa nhận dữ liệu có từ trước khi app có đăng nhập (ADR-013). */
+  claimedExistingData: boolean;
+}

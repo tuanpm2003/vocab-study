@@ -244,7 +244,30 @@ Xuất hiện ở **Phase 9**, không phải Phase 1.
 
 ---
 
+### User *(Phase 12)*
+| Cột | Kiểu | Ghi chú |
+|---|---|---|
+| `id` | String `@id` `@default(cuid())` | Chính là `ownerId` của mọi bảng dữ liệu |
+| `email` | String? `@unique` | Chữ thường, đã cắt khoảng trắng. `null` chỉ ở dòng giữ chỗ |
+| `passwordHash` | String? | `scrypt$<salt>$<hash>` — không bao giờ lưu mật khẩu gốc. `null` chỉ ở dòng giữ chỗ |
+| `displayName` | String? | |
+| `createdAt` / `updatedAt` | DateTime | |
+
+**Dòng giữ chỗ:** database đã có dữ liệu trước Phase 12 chứa đúng một dòng `User` có
+`id = LOCAL_OWNER_ID`, `email` và `passwordHash` đều `null`. Nó tồn tại để khóa ngoại của dữ
+liệu cũ có chỗ trỏ tới. Tài khoản đầu tiên đăng ký sẽ điền email + mật khẩu vào chính dòng
+này (ADR-013). Mọi tài khoản thật đều có đủ hai cột.
+
+`Language`, `Vocabulary`, `LearningProgress`, `ReviewLog` có khóa ngoại
+`ownerId → User.id` với `onDelete: Cascade`: xóa một `User` là xóa sạch dữ liệu của người đó.
+
+---
+
 ## 5. `ownerId` — chuẩn bị cho multi-user
+
+> **Đã thực hiện ở Phase 12 (2026-10-07).** Phần dưới đây giữ nguyên như lúc thiết kế để thấy
+> lời hứa và kết quả: bảng `User` + bốn khóa ngoại + thay guard — **không một chữ ký service
+> nào phải sửa**.
 
 MVP **không có bảng `User`**. Nhưng `Language`, `Vocabulary`, `LearningProgress`,
 `ReviewLog` đều có cột `ownerId` (String, **chưa có khóa ngoại**), lấy từ
@@ -283,7 +306,6 @@ Thay vào đó: **index** `@@index([languageId, term])` để tra cứu nhanh, v
 
 | Entity | Lý do |
 |---|---|
-| `User` | Xem mục 5 |
 | `Tag` | `Collection` đã làm được việc của tag. Tag và Collection khác nhau về ý niệm nhưng **giống hệt nhau về cấu trúc dữ liệu**. Thêm sau nếu dùng vài tháng vẫn thấy thiếu |
 | `Topic` | Chính là `Collection` với `kind = TOPIC`, `levelId = null` |
 
@@ -297,7 +319,7 @@ Thay vào đó: **index** `@@index([languageId, term])` để tra cứu nhanh, v
 | 3 | `LevelSystem`, `Level`, `Collection` |
 | 4 | `Vocabulary`, `VocabularyCollection` |
 | 9 | `LearningProgress`, `ReviewLog` |
-| 12 | `User` + khóa ngoại cho mọi `ownerId` |
+| 12 | `User` + khóa ngoại cho mọi `ownerId` ✅ |
 
 **Không tạo trước bảng của phase sau.** Bảng rỗng không dùng đến chỉ làm schema khó đọc
 và tạo ảo giác rằng tính năng đó đã có.

@@ -46,6 +46,15 @@ export function saveContext(context: VocabularyContext): void {
   }
 }
 
+/** Gọi khi đăng xuất / đăng nhập: ngữ cảnh chứa id dữ liệu của tài khoản vừa dùng máy này. */
+export function clearContext(): void {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // localStorage bị chặn thì cũng không có gì để xóa.
+  }
+}
+
 /** Ngữ cảnh truyền qua URL — ví dụ bấm "Thêm từ" từ trang một bài học. */
 export function contextFromParams(
   params: URLSearchParams,

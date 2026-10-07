@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './helpers/app.js';
 import type { App } from 'supertest/types';
 import { dayRange } from '../src/learning/time-zone.js';
 import type { StatsResponse } from '../src/learning/stats.service.js';
@@ -15,7 +15,7 @@ describe('GET /learning/stats (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let fx: StudyFixture;
-  const api = () => request(app.getHttpServer());
+  const api = () => authed(app);
 
   async function stats(): Promise<StatsResponse> {
     const res = await api().get('/learning/stats').expect(200);

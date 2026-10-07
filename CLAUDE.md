@@ -151,7 +151,7 @@ Quy tắc: field cần **search/filter/sort** → cột thật; field chỉ đ�
 | 9 | Learning Progress + ReviewLog | ✅ |
 | 10 | Dashboard | ✅ |
 | 11 | Spaced Repetition — SM-2 (ADR-012) | ✅ |
-| 12 | Authentication (multi-user) | ⬜ |
+| 12 | Authentication — JWT trong cookie httpOnly (ADR-013) | ✅ |
 | 13 | AWS Deployment | ⬜ |
 
 **Ngoài MVP:** AI, TTS, Speech Recognition, SRS phức tạp, multi-user, import/export,

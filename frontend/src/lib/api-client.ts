@@ -34,6 +34,9 @@ export async function apiFetch<T>(
   try {
     res = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
+      // Gửi kèm cookie phiên đăng nhập. Mặc định fetch KHÔNG gửi cookie sang origin khác,
+      // mà backend (cổng 4000) và frontend (cổng 3000) là hai origin.
+      credentials: "include",
       headers: { "Content-Type": "application/json", ...init?.headers },
     });
   } catch (cause) {

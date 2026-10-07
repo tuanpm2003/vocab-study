@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './helpers/app.js';
 import type { App } from 'supertest/types';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp, resetDatabase } from './helpers/app.js';
@@ -14,7 +14,7 @@ describe('Hardening sau G3/G4 (e2e)', () => {
   let prisma: PrismaService;
   let fx: StudyFixture;
   let systemId: string;
-  const api = () => request(app.getHttpServer());
+  const api = () => authed(app);
 
   beforeAll(async () => {
     ({ app, prisma } = await createTestApp());

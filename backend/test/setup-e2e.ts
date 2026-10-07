@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { config } from 'dotenv';
 
 config({ quiet: true });
@@ -23,3 +24,10 @@ if (!dbName.endsWith('_test')) {
 // ConfigModule không ghi đè biến đã có sẵn trong process.env,
 // nên gán ở đây sẽ thắng giá trị DATABASE_URL trong .env.
 process.env.DATABASE_URL = testUrl;
+
+// Khóa ký JWT cho riêng lượt test này, sinh ngẫu nhiên — không có secret nào nằm trong repo.
+// Gán thẳng (=), không dùng ??=: nếu .env có JWT_SECRET thật thì test KHÔNG được ký token
+// bằng khóa đó — token test mang id của chính tài khoản chủ dữ liệu.
+process.env.JWT_SECRET = randomBytes(32).toString('hex');
+// Bộ test gọi /auth/* dồn dập; giới hạn thật (10/phút) được kiểm ở auth-throttle.e2e-spec.ts.
+process.env.AUTH_RATE_LIMIT_PER_MINUTE ??= '1000';

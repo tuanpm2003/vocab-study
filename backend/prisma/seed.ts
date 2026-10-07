@@ -92,6 +92,15 @@ async function seedWord(
 }
 
 async function main(): Promise<void> {
+  // Dữ liệu mẫu phải có chủ (khóa ngoại ownerId → User). Nếu chưa ai mang id này thì tạo một
+  // dòng giữ chỗ CHƯA có mật khẩu: tài khoản đầu tiên đăng ký sẽ nhận nó cùng dữ liệu mẫu
+  // (ADR-013). Nếu id này đã là một tài khoản thật thì dữ liệu mẫu thuộc về tài khoản đó.
+  await prisma.user.upsert({
+    where: { id: ownerId },
+    update: {},
+    create: { id: ownerId },
+  });
+
   for (const entry of SEED) {
     const language = await prisma.language.upsert({
       where: { ownerId_name: { ownerId, name: entry.name } },

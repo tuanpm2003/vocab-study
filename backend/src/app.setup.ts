@@ -1,6 +1,8 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
+import { browserRequestGuard } from './common/middleware/browser-request-guard.js';
 import type { EnvironmentVariables } from './config/env.validation.js';
 
 /**
@@ -10,6 +12,13 @@ import type { EnvironmentVariables } from './config/env.validation.js';
  */
 export function configureApp(app: INestApplication): void {
   const config = app.get(ConfigService<EnvironmentVariables, true>);
+
+  // Đăng ký TRƯỚC mọi thứ khác: request ghi từ trang web lạ phải bị loại trước khi body
+  // được xử lý hay một route công khai (như /auth/register) kịp chạy.
+  app.use(browserRequestGuard(config.get('CORS_ORIGIN', { infer: true })));
+
+  // Đọc header Cookie thành request.cookies — JwtAuthGuard lấy phiên đăng nhập từ đó.
+  app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,6 +31,12 @@ export function configureApp(app: INestApplication): void {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  app.enableCors({ origin: config.get('CORS_ORIGIN', { infer: true }) });
+  app.enableCors({
+    origin: config.get('CORS_ORIGIN', { infer: true }),
+    // credentials: cho phép trình duyệt gửi cookie đăng nhập trong request từ frontend
+    // (khác cổng = khác origin). Chỉ an toàn vì `origin` ở trên là MỘT địa chỉ cụ thể,
+    // không phải "*".
+    credentials: true,
+  });
   app.enableShutdownHooks();
 }

@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './app.js';
 import type { App } from 'supertest/types';
 
 export interface StudyFixture {
@@ -28,10 +28,7 @@ export async function createStudyFixture(
   app: INestApplication<App>,
 ): Promise<StudyFixture> {
   const post = async <T>(url: string, body: object): Promise<T> => {
-    const res = await request(app.getHttpServer())
-      .post(url)
-      .send(body)
-      .expect(201);
+    const res = await authed(app).post(url).send(body).expect(201);
     return res.body as T;
   };
   type WithId = { id: string };

@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './helpers/app.js';
 import type { App } from 'supertest/types';
 import { dayRange } from '../src/learning/time-zone.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
@@ -34,7 +34,7 @@ describe('Learning progress & spaced repetition (e2e)', () => {
   let fx: StudyFixture;
   let taberu: string;
   let nomu: string;
-  const api = () => request(app.getHttpServer());
+  const api = () => authed(app);
 
   async function flashcard(
     vocabularyId: string,

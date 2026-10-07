@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './helpers/app.js';
 import type { App } from 'supertest/types';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp, OTHER_OWNER, resetDatabase } from './helpers/app.js';
@@ -7,7 +7,7 @@ import { createTestApp, OTHER_OWNER, resetDatabase } from './helpers/app.js';
 describe('Languages (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
-  const api = () => request(app.getHttpServer());
+  const api = () => authed(app);
 
   async function createLanguage(body: object): Promise<string> {
     const res = await api().post('/languages').send(body).expect(201);

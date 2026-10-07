@@ -11,11 +11,28 @@ datasource db {
   provider = "postgresql"
 }
 
+// Tài khoản (Phase 12, ADR-013). `email` và `passwordHash` cho phép null CHỈ để chứa một dòng
+// "giữ chỗ" cho dữ liệu có từ trước khi app có đăng nhập: dòng đó mang id = LOCAL_OWNER_ID và
+// được tài khoản đầu tiên đăng ký nhận về. Mọi tài khoản thật đều có đủ cả hai.
+model User {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  passwordHash String?
+  displayName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // onDelete: Cascade ở phía con: xóa một User là xóa sạch dữ liệu của người đó.
+  languages    Language[]
+  vocabularies Vocabulary[]
+  progress     LearningProgress[]
+  reviewLogs   ReviewLog[]
+}
 
 model Language {
   id        String   @id @default(cuid())
-  // Chưa có khóa ngoại: bảng User xuất hiện ở Phase 12 (docs/DATABASE.md §5).
   ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name      String
   code      String?
   createdAt DateTime @default(now())
@@ -53,7 +70,7 @@ model Level {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  levelSystem LevelSystem  @relation(fields: [levelSystemId], references: [id], onDelete: Cascade)
+  levelSystem  LevelSystem  @relation(fields: [levelSystemId], references: [id], onDelete: Cascade)
   collections  Collection[]
   vocabularies Vocabulary[]
 
@@ -92,6 +109,7 @@ model Collection {
 model Vocabulary {
   id                 String   @id @default(cuid())
   ownerId            String
+  owner              User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   languageId         String
   levelId            String?
   term               String
@@ -155,7 +173,8 @@ enum ReviewRating {
 model LearningProgress {
   id             String         @id @default(cuid())
   ownerId        String
-  // @unique → quan hệ 1-1. Phase 12 đổi thành @@unique([vocabularyId, ownerId]) là thành 1-N.
+  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  // @unique → quan hệ 1-1: mỗi từ thuộc đúng một người dùng, nên cũng chỉ có một tiến độ.
   vocabularyId   String         @unique
   status         LearningStatus @default(NEW)
   reviewCount    Int            @default(0)
@@ -185,6 +204,7 @@ model LearningProgress {
 model ReviewLog {
   id           String        @id @default(cuid())
   ownerId      String
+  owner        User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   vocabularyId String
   mode         ReviewMode
   rating       ReviewRating?

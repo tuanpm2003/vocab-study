@@ -6,7 +6,8 @@ học bằng Flashcard và Quiz, theo dõi tiến độ trên Dashboard.
 
 > **Trạng thái:** MVP đã đủ tính năng (Phase 1–10): quản lý ngôn ngữ / level / bài học, thêm từ
 > nhanh, danh sách có tìm kiếm và lọc, Flashcard, Trắc nghiệm, tiến độ học, Dashboard.
-> Đã có thêm Spaced Repetition (Phase 11, SM-2). Đang chờ chủ dự án nghiệm thu (nhóm F11). Tiến độ chi tiết: [docs/PLAN.md](docs/PLAN.md).
+> Đã có thêm Spaced Repetition (Phase 11, SM-2) và đăng nhập nhiều người dùng (Phase 12).
+> Đang chờ chủ dự án nghiệm thu (nhóm F11). Tiến độ chi tiết: [docs/PLAN.md](docs/PLAN.md).
 
 ---
 
@@ -84,8 +85,17 @@ npm install
 npm run dev
 ```
 
-Mở http://localhost:3000 — trang phải hiện màn hình **"Chào mừng"** với ba bước bắt đầu
-(database còn trống), hoặc Dashboard nếu đã có từ vựng.
+Mở http://localhost:3000 — app chuyển tới trang **Đăng nhập**. Lần đầu, bấm **Tạo tài khoản**.
+Vào được rồi thì thấy màn hình **"Chào mừng"** (database còn trống) hoặc Dashboard.
+
+> **Khóa phiên đăng nhập.** `backend/.env` có dòng `JWT_SECRET=` để trống. Để trống vẫn chạy
+> được, nhưng mỗi lần backend khởi động lại bạn sẽ phải đăng nhập lại. Sinh một khóa và dán vào:
+>
+> ```powershell
+> node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+> ```
+>
+> Khóa này là bí mật: ai có nó thì giả được phiên đăng nhập của bất kỳ ai. Không commit, không chia sẻ.
 
 ### 4. Dữ liệu mẫu (tùy chọn)
 
@@ -96,6 +106,37 @@ npx prisma db seed
 
 Tạo 3 ngôn ngữ (Japanese, Chinese, English) kèm hệ thống level, vài bài học và 30 từ mẫu.
 Chạy lại bao nhiêu lần cũng không tạo bản ghi trùng.
+
+---
+
+## Nâng cấp lên bản có đăng nhập (database đã có dữ liệu)
+
+Chỉ cần làm **một lần**, nếu bạn đã dùng app từ trước Phase 12 và muốn giữ dữ liệu.
+
+```powershell
+cd backend
+git pull                      # hoặc đã có sẵn code mới
+npm install
+npx prisma migrate deploy     # áp các migration còn thiếu
+```
+
+Nếu `migrate deploy` báo lỗi khóa ngoại ở migration `add_owner_foreign_keys` (dữ liệu cũ chưa có
+chủ), chạy lệnh tạo dòng giữ chỗ rồi chạy lại:
+
+```powershell
+npm run auth:prepare-legacy
+npx prisma migrate resolve --rolled-back <ten_migration_vua_loi>
+npx prisma migrate deploy
+```
+
+Sau đó mở app và **tạo tài khoản**. Tài khoản **đầu tiên** được tạo sẽ nhận toàn bộ dữ liệu cũ
+(app báo "Đã chuyển toàn bộ dữ liệu có sẵn vào tài khoản của bạn"). Các tài khoản tạo sau đó
+bắt đầu với kho từ trống.
+
+> **Quan trọng:** hãy là người tạo tài khoản đầu tiên, và làm việc đó sớm. Cho tới khi bạn làm,
+> bất kỳ ai dùng được trang đăng ký trên máy này cũng có thể nhận dữ liệu của bạn. (Việc nhận chỉ
+> hoạt động khi backend chạy ở máy local; trên một server công khai nó bị tắt hẳn.) Tạo xong, nếu không muốn ai đăng ký thêm,
+> đặt `REGISTRATION_ENABLED=false` trong `backend/.env` rồi khởi động lại backend.
 
 ---
 
@@ -131,6 +172,23 @@ Phím tắt khi học: `Space` lật thẻ / sang câu, `1`–`4` chấm điểm
 ---
 
 ## Xử lý sự cố
+
+**Cứ khởi động lại backend là phải đăng nhập lại**
+Chưa đặt `JWT_SECRET` trong `backend/.env` — backend đang dùng khóa tạm sinh ngẫu nhiên mỗi lần
+chạy (nó có in cảnh báo lúc khởi động). Xem mục "Cài đặt từ đầu → Frontend".
+
+**Quên mật khẩu**
+Chưa có chức năng đặt lại mật khẩu. Cách làm tay, **chỉ ở máy local**:
+
+1. Sao lưu trước: `docker exec vocab-postgres pg_dump -U vocab vocab_dev > backup.sql`
+2. Mở `npx prisma studio`, bảng `User`: xóa giá trị ở hai cột `email` và `passwordHash` của tài
+   khoản đó (để trống = null). **Đừng xóa cả dòng** — xóa dòng là xóa toàn bộ dữ liệu của tài khoản.
+3. Đổi `JWT_SECRET` trong `backend/.env` và khởi động lại backend, để mọi phiên đăng nhập cũ hết hiệu lực.
+4. Mở app và tạo tài khoản lại ngay: nếu `id` của dòng đó trùng `LOCAL_OWNER_ID`, lần đăng ký kế
+   tiếp sẽ nhận lại dữ liệu. Từ bước 2 tới bước này, **ai đăng ký trước thì người đó nhận**.
+
+**Đăng nhập báo "Bạn thử quá nhiều lần"**
+Giới hạn chống dò mật khẩu: 10 lần mỗi phút. Chờ một phút.
 
 **Trang báo "Không kết nối được backend"**
 Backend chưa chạy. `cd backend; npm run start:dev`, rồi bấm "Thử lại".

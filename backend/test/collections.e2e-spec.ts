@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './helpers/app.js';
 import type { App } from 'supertest/types';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp, OTHER_OWNER, resetDatabase } from './helpers/app.js';
@@ -23,7 +23,7 @@ describe('Collections (e2e)', () => {
   let n5Id: string;
   let n4Id: string;
   let hsk1Id: string;
-  const api = () => request(app.getHttpServer());
+  const api = () => authed(app);
 
   async function createLanguageWithLevels(
     name: string,

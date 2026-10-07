@@ -11,6 +11,49 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 12] — Authentication — 2026-10-07
+
+Làm theo yêu cầu của chủ dự án. **Từ bản này app yêu cầu đăng nhập.**
+
+### Added
+- ADR-013; bảng `User` + khóa ngoại `ownerId → User` (cascade) cho 4 bảng — hai migration
+- Module `auth`: `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me`
+- Mật khẩu băm scrypt (`scrypt$N$r$p$salt$hash`); phiên là JWT HS256 trong cookie
+  `HttpOnly; SameSite=Lax` (thêm `Secure` ở production)
+- `JwtAuthGuard` toàn cục + `@Public()`; giới hạn tần suất cho login/register
+- Tài khoản đầu tiên đăng ký nhận dữ liệu có từ trước (`npm run auth:prepare-legacy`)
+- Biến môi trường: `JWT_SECRET`, `REGISTRATION_ENABLED`, `AUTH_RATE_LIMIT_PER_MINUTE`, `NODE_ENV`
+- Frontend: `/login`, `/register`, `AuthGate`, nút Đăng xuất, `safeNext` chống open redirect
+- Test: +48 unit, +68 e2e, +47 frontend
+
+### Changed
+- `OwnerGuard` bị thay bằng `JwtAuthGuard`. **`@CurrentUser()` và mọi service không đổi một dòng**
+  — đúng điều ADR-006 đã chuẩn bị từ Phase 0.
+- `LOCAL_OWNER_ID` không còn là "người dùng hiện tại", chỉ là id của dòng giữ chỗ dữ liệu cũ; tùy chọn.
+- Toàn bộ e2e gọi API bằng phiên đăng nhập thật; schema test được dựng lại từ đầu mỗi lượt chạy.
+- `prisma db seed` tự tạo dòng giữ chỗ làm chủ dữ liệu mẫu.
+
+### Security — phát hiện của G4 (subagent `security`) và cách xử lý
+- **[CAO] Trang web lạ chiếm được dữ liệu cũ bằng một thẻ `<form>`** tự gửi tới
+  `/auth/register` (ADR-013 bản đầu khẳng định sai rằng form chéo site không gửi được body).
+  → Request ghi có `Origin` lạ bị 403, body không phải JSON bị 415.
+- **[CAO, cho Phase 13] Quên `NODE_ENV` trên server là chạy với khóa JWT tạm và cookie không
+  `Secure` mà không báo lỗi.** → `HOST` ngoài loopback bắt buộc `NODE_ENV=production` +
+  `JWT_SECRET`, thiếu là không khởi động. Việc "nhận dữ liệu cũ" cũng bị tắt ngoài loopback.
+- **[TRUNG BÌNH] Open redirect qua `?next=/%09/evil.example`** (trình duyệt bỏ qua ký tự tab).
+  → `safeNext` phân tích bằng URL parser và kiểm tra lại chính kết quả trả về.
+- Tham số scrypt nâng lên N=2^15, r=8, p=3 và được ghi trong chuỗi hash; test luôn ký JWT bằng
+  khóa riêng; ngữ cảnh nhập từ trong localStorage được xóa khi đổi tài khoản; `@Public()` của
+  health chuyển xuống cấp method.
+- Bug do test bắt được: `REGISTRATION_ENABLED=false` bị ép kiểu ngầm thành `true`.
+
+### Notes
+- Chưa có: quên/đổi mật khẩu, xác minh email, thu hồi phiên, giới hạn dò mật khẩu theo tài khoản.
+  Đã ghi trong docs/TODO.md cho Phase 13.
+- Trên database dev, chưa ai đăng ký: tài khoản đầu tiên phải do chủ dự án tạo.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ✅ (PASS có điều kiện → đã đáp ứng) G5 ⬜
+
 ## [Phase 11] — Spaced Repetition (SM-2) — 2026-10-07
 
 Làm theo yêu cầu của chủ dự án, trước khi có dữ liệu dùng thật mà ADR-007 muốn chờ.

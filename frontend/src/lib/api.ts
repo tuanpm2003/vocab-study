@@ -16,6 +16,8 @@ import type {
   Session,
   SessionParams,
   Stats,
+  User,
+  AuthResponse,
   Vocabulary,
   VocabularyInput,
   VocabularyQuery,
@@ -112,4 +114,16 @@ export const learningApi = {
     ),
   session: (params: SessionParams) =>
     apiFetch<Session>(`/learning/session?${toQueryString({ ...params })}`),
+};
+
+export const authApi = {
+  me: () => apiFetch<User>("/auth/me"),
+  login: (input: { email: string; password: string }) =>
+    apiFetch<AuthResponse>("/auth/login", json("POST", input)),
+  register: (input: {
+    email: string;
+    password: string;
+    displayName: string | null;
+  }) => apiFetch<AuthResponse>("/auth/register", json("POST", input)),
+  logout: () => apiFetch<void>("/auth/logout", { method: "POST" }),
 };

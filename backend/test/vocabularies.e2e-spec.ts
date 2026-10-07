@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './helpers/app.js';
 import type { App } from 'supertest/types';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp, OTHER_OWNER, resetDatabase } from './helpers/app.js';
@@ -27,7 +27,7 @@ describe('Vocabularies (e2e)', () => {
   let lesson3: string;
   let food: string;
   let zhLesson: string;
-  const api = () => request(app.getHttpServer());
+  const api = () => authed(app);
 
   async function post<T>(url: string, body: object): Promise<T> {
     const res = await api().post(url).send(body).expect(201);

@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { authed } from './helpers/app.js';
 import type { App } from 'supertest/types';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp, OTHER_OWNER, resetDatabase } from './helpers/app.js';
@@ -21,7 +21,7 @@ describe('GET /learning/session?mode=flashcard (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let fx: StudyFixture;
-  const api = () => request(app.getHttpServer());
+  const api = () => authed(app);
 
   async function session(query: string): Promise<string[]> {
     const res = await api()

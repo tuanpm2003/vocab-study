@@ -591,3 +591,105 @@ cũng thành `MASTERED`". Giờ muốn `MASTERED` phải trụ được qua các
 Khi `ReviewLog` có vài nghìn dòng: đủ dữ liệu để khớp tham số FSRS và so sánh tỷ lệ nhớ
 thực tế với SM-2. Xem lại sớm hơn nếu số từ đến hạn mỗi ngày vượt quá sức ôn — khi đó thêm
 giới hạn từ mới mỗi ngày trước khi nghĩ tới đổi thuật toán.
+
+---
+
+## ADR-013 — Authentication: JWT trong cookie httpOnly, mật khẩu băm bằng scrypt
+
+- **Ngày:** 2026-10-07 · **Trạng thái:** Accepted · **Phase:** 12
+- **Người quyết định:** Claude Code, theo ủy quyền "tự ra quyết định" của chủ dự án
+  (2026-10-07). Chủ dự án nên đọc lại mục này.
+
+### Bối cảnh
+Từ Phase 2, mọi truy vấn đã lọc theo `ownerId` (ADR-006), nhưng `ownerId` luôn là một hằng số
+lấy từ biến môi trường `LOCAL_OWNER_ID`: ai gọi được API thì người đó là chủ dữ liệu. Phase 12
+thay hằng số đó bằng danh tính thật của người đang đăng nhập. Ba câu hỏi phải trả lời: lưu
+mật khẩu thế nào, giữ phiên đăng nhập ở đâu, và **dữ liệu đã có thuộc về ai**.
+
+### Các phương án đã cân nhắc
+
+**Băm mật khẩu**
+1. `bcrypt` / `argon2` (thư viện ngoài) — phổ biến, nhưng là native addon: thêm một thứ phải
+   biên dịch được trên Windows và sau này trong container.
+2. **`scrypt` có sẵn trong `node:crypto`** — không thêm dependency; scrypt nằm trong danh sách
+   thuật toán OWASP chấp nhận cho lưu mật khẩu.
+
+**Giữ phiên**
+1. JWT trong `localStorage`, gửi qua header `Authorization` — dễ làm, nhưng JavaScript đọc được
+   token: một lỗi XSS là mất tài khoản.
+2. **JWT trong cookie `httpOnly`** — JavaScript không đọc được; trình duyệt tự gửi kèm.
+3. Session lưu ở server (bảng Session hoặc Redis) — thu hồi được từng phiên, nhưng thêm một
+   bảng/dịch vụ và một truy vấn cho mỗi request.
+
+**Dữ liệu đã có**
+1. Bỏ lại, người dùng đăng ký xong thấy app trống — mất dữ liệu đang dùng thật.
+2. Hard-code một tài khoản mặc định có mật khẩu sẵn — mật khẩu mặc định là lỗ hổng kinh điển.
+3. **Tài khoản đầu tiên đăng ký sẽ "nhận" dữ liệu cũ.**
+
+### Quyết định
+- **Mật khẩu:** `scrypt` (N=32768, r=8, p=3, khóa 64 byte), salt ngẫu nhiên 16 byte cho mỗi
+  mật khẩu, lưu dạng `scrypt$N$r$p$<salt>$<hash>` — tham số nằm trong chuỗi để sau này tăng
+  độ khó mà mật khẩu cũ vẫn kiểm được. So sánh bằng `timingSafeEqual`. Tối thiểu 8 ký tự.
+- **Phiên:** JWT ký HS256 bằng `JWT_SECRET` (biến môi trường, tối thiểu 32 ký tự, app không
+  khởi động nếu thiếu), hạn 7 ngày, đặt trong cookie `access_token` với
+  `httpOnly`, `sameSite=lax`, `secure` khi `NODE_ENV=production`.
+- **Guard:** `JwtAuthGuard` thay `OwnerGuard` làm guard toàn cục — **mặc định mọi route đều cần
+  đăng nhập**; route công khai phải tự khai báo `@Public()` (`/health`, `/auth/register`,
+  `/auth/login`). Quên khai báo thì route bị khóa chứ không bị hở.
+- **`@CurrentUser()` không đổi**, đúng như ADR-006 đã hứa: không một chữ ký service nào phải sửa.
+- **Bảng `User`** + khóa ngoại thật từ `Language`, `Vocabulary`, `LearningProgress`,
+  `ReviewLog` (`onDelete: Cascade`).
+- **Dữ liệu cũ:** một dòng `User` giữ chỗ với `id = LOCAL_OWNER_ID` và **chưa có mật khẩu** được
+  tạo để giữ khóa ngoại. Lần đăng ký đầu tiên, khi dòng giữ chỗ còn tồn tại, sẽ điền email và
+  mật khẩu vào chính dòng đó thay vì tạo dòng mới — người đăng ký trở thành chủ của toàn bộ
+  dữ liệu cũ. Từ lần thứ hai trở đi, đăng ký tạo tài khoản mới, trống.
+- **Chống dò mật khẩu:** `@nestjs/throttler` giới hạn 10 lần/phút cho `/auth/login` và
+  `/auth/register`. Đăng nhập sai luôn trả cùng một thông điệp, không phân biệt "email không
+  tồn tại" với "sai mật khẩu".
+- **`REGISTRATION_ENABLED`** (mặc định `true`): đặt `false` để khóa đăng ký sau khi đã có tài khoản
+  — cần cho Phase 13, khi app có URL công khai.
+
+### Lý do
+Cookie `httpOnly` loại hẳn một lớp tấn công (XSS đánh cắp token) với chi phí gần bằng không ở
+kiến trúc này: frontend và backend cùng "site" (`localhost` hôm nay, cùng tên miền sau
+CloudFront ở Phase 13), nên `sameSite=lax` cho cookie đi kèm request của app và chặn phần lớn
+request giả mạo từ site khác (CSRF). JWT không trạng thái nên chưa cần bảng Session.
+
+> **Đính chính sau rà soát bảo mật (cùng ngày).** Bản đầu của ADR này viết: "body của API là
+> JSON, form HTML chéo site không gửi được". **Điều đó sai.** Express/Nest mặc định nhận cả
+> `application/x-www-form-urlencoded`, nên thẻ `<form>` của một trang bất kỳ gửi được body hợp
+> lệ tới `/auth/register` — một route công khai, không cần cookie, `sameSite` không bảo vệ gì —
+> và chiếm dòng giữ chỗ. Ngoài ra `sameSite` chặn theo *site* chứ không theo *origin*: mọi cổng
+> khác trên `localhost` đều cùng site với app.
+>
+> Bốn chốt đã thêm (`browser-request-guard.ts`, `env.validation.ts`, `auth.service.ts`):
+> 1. Request ghi có header `Origin` khác `CORS_ORIGIN` → **403**.
+> 2. Request ghi có body không phải `application/json` → **415**.
+> 3. Chỉ cho "nhận dữ liệu cũ" khi backend nghe trên **loopback**. Trên server thật, việc nhận
+>    bị tắt hẳn: phải tạo tài khoản ở máy mình trước khi đưa database lên mạng.
+> 4. `HOST` không phải loopback mà thiếu `NODE_ENV=production` hoặc `JWT_SECRET` → app **từ
+>    chối khởi động**. Trước đó, quên đặt `NODE_ENV` trên server là chạy với khóa tạm và cookie
+>    không `secure` mà không báo lỗi gì.
+>
+> Bài học: một câu khẳng định về bảo mật trong ADR phải được kiểm bằng test, không phải bằng
+> trí nhớ về hành vi mặc định của framework.
+
+Cơ chế "nhận dữ liệu cũ" cho chủ dự án giữ nguyên dữ liệu mà không cần một mật khẩu mặc định
+nào tồn tại ở bất cứ đâu.
+
+### Hệ quả
+**Tích cực:** API không còn mở cho mọi máy cùng mạng; ràng buộc `ownerId` có ý nghĩa thật;
+xóa một `User` là xóa sạch dữ liệu của người đó nhờ cascade.
+**Cái giá phải trả:**
+- Không thu hồi được một JWT trước hạn (đăng xuất chỉ xóa cookie ở trình duyệt đó). Đổi
+  `JWT_SECRET` là cách "đăng xuất mọi nơi".
+- Chưa có: quên mật khẩu, xác minh email, đổi mật khẩu, refresh token. Một mình dùng thì quên
+  mật khẩu = sửa thẳng trong database.
+- `APP_TIMEZONE` vẫn là của cả server (ADR-011 đã hẹn chuyển về từng User) — hoãn tới khi có
+  người dùng thứ hai ở múi giờ khác.
+- Hai bước migration: bảng `User` trước, khóa ngoại sau — vì database đang dùng phải có dòng
+  giữ chỗ trước khi ràng buộc được bật. Database mới tinh thì chạy liền một mạch.
+
+### Khi nào nên xem lại
+Phase 13: `secure` cookie bắt buộc HTTPS; xem lại CORS và `sameSite` nếu frontend và API nằm
+ở hai tên miền khác nhau. Thêm refresh token / bảng Session khi cần "đăng xuất khỏi mọi thiết bị".

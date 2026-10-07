@@ -49,7 +49,8 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F10 | Dashboard | 10 | §3.8 | 5 | 5 | 100% | G1✅ G2✅ G5⬜ |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 2 | 33% | G3✅ G4✅ G5⬜ |
 | F12 | Spaced Repetition | 11 | Ngoài MVP | 6 | 6 | 100% | G1✅ G2✅ G5⬜ |
-| | **Tổng** | | | **105** | **100** | **95%** | |
+| F13 | Authentication | 12 | Ngoài MVP | 9 | 9 | 100% | G1✅ G2✅ G4✅ G5⬜ |
+| | **Tổng** | | | **114** | **109** | **96%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -318,9 +319,27 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 | F12-06 | UI: mỗi nút chấm flashcard hiện khoảng cách ôn kế tiếp; danh sách và trang sửa từ hiện ngày ôn lại; Dashboard và màn hình "hết từ cần ôn" nói theo hạn ôn | FE | Lật thẻ thấy "1 ngày / 6 ngày…" dưới các nút; ôn hết thì báo "quay lại ngày mai" | ✅ |
 
 ---
+## F13 — Authentication · Phase 12
+
+**Mục tiêu:** mỗi người dùng một tài khoản; `ownerId` là danh tính thật của người đang đăng nhập thay vì một hằng số trong `.env`. Dữ liệu đang có được giữ nguyên và thuộc về tài khoản đầu tiên đăng ký (ADR-013).
+**Phụ thuộc:** F0–F12. **Ngoài phạm vi MVP** — làm theo yêu cầu của chủ dự án ngày 2026-10-07.
+
+| ID | Task | Tầng | Xong khi | TT |
+|---|---|---|---|:---:|
+| F13-01 | Chốt cách băm mật khẩu, cách giữ phiên và cách xử lý dữ liệu cũ thành ADR **trước khi code** | Docs | Có ADR-013 trong DECISIONS.md | ✅ |
+| F13-02 | Model `User` + migration; băm/kiểm mật khẩu bằng scrypt (hàm thuần) | DB+BE | Unit test: cùng mật khẩu ra hai hash khác nhau, kiểm đúng/sai, hash hỏng không làm sập | ✅ |
+| F13-03 | `POST /auth/register`, `/auth/login`, `/auth/logout`, `GET /auth/me`; JWT trong cookie httpOnly; `JWT_SECRET` bắt buộc | BE | Đăng ký → có cookie httpOnly; `/auth/me` trả user và **không** trả `passwordHash` | ✅ |
+| F13-04 | `JwtAuthGuard` toàn cục thay `OwnerGuard`; `@Public()` cho `/health` và auth; giới hạn tần suất cho login/register | BE | Không cookie → mọi endpoint dữ liệu trả 401; `/health` vẫn 200; quá 10 lần/phút → 429 | ✅ |
+| F13-05 | Khóa ngoại `ownerId → User` (cascade) cho 4 bảng; dòng giữ chỗ + cơ chế "tài khoản đầu tiên nhận dữ liệu cũ" | DB+BE | Trên database dev: đăng ký lần đầu xong vẫn thấy đủ từ vựng cũ; đăng ký lần hai thấy app trống | ✅ |
+| F13-06 | E2E auth + chuyển toàn bộ e2e hiện có sang gọi API bằng phiên đăng nhập thật | Test | Toàn bộ unit + e2e pass; có test hai tài khoản không thấy dữ liệu của nhau **qua API thật** | ✅ |
+| F13-07 | Frontend: trang `/login`, `/register`; `apiFetch` gửi cookie; chưa đăng nhập → chuyển về `/login` rồi quay lại trang cũ; thanh điều hướng có tên người dùng + Đăng xuất | FE | Mở `/vocabulary` khi chưa đăng nhập → tới `/login`; đăng nhập xong quay lại `/vocabulary` | ✅ |
+| F13-08 | Rà soát bảo mật riêng cho phần auth (subagent `security`) và sửa phát hiện | Test | Không còn phát hiện NGHIÊM TRỌNG hoặc CAO | ✅ |
+| F13-09 | Cập nhật tài liệu: API.md, DATABASE.md, README (đăng ký lần đầu, biến môi trường mới), TODO "trước khi lên mạng" | Docs | Làm theo README trên database đang dùng → đăng nhập được và còn nguyên dữ liệu | ✅ |
+
+---
 ## Sau MVP
 
-Phase 12 (Authentication) và Phase 13 (AWS) chưa được lập kế hoạch. Khi làm, thêm thành các nhóm F13+ theo cùng định dạng (Phase 11 là nhóm F12 ở trên).
+Phase 13 (AWS) chưa được lập kế hoạch. Khi làm, thêm thành nhóm F14 theo cùng định dạng.
 
 ---
 
@@ -330,6 +349,15 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-07 | F13-09 | API.md (mục Auth, chống CSRF), DATABASE.md (bảng User, dòng giữ chỗ), README (đăng ký lần đầu, JWT_SECRET, nâng cấp database cũ, quên mật khẩu), `.env.example`, TODO "trước khi lên mạng", ADR-013 có đính chính. Chưa tự kiểm được dòng "đăng nhập được và còn nguyên dữ liệu" trên database dev — việc đăng ký đầu tiên là của chủ dự án; luồng đó được phủ bằng e2e trên database test |
+| 2026-10-07 | F13-08 | Subagent `security` rà riêng phần auth: 32 route (4 công khai có chủ đích), 0 nghiêm trọng, 2 cao, 4 trung bình. Đã sửa: chốt Origin + Content-Type chống CSRF (form chéo site từng chiếm được dòng giữ chỗ), HOST ngoài loopback bắt buộc cấu hình production, `safeNext` lọt ký tự tab, tham số scrypt ghi trong hash. +16 e2e, +20 unit, +14 frontend. Phần còn lại ghi TODO cho Phase 13 |
+| 2026-10-07 | F13-07 | Trang `/login` và `/register` (RHF + Zod, một form dùng chung); `apiFetch` gửi cookie (`credentials: include`); `AuthGate` chuyển về `/login?next=…` và `safeNext` chỉ nhận đường dẫn nội bộ (chống open redirect); thanh điều hướng có nút Đăng xuất. Trên trình duyệt: mở `/vocabulary?status=LEARNING` khi chưa đăng nhập → `/login?next=%2Fvocabulary%3Fstatus%3DLEARNING`; cookie không đọc được từ JavaScript. +33 test frontend (103/103). Chưa đăng ký thật trên database dev — tài khoản đầu tiên phải là của chủ dự án |
+| 2026-10-07 | F13-06 | Toàn bộ e2e chuyển sang client mang cookie phiên thật (`authed(app)`); `global-setup` dựng lại schema test từ đầu mỗi lượt. +52 e2e auth (hai tài khoản thật cách ly qua mọi API, cascade khi xóa user) + 28 unit. Test bắt được bug: `REGISTRATION_ENABLED=false` bị ép kiểu ngầm thành `true`. Tổng: unit 207, e2e 244 |
+| 2026-10-07 | F13-05 | Migration `add_owner_foreign_keys` (4 khóa ngoại, cascade). Trên database dev: `npm run auth:prepare-legacy` tạo dòng giữ chỗ cho 3 ngôn ngữ + 30 từ rồi mới bật khóa ngoại. E2E: tài khoản đầu nhận dữ liệu cũ, tài khoản thứ hai trống, hai người đăng ký cùng lúc chỉ một người nhận |
+| 2026-10-07 | F13-04 | `JwtAuthGuard` toàn cục thay `OwnerGuard`, `@Public()` cho `/health` + auth; e2e: 15 endpoint không cookie → 401, JWT rác / `alg none` / ký khóa khác / hết hạn / gửi qua header → 401; quá giới hạn → 429. `@CurrentUser()` và mọi service không đổi một dòng |
+| 2026-10-07 | F13-03 | `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/me`; JWT HS256 hạn 7 ngày trong cookie `HttpOnly; SameSite=Lax`; body không bao giờ chứa token hay `passwordHash`. `JWT_SECRET` bắt buộc ở production, local thiếu thì sinh khóa tạm ngẫu nhiên (không có secret nào trong repo) |
+| 2026-10-07 | F13-02 | Model `User` (migration `add_user`); `auth/password.ts` băm scrypt với salt riêng từng mật khẩu, so sánh `timingSafeEqual`; 12 unit test: hai hash khác nhau cho cùng mật khẩu, sai một ký tự → false, 8 dạng chuỗi hỏng → false không ném lỗi |
+| 2026-10-07 | F13-01 | ADR-013: scrypt (node:crypto, không thêm native addon), JWT trong cookie httpOnly + sameSite=lax, guard toàn cục mặc định khóa, tài khoản đầu tiên đăng ký nhận dữ liệu cũ (không có mật khẩu mặc định nào). Quyết định bởi Claude Code theo ủy quyền ngày 2026-10-07 |
 | 2026-10-07 | F12-06 | Nút chấm flashcard hiện khoảng cách ôn ("ngay / 1 ngày / 15 ngày / ~3 tháng"), thẻ vừa Quên quay lại với lịch học lại; danh sách và trang sửa từ hiện "Ôn lại ngày mai / sau N ngày"; Dashboard "N từ đến hạn ôn"; hết từ → "Hôm nay bạn đã ôn hết". Thử trên trình duyệt với dữ liệu thật; frontend 70/70 |
 | 2026-10-07 | F12-05 | Viết lại `learning-progress.e2e-spec.ts` theo ADR-012 (40 test) và `progress-rules.spec.ts` (28 test); toàn bộ backend: unit 179, e2e 192 pass |
 | 2026-10-07 | F12-04 | `whereDue()` dùng chung cho `GET /learning/due` và `dueCount`: chưa ôn, `dueAt` null (dòng cũ) hoặc `dueAt ≤ now`. E2E: từ vừa GOOD biến khỏi danh sách, kéo hạn về quá khứ thì hiện lại ở đầu (kể cả MASTERED); quá hạn lâu nhất trước, từ mới sau cùng |
