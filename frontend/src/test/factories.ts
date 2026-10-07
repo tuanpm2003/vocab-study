@@ -7,4 +7,8 @@ export const NEW_PROGRESS: Progress = {
   correctCount: 0,
   incorrectCount: 0,
   lastReviewedAt: null,
+  dueAt: null,
+  intervalDays: 0,
+  easeFactor: 2.5,
+  repetitions: 0,
 };

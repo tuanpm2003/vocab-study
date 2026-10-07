@@ -19,11 +19,16 @@ import {
   type QuestionType,
 } from './multiple-choice.js';
 import { Prisma } from '../generated/prisma/client.js';
+import { ConfigService } from '@nestjs/config';
+import type { EnvironmentVariables } from '../config/env.validation.js';
+import type { ReviewRating } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { previewIntervals } from './srs.js';
+import { dueDateAfter } from './time-zone.js';
 import {
   toVocabularyResponse,
   vocabularyInclude,
-  whereStatusIn,
+  whereDue,
   type VocabularyResponse,
 } from '../vocabularies/vocabularies.service.js';
 import type { ScopeDto, SessionQueryDto } from './dto/session.dto.js';
@@ -32,10 +37,18 @@ import type { ScopeDto, SessionQueryDto } from './dto/session.dto.js';
 // đủ nhỏ để không bao giờ tải cả bảng.
 const DISTRACTOR_POOL_SIZE = 60;
 
-/** Flashcard chỉ có `vocabulary`; trắc nghiệm có thêm các field của BuiltQuestion. */
+/**
+ * Flashcard có `vocabulary` + `intervals` (số ngày tới lần ôn kế tiếp nếu chấm từng mức);
+ * trắc nghiệm có `vocabulary` + các field của BuiltQuestion.
+ */
 export type SessionItem = {
   vocabulary: VocabularyResponse;
+  intervals?: Record<ReviewRating, number>;
 } & Partial<BuiltQuestion>;
+
+function toFlashcardItem(vocabulary: VocabularyResponse): SessionItem {
+  return { vocabulary, intervals: previewIntervals(vocabulary.progress) };
+}
 
 export interface SessionResponse {
   items: SessionItem[];
@@ -53,9 +66,9 @@ export interface ProgressResponse {
   correctCount: number;
   incorrectCount: number;
   lastReviewedAt: Date | null;
+  dueAt: Date | null;
+  intervalDays: number;
 }
-
-export const DUE_STATUSES: LearningStatus[] = ['NEW', 'LEARNING'];
 
 /** `rating` cho flashcard, `isCorrect` cho quiz — đúng một trong hai, khớp với `mode`. */
 function toReviewInput(dto: ReviewDto): ReviewInput {
@@ -78,7 +91,10 @@ function toReviewInput(dto: ReviewDto): ReviewInput {
 
 @Injectable()
 export class LearningService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService<EnvironmentVariables, true>,
+  ) {}
 
   async getSession(
     ownerId: string,
@@ -87,7 +103,7 @@ export class LearningService {
     const ids = await this.pickRandomIds(ownerId, query);
     const vocabularies = await this.loadInOrder(ownerId, ids);
     if (query.mode === 'flashcard') {
-      return { items: vocabularies.map((vocabulary) => ({ vocabulary })) };
+      return { items: vocabularies.map(toFlashcardItem) };
     }
     return {
       items: await this.buildQuestions(
@@ -100,7 +116,7 @@ export class LearningService {
 
   /**
    * Ghi nhận MỘT lần trả lời. Ba việc trong một transaction — hoặc cả ba, hoặc không gì:
-   * thêm dòng ReviewLog, tạo/cập nhật LearningProgress, tính trạng thái mới (ADR-010).
+   * thêm dòng ReviewLog, tạo/cập nhật LearningProgress, xếp lịch ôn kế tiếp (ADR-012).
    */
   async review(ownerId: string, dto: ReviewDto): Promise<ProgressResponse> {
     const input = toReviewInput(dto);
@@ -122,6 +138,11 @@ export class LearningService {
         where: { vocabularyId: vocabulary.id, ownerId },
       });
       const next = applyReview(current ?? INITIAL_PROGRESS, input);
+      const dueAt = dueDateAfter(
+        now,
+        next.intervalDays,
+        this.config.get('APP_TIMEZONE', { infer: true }),
+      );
 
       await tx.reviewLog.create({
         data: {
@@ -140,9 +161,10 @@ export class LearningService {
           ownerId,
           vocabularyId: vocabulary.id,
           ...next,
+          dueAt,
           lastReviewedAt: now,
         },
-        update: { ...next, lastReviewedAt: now },
+        update: { ...next, dueAt, lastReviewedAt: now },
       });
       return {
         vocabularyId: saved.vocabularyId,
@@ -151,15 +173,21 @@ export class LearningService {
         correctCount: saved.correctCount,
         incorrectCount: saved.incorrectCount,
         lastReviewedAt: saved.lastReviewedAt,
+        dueAt: saved.dueAt,
+        intervalDays: saved.intervalDays,
       };
     });
   }
 
   /**
-   * Từ cần ôn. MVP: trạng thái NEW hoặc LEARNING, từ lâu chưa ôn nhất lên trước (từ chưa
-   * ôn lần nào đứng đầu). Phase 11 đổi thành `dueAt <= now()` — contract giữ nguyên.
+   * Từ đến hạn ôn (ADR-012). Thứ tự: quá hạn lâu nhất trước, từ chưa ôn lần nào sau cùng —
+   * nợ cũ trả trước khi vay mới.
    */
-  async getDue(ownerId: string, scope: ScopeDto): Promise<DueResponse> {
+  async getDue(
+    ownerId: string,
+    scope: ScopeDto,
+    now: Date = new Date(),
+  ): Promise<DueResponse> {
     const where: Prisma.VocabularyWhereInput = {
       ownerId,
       languageId: scope.languageId,
@@ -167,14 +195,16 @@ export class LearningService {
       ...(scope.collectionId && {
         collections: { some: { collectionId: scope.collectionId } },
       }),
-      AND: [whereStatusIn(DUE_STATUSES)],
+      AND: [whereDue(now)],
     };
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.vocabulary.findMany({
         where,
         include: vocabularyInclude,
         orderBy: [
-          { progress: { lastReviewedAt: { sort: 'asc', nulls: 'first' } } },
+          // nulls: 'last' — từ chưa ôn lần nào không có dòng tiến độ, nên sau phép JOIN
+          // dueAt của nó là NULL và nó rơi xuống cuối, sau mọi từ đã có hạn ôn.
+          { progress: { dueAt: { sort: 'asc', nulls: 'last' } } },
           { createdAt: 'asc' },
           { id: 'asc' },
         ],
@@ -183,7 +213,7 @@ export class LearningService {
       this.prisma.vocabulary.count({ where }),
     ]);
     return {
-      items: rows.map((row) => ({ vocabulary: toVocabularyResponse(row) })),
+      items: rows.map((row) => toFlashcardItem(toVocabularyResponse(row))),
       total,
     };
   }

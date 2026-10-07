@@ -150,7 +150,7 @@ Quy tắc: field cần **search/filter/sort** → cột thật; field chỉ đ�
 | 8 | Multiple Choice | ✅ |
 | 9 | Learning Progress + ReviewLog | ✅ |
 | 10 | Dashboard | ✅ |
-| 11 | Spaced Repetition (nghiên cứu Leitner/SM-2/FSRS rồi mới chọn) | ⬜ |
+| 11 | Spaced Repetition — SM-2 (ADR-012) | ✅ |
 | 12 | Authentication (multi-user) | ⬜ |
 | 13 | AWS Deployment | ⬜ |
 

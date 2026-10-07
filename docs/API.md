@@ -174,8 +174,9 @@ Xóa Collection **không** xóa từ vựng — chỉ xóa các dòng trong bả
       { "id": "clx7", "name": "Lesson 3" },
       { "id": "clx8", "name": "Food" }
     ],
-    "progress": { "status": "LEARNING", "reviewCount": 8, "correctCount": 6,
-                  "incorrectCount": 2, "lastReviewedAt": "..." },
+    "progress": { "status": "REVIEW", "reviewCount": 8, "correctCount": 6,
+                  "incorrectCount": 2, "lastReviewedAt": "...", "dueAt": "...",
+                  "intervalDays": 15, "easeFactor": 2.36, "repetitions": 3 },
     "createdAt": "...", "updatedAt": "..."
   }],
   "total": 253, "page": 1, "limit": 20, "totalPages": 13
@@ -228,7 +229,10 @@ lại), phải nằm trong `$transaction` — nếu xóa xong mà thêm lỗi, t
 (`term_to_meaning|meaning_to_term`, chỉ cho trắc nghiệm), `languageId`, `levelId`,
 `collectionId`, `limit` (1-100, mặc định 20)
 
-**200** — với `multiple_choice`, backend sinh sẵn đáp án nhiễu:
+**200** — với `flashcard`, mỗi item là `{ vocabulary, intervals }`; `intervals` cho biết số ngày
+tới lần ôn kế tiếp nếu chấm từng mức, ví dụ `{ "AGAIN": 0, "HARD": 12, "GOOD": 15, "EASY": 16 }`.
+
+Với `multiple_choice`, backend sinh sẵn đáp án nhiễu:
 ```json
 { "items": [{
     "vocabulary": { "id": "clx9", "term": "食べる", "meaning": "to eat", "reading": "たべる" },
@@ -248,7 +252,11 @@ bộ từ vựng về máy client, vi phạm yêu cầu "không load toàn bộ 
 `rating` cho flashcard, `isCorrect` cho quiz. Đúng một trong hai phải có, và phải khớp
 với `mode` — sai thì **400**. Field còn lại bỏ trống hoặc gửi `null` đều được. Từ không tồn tại → **404**. Quy tắc tính trạng thái: ADR-010.
 
-**201** → `{ vocabularyId, status, reviewCount, correctCount, incorrectCount, lastReviewedAt }`
+**201** → `{ vocabularyId, status, reviewCount, correctCount, incorrectCount, lastReviewedAt, dueAt, intervalDays }`
+
+`intervalDays` là số ngày tới lần ôn kế tiếp do SM-2 tính (ADR-012); `dueAt` là 00:00 giờ
+địa phương (`APP_TIMEZONE`) của ngày đó. Quên → `intervalDays: 0`, `dueAt` = thời điểm vừa ôn.
+Client **không** gửi được lịch ôn — mọi field ngoài bốn field của body đều bị từ chối (400).
 
 Backend làm trong một `$transaction`:
 1. Tạo một dòng `ReviewLog`
@@ -261,8 +269,9 @@ Backend làm trong một `$transaction`:
 **200** → `{ items: [{ vocabulary }], total }` — cùng shape với phiên flashcard, thêm `total`
 là tổng số từ cần ôn trong phạm vi.
 
-MVP: trả từ có `status` ∈ `NEW | LEARNING`, sắp theo `lastReviewedAt` tăng dần (lâu nhất trước).
-Phase 11: đổi thành lọc `dueAt <= now()`. **Contract không đổi** — chỉ logic bên trong đổi.
+Từ **đến hạn ôn** (ADR-012): chưa ôn lần nào, hoặc `dueAt ≤ now` (dòng tiến độ tạo trước
+Phase 11 có `dueAt` null cũng được coi là đến hạn). Thứ tự: quá hạn lâu nhất trước, từ chưa
+ôn lần nào sau cùng. Mỗi item kèm `intervals` như phiên flashcard.
 
 ### ✅ `GET /learning/stats` — Phase 10
 **Query:** không có. (`from`/`to` của bản thiết kế Phase 0 chưa làm — chưa có màn hình nào cần.)
@@ -283,7 +292,8 @@ Phase 11: đổi thành lọc `dueAt <= now()`. **Contract không đổi** — c
 `Asia/Ho_Chi_Minh`), không theo UTC — xem ADR-011.
 
 - `accuracy` là `null` khi hôm nay chưa ôn từ nào.
-- `dueCount` = `new` + `learning`, cùng định nghĩa với `GET /learning/due`.
+- `dueCount` = số từ đến hạn ôn, cùng điều kiện với `GET /learning/due` (ADR-012). Từ Phase 11
+  nó **không còn** bằng `new` + `learning`: một từ `MASTERED` tới hạn vẫn được đếm.
 - `streak`: số ngày liên tiếp có ôn; hôm nay chưa ôn thì vẫn tính tới hôm qua.
 
 ---

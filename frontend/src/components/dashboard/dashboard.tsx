@@ -169,7 +169,9 @@ export function Dashboard() {
           icon={RotateCcw}
           title="Ôn tập"
           subtitle={
-            hasDue ? `${data.dueCount} từ cần ôn` : "Không còn từ nào cần ôn"
+            hasDue
+              ? `${data.dueCount} từ đến hạn ôn`
+              : "Hôm nay đã ôn hết — quay lại ngày mai"
           }
           primary={hasDue}
         />

@@ -11,6 +11,7 @@ import { VocabularyForm } from "@/components/vocabulary/vocabulary-form";
 import { vocabulariesApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { qk } from "@/lib/query-keys";
+import { formatDue, formatInterval } from "@/lib/srs-format";
 
 export function VocabularyEdit({ id }: { id: string }) {
   const router = useRouter();
@@ -79,6 +80,16 @@ export function VocabularyEdit({ id }: { id: string }) {
               : "chưa ôn"}
           </dd>
         </div>
+        {data.progress.reviewCount > 0 && (
+          <div className="flex items-center gap-1.5">
+            <dt className="text-muted-foreground">Lịch ôn</dt>
+            <dd className="font-medium">
+              {formatDue(data.progress.dueAt, new Date()) ?? "chưa xếp lịch"}
+              {data.progress.intervalDays > 0 &&
+                ` (khoảng cách ${formatInterval(data.progress.intervalDays)})`}
+            </dd>
+          </div>
+        )}
       </dl>
       {/* key theo updatedAt: sau khi lưu, form được dựng lại từ dữ liệu mới nhất. */}
       <VocabularyForm

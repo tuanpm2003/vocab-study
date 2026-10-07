@@ -504,3 +504,90 @@ giờ — `dayRange` xử lý đúng mốc đầu/cuối, có test cho `America/
 ### Khi nào nên xem lại
 Phase 12 (multi-user): múi giờ phải thành thuộc tính của từng `User`, không còn là cấu hình
 chung của server.
+
+---
+
+## ADR-012 — Spaced Repetition bằng SM-2; trạng thái suy ra từ khoảng cách ôn
+
+- **Ngày:** 2026-10-07 · **Trạng thái:** Accepted · **Phase:** 11
+- **Thay thế:** phần "Bước 2 — trạng thái mới" của ADR-010. Phần quy về đúng/sai và bộ đếm
+  của ADR-010 vẫn còn hiệu lực.
+- **Người quyết định:** Claude Code, theo ủy quyền "tự ra quyết định" của chủ dự án
+  (2026-10-07). Chủ dự án nên đọc lại mục này.
+
+### Bối cảnh
+MVP chọn từ cần ôn bằng trạng thái (`NEW`/`LEARNING`): một từ đã lên `REVIEW` thì **không
+bao giờ** quay lại danh sách ôn, dù ba tháng không đụng tới. Thứ còn thiếu là khái niệm
+**thời gian**: từ nào, khi nào cần ôn lại. ADR-007 đã để sẵn bốn cột
+(`dueAt`, `intervalDays`, `easeFactor`, `repetitions`) cho việc này.
+
+ADR-007 muốn chọn thuật toán sau 2–4 tuần dữ liệu thật. Chủ dự án quyết định làm ngay, nên
+lựa chọn dưới đây dựa trên đặc tính thuật toán, **chưa** dựa trên dữ liệu của chính app.
+
+### Các phương án đã cân nhắc
+1. **Leitner** — 5 hộp, đúng thì lên hộp, sai thì về hộp 1; mỗi hộp một khoảng cách cố định.
+   Dễ hiểu nhất, nhưng mọi từ đi cùng một lịch: từ dễ và từ khó được ôn dày như nhau.
+2. **SM-2** — mỗi từ có "hệ số dễ" riêng; khoảng cách lần sau = khoảng cách lần trước × hệ
+   số. Bốn mức chấm hiện có (Quên/Khó/Được/Dễ) khớp thẳng vào thang điểm của nó.
+3. **FSRS** — mô hình hiện đại, chính xác hơn SM-2, nhưng có khoảng 20 tham số phải tối ưu
+   từ lịch sử ôn tập. Chưa có lịch sử thì chạy bằng tham số mặc định, và cần thêm cột
+   (`stability`, `difficulty`) ngoài bốn cột đã có.
+
+### Quyết định
+**SM-2**, cài đặt thành hàm thuần `schedule()` trong `backend/src/learning/srs.ts`.
+
+**Quy đổi lần ôn sang điểm chất lượng `q`:**
+
+| Nguồn | `q` |
+|---|---|
+| Flashcard `AGAIN`, quiz sai | 1 |
+| Flashcard `HARD` | 3 |
+| Flashcard `GOOD`, quiz đúng | 4 |
+| Flashcard `EASY` | 5 |
+
+**Lịch ôn:**
+- `q < 3` (quên): `repetitions = 0`, `intervalDays = 0` → **đến hạn ngay**, từ ở lại danh
+  sách ôn cho tới khi trả lời được.
+- `q ≥ 3`: lần đúng thứ nhất → 1 ngày; lần thứ hai → 6 ngày; từ lần thứ ba →
+  `round(khoảng cách trước × easeFactor)`, tối đa 365 ngày.
+- `easeFactor` cập nhật sau **mọi** lần ôn: `EF + (0.1 − (5−q)·(0.08 + (5−q)·0.02))`, không
+  thấp hơn 1.3. Khởi đầu 2.5.
+- `dueAt` = **00:00 giờ địa phương** (`APP_TIMEZONE`, ADR-011) của ngày hôm nay +
+  `intervalDays`. Ôn lúc 9 giờ sáng hay 11 giờ đêm thì từ "1 ngày" đều đến hạn từ đầu ngày
+  mai — lịch ôn theo NGÀY, không theo giờ.
+
+**Trạng thái suy ra từ lịch ôn** (không còn theo chuỗi đúng liên tiếp):
+- chưa ôn lần nào → `NEW`
+- `repetitions = 0` (vừa quên, hoặc chưa đúng lần nào) → `LEARNING`
+- `intervalDays ≥ 21` → `MASTERED` (ngưỡng "thẻ trưởng thành" quen dùng của Anki)
+- còn lại → `REVIEW`
+
+**Từ cần ôn** (`GET /learning/due`, `dueCount`): chưa ôn lần nào, **hoặc** `dueAt ≤ bây giờ`.
+Thứ tự: từ quá hạn lâu nhất trước, từ mới sau cùng — nợ cũ trả trước khi vay mới.
+
+**Dữ liệu cũ:** dòng `LearningProgress` tạo trước Phase 11 có `dueAt = NULL` và được coi là
+đến hạn ngay. Không cần migration dữ liệu; lần ôn kế tiếp sẽ xếp lịch cho nó.
+
+### Lý do
+SM-2 dùng đúng bốn cột đã chuẩn bị từ Phase 9 — **không có migration schema nào**. Nó đủ
+đơn giản để đọc hết trong một hàm 20 dòng và kiểm chứng bằng tay (1 → 6 → 15 → 38 ngày), điều
+quan trọng với một dự án để học. FSRS tốt hơn về lý thuyết nhưng lợi thế của nó đến từ việc
+khớp tham số với dữ liệu cá nhân — thứ app này chưa có.
+
+Suy trạng thái từ `intervalDays` sửa đúng điểm yếu ADR-010 tự nêu: "5 lần đúng trong 5 phút
+cũng thành `MASTERED`". Giờ muốn `MASTERED` phải trụ được qua các khoảng cách 1, 6, 15 ngày.
+
+### Hệ quả
+**Tích cực:** "Ôn tập" trở thành việc làm mỗi ngày với số lượng tự giảm dần; contract của
+`POST /learning/review` và `GET /learning/due` không đổi (chỉ thêm field).
+**Cái giá phải trả:**
+- Học trước hạn (qua "Học" thay vì "Ôn tập") vẫn được tính như một lần ôn đúng hạn và đẩy
+  lịch xa thêm — SM-2 gốc không phân biệt.
+- Không giới hạn số từ mới mỗi ngày: thêm 200 từ thì cả 200 đều nằm trong danh sách ôn.
+- `correctStreak` (ADR-010) vẫn được ghi nhưng không còn quyết định trạng thái.
+- Từ đã `MASTERED` theo quy tắc cũ sẽ được tính lại trạng thái ở lần ôn kế tiếp.
+
+### Khi nào nên xem lại
+Khi `ReviewLog` có vài nghìn dòng: đủ dữ liệu để khớp tham số FSRS và so sánh tỷ lệ nhớ
+thực tế với SM-2. Xem lại sớm hơn nếu số từ đến hạn mỗi ngày vượt quá sức ôn — khi đó thêm
+giới hạn từ mới mỗi ngày trước khi nghĩ tới đổi thuật toán.

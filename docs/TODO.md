@@ -26,6 +26,10 @@ Ký hiệu: ⬜ chưa làm · 🔄 đang làm · ✅ xong · ⏸️ hoãn có ch
 
 ---
 
+> **SRS (Phase 11):** chưa có giới hạn số từ mới mỗi ngày — thêm 200 từ thì cả 200 nằm trong
+> "Ôn tập". Học trước hạn (qua "Học") vẫn đẩy lịch xa thêm như ôn đúng hạn. Xem lại khi số từ
+> đến hạn mỗi ngày vượt sức ôn (ADR-012 → "Khi nào nên xem lại").
+
 ## Hoãn có chủ đích ⏸️
 
 Những thứ **cố ý không làm**, kèm điều kiện để xem lại:

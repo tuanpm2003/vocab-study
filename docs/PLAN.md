@@ -48,7 +48,8 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F9 | Learning Progress | 9 | §3.7 | 9 | 9 | 100% | G1✅ G2✅ G5⬜ |
 | F10 | Dashboard | 10 | §3.8 | 5 | 5 | 100% | G1✅ G2✅ G5⬜ |
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 2 | 33% | G3✅ G4✅ G5⬜ |
-| | **Tổng** | | | **99** | **94** | **95%** | |
+| F12 | Spaced Repetition | 11 | Ngoài MVP | 6 | 6 | 100% | G1✅ G2✅ G5⬜ |
+| | **Tổng** | | | **105** | **100** | **95%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -302,9 +303,24 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 
 ---
 
+## F12 — Spaced Repetition · Phase 11
+
+**Mục tiêu:** mỗi từ có lịch ôn riêng theo thời gian. "Ôn tập" chỉ đưa ra những từ **đến hạn hôm nay**, và khoảng cách giữa các lần ôn giãn dần khi từ được nhớ tốt (ADR-012: SM-2).
+**Phụ thuộc:** F9, F10. **Ngoài phạm vi MVP** — làm theo yêu cầu của chủ dự án ngày 2026-10-07.
+
+| ID | Task | Tầng | Xong khi | TT |
+|---|---|---|---|:---:|
+| F12-01 | So sánh Leitner / SM-2 / FSRS, chốt thuật toán và cách suy trạng thái thành ADR **trước khi code** | Docs | Có ADR-012 trong DECISIONS.md | ✅ |
+| F12-02 | Hàm thuần `schedule()` (SM-2) + `statusFor()` trong `learning/srs.ts`; hàm cộng ngày theo múi giờ | BE | Unit test phủ mọi nhánh: quên, lần đúng 1/2/3+, sàn ease 1.3, trần 365 ngày, chuỗi 1 → 6 → 15 → 38 | ✅ |
+| F12-03 | `POST /learning/review` ghi `easeFactor`, `intervalDays`, `repetitions`, `dueAt`; trạng thái suy từ lịch ôn | BE | Ôn GOOD ba lần → `intervalDays` 1, 6, 15 và `dueAt` là 00:00 giờ địa phương của ngày đến hạn | ✅ |
+| F12-04 | `GET /learning/due` và `dueCount` theo `dueAt ≤ now` (từ chưa ôn và dòng cũ `dueAt` null vẫn đến hạn); quá hạn lâu nhất trước, từ mới sau cùng | BE | Từ vừa ôn GOOD biến khỏi danh sách; lùi `dueAt` về quá khứ thì nó hiện lại ở đầu | ✅ |
+| F12-05 | E2E cho lịch ôn + cập nhật các test Phase 9/10 theo quy tắc mới | Test | Toàn bộ unit + e2e pass | ✅ |
+| F12-06 | UI: mỗi nút chấm flashcard hiện khoảng cách ôn kế tiếp; danh sách và trang sửa từ hiện ngày ôn lại; Dashboard và màn hình "hết từ cần ôn" nói theo hạn ôn | FE | Lật thẻ thấy "1 ngày / 6 ngày…" dưới các nút; ôn hết thì báo "quay lại ngày mai" | ✅ |
+
+---
 ## Sau MVP
 
-Phase 11 (Spaced Repetition), Phase 12 (Authentication), Phase 13 (AWS) **không nằm trong file này**. Khi MVP xong, lập kế hoạch cho chúng thành các nhóm F12+ theo cùng định dạng, dựa trên dữ liệu thật từ F11-05.
+Phase 12 (Authentication) và Phase 13 (AWS) chưa được lập kế hoạch. Khi làm, thêm thành các nhóm F13+ theo cùng định dạng (Phase 11 là nhóm F12 ở trên).
 
 ---
 
@@ -314,6 +330,12 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-07 | F12-06 | Nút chấm flashcard hiện khoảng cách ôn ("ngay / 1 ngày / 15 ngày / ~3 tháng"), thẻ vừa Quên quay lại với lịch học lại; danh sách và trang sửa từ hiện "Ôn lại ngày mai / sau N ngày"; Dashboard "N từ đến hạn ôn"; hết từ → "Hôm nay bạn đã ôn hết". Thử trên trình duyệt với dữ liệu thật; frontend 70/70 |
+| 2026-10-07 | F12-05 | Viết lại `learning-progress.e2e-spec.ts` theo ADR-012 (40 test) và `progress-rules.spec.ts` (28 test); toàn bộ backend: unit 179, e2e 192 pass |
+| 2026-10-07 | F12-04 | `whereDue()` dùng chung cho `GET /learning/due` và `dueCount`: chưa ôn, `dueAt` null (dòng cũ) hoặc `dueAt ≤ now`. E2E: từ vừa GOOD biến khỏi danh sách, kéo hạn về quá khứ thì hiện lại ở đầu (kể cả MASTERED); quá hạn lâu nhất trước, từ mới sau cùng |
+| 2026-10-07 | F12-03 | `POST /learning/review` ghi `easeFactor` / `intervalDays` / `repetitions` / `dueAt`; e2e: GOOD ba lần → 1, 6, 15 ngày và `dueAt` đúng 00:00 giờ Việt Nam của ngày đến hạn; quên → 0 ngày, LEARNING; 38 ngày → MASTERED. Không cần migration schema |
+| 2026-10-07 | F12-02 | `learning/srs.ts`: `schedule()` (SM-2), `statusFor()`, `previewIntervals()` + `dueDateAfter()` trong time-zone.ts — đều là hàm thuần; 26 + 5 unit test: quên, lần đúng 1/2/3+, sàn ease 1.3, trần 365 ngày, chuỗi 1 → 6 → 15 → 38 → 95, DST |
+| 2026-10-07 | F12-01 | ADR-012: chọn SM-2 (dùng đúng 4 cột SRS có sẵn, không migration; FSRS cần dữ liệu để khớp tham số). Trạng thái suy từ lịch ôn: repetitions 0 → LEARNING, interval ≥ 21 ngày → MASTERED. Quyết định bởi Claude Code theo ủy quyền ngày 2026-10-07 |
 | 2026-10-06 | F11-04 | Đối chiếu tài liệu với code: README (trạng thái, cách dùng, seed, xử lý sự cố), ARCHITECTURE (cây thư mục, tên module), API.md (mọi endpoint ✅, quy ước `null`, stats, due, reorder), DATABASE.md (`correctStreak`, `isCorrect`), Roadmap trong CLAUDE.md, cột Gate |
 | 2026-10-06 | F11-03 | G1–G4 trên toàn bộ codebase. G3 (`reviewer`): 0 nghiêm trọng, 1 cao (ô tìm kiếm mất focus) + 8 mục nhỏ — đã sửa hết, có test hồi quy. G4 (`security`): 0/53 lời gọi Prisma không an toàn về `ownerId`; nâng `next` 16.3.6. Sau sửa: unit 148, e2e 179, frontend 52, build production cả hai phía OK |
 | 2026-10-06 | F10-05 | Người dùng mới: database rỗng → "Thêm ngôn ngữ" là bước duy nhất có nút; có ngôn ngữ chưa có từ → "Thêm từ"; 6 component test (frontend 41/41) |

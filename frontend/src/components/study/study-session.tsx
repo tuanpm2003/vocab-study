@@ -98,8 +98,8 @@ export function StudySession() {
   if (session.data.items.length === 0) {
     return isDue ? (
       <EmptyState
-        title="Không còn từ nào cần ôn"
-        description="Mọi từ đều đã qua mức “Đang học”. Thêm từ mới, hoặc học lại một phạm vi bất kỳ."
+        title="Hôm nay bạn đã ôn hết"
+        description="Không còn từ nào đến hạn. Quay lại ngày mai — hoặc thêm từ mới, hay học trước một phạm vi bất kỳ."
         action={backLink}
       />
     ) : (
@@ -144,6 +144,11 @@ export function StudySession() {
       // key: phiên mới = component mới, mọi state của phiên cũ bị bỏ.
       key={round}
       items={session.data.items.map((item) => item.vocabulary)}
+      intervals={Object.fromEntries(
+        session.data.items.flatMap((item) =>
+          item.intervals ? [[item.vocabulary.id, item.intervals]] : [],
+        ),
+      )}
       onReview={(vocabulary, rating) =>
         record({ vocabularyId: vocabulary.id, mode: "FLASHCARD", rating })
       }

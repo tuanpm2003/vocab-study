@@ -11,9 +11,17 @@ import {
   RATINGS,
   reveal,
 } from "@/lib/flashcard-session";
+import { formatInterval } from "@/lib/srs-format";
 import { useHotkeys } from "@/lib/use-hotkeys";
 import { cn } from "@/lib/utils";
 import type { Vocabulary } from "@/types/api";
+
+const RELEARN_INTERVALS: Record<Rating, number> = {
+  AGAIN: 0,
+  HARD: 1,
+  GOOD: 1,
+  EASY: 1,
+};
 
 const RATING_UI: Record<Rating, { label: string; className: string }> = {
   AGAIN: { label: "Quên", className: "border-red-300 bg-red-50 text-red-900" },
@@ -66,11 +74,14 @@ function Summary({
 
 export function FlashcardSession({
   items,
+  intervals,
   onReview,
   onRestart,
   summaryFooter,
 }: {
   items: Vocabulary[];
+  /** Theo id từ: số ngày tới lần ôn kế tiếp nếu chấm từng mức (backend tính sẵn). */
+  intervals?: Record<string, Record<Rating, number>>;
   /** Gọi mỗi lần chấm một thẻ. Phiên học không chờ nó xong. */
   onReview?: (vocabulary: Vocabulary, rating: Rating) => void;
   onRestart: () => void;
@@ -78,10 +89,16 @@ export function FlashcardSession({
 }) {
   const [state, setState] = useState(() => initFlashcards(items));
   const current = state.queue[0];
+  // Thẻ đã bị chấm "Quên" trong phiên này: backend đã đưa nó về vạch xuất phát, nên con số
+  // tính sẵn lúc mở phiên không còn đúng — mọi mức "nhớ được" giờ đều là 1 ngày.
+  const [forgotten, setForgotten] = useState<ReadonlySet<string>>(new Set());
 
   function handleRate(rating: Rating) {
     if (!current || !state.revealed) return;
     onReview?.(current, rating);
+    if (rating === "AGAIN") {
+      setForgotten((ids) => new Set(ids).add(current.id));
+    }
     setState((s) => rate(s, rating));
   }
 
@@ -105,6 +122,9 @@ export function FlashcardSession({
     );
   }
 
+  const preview = forgotten.has(current.id)
+    ? RELEARN_INTERVALS
+    : intervals?.[current.id];
   const lang = current.language.code ?? undefined;
   const readings = [current.reading, current.romanization].filter(Boolean);
 
@@ -165,11 +185,16 @@ export function FlashcardSession({
               type="button"
               onClick={() => handleRate(rating)}
               className={cn(
-                "flex h-16 flex-col items-center justify-center rounded-xl border font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                "flex h-20 flex-col items-center justify-center rounded-xl border font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 RATING_UI[rating].className,
               )}
             >
               {RATING_UI[rating].label}
+              {preview && (
+                <span className="text-xs font-normal">
+                  {formatInterval(preview[rating])}
+                </span>
+              )}
               <kbd className="text-xs font-normal opacity-70">{index + 1}</kbd>
             </button>
           ))}

@@ -94,6 +94,21 @@ export function dayRange(
   };
 }
 
+/**
+ * Thời điểm một từ đến hạn ôn: 00:00 giờ địa phương của (hôm nay + `intervalDays`).
+ * Lịch ôn tính theo NGÀY: ôn lúc 9 giờ sáng hay 11 giờ đêm thì từ "1 ngày" đều đến hạn từ
+ * đầu ngày mai. `intervalDays = 0` nghĩa là đến hạn ngay bây giờ.
+ */
+export function dueDateAfter(
+  now: Date,
+  intervalDays: number,
+  timeZone: string,
+): Date {
+  if (intervalDays <= 0) return now;
+  const { year, month, day } = localParts(now, timeZone);
+  return startOfLocalDay(year, month, day + intervalDays, timeZone);
+}
+
 function previousDay(dateKey: string): string {
   const [year, month, day] = dateKey.split('-').map(Number) as [
     number,

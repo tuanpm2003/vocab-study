@@ -1,4 +1,5 @@
 import { STATUS_CLASSES, STATUS_LABELS } from "@/lib/learning-status";
+import { formatDue } from "@/lib/srs-format";
 import { cn } from "@/lib/utils";
 import type { Progress } from "@/types/api";
 
@@ -10,6 +11,8 @@ export function StatusBadge({
   /** Kèm "đã ôn · đúng · sai" bên cạnh nhãn. */
   showCounts?: boolean;
 }) {
+  // Dữ liệu chỉ có sau khi trình duyệt gọi API, nên đọc đồng hồ ở đây không gây lệch hydration.
+  const due = showCounts ? formatDue(progress.dueAt, new Date()) : null;
   return (
     <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
       <span
@@ -24,6 +27,7 @@ export function StatusBadge({
         <span className="text-xs whitespace-nowrap text-muted-foreground">
           {progress.reviewCount} lần · {progress.correctCount} đúng ·{" "}
           {progress.incorrectCount} sai
+          {due && ` · ${due}`}
         </span>
       )}
     </span>

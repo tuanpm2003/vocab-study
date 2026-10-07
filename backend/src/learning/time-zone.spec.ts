@@ -1,5 +1,6 @@
 import {
   countStreak,
+  dueDateAfter,
   dayRange,
   isValidTimeZone,
   localDateKey,
@@ -165,5 +166,47 @@ describe('countStreak', () => {
       countStreak(['2026-10-01', '2026-09-30', '2026-09-29'], '2026-10-01'),
     ).toBe(3);
     expect(countStreak(['2027-01-01', '2026-12-31'], '2027-01-01')).toBe(2);
+  });
+});
+
+describe('dueDateAfter', () => {
+  const VN_ZONE = 'Asia/Ho_Chi_Minh';
+  const at = (iso: string) => new Date(`${iso}Z`);
+
+  it('0 ngày → đến hạn ngay bây giờ', () => {
+    const now = at('2026-10-06T03:00:00');
+    expect(dueDateAfter(now, 0, VN_ZONE)).toBe(now);
+  });
+
+  it('1 ngày → 00:00 giờ Việt Nam ngày mai, bất kể ôn lúc mấy giờ trong ngày', () => {
+    const morning = at('2026-10-06T02:00:00'); // 09:00 VN ngày 6
+    const lateNight = at('2026-10-06T16:30:00'); // 23:30 VN ngày 6
+    const expected = '2026-10-06T17:00:00.000Z'; // 00:00 VN ngày 7
+
+    expect(dueDateAfter(morning, 1, VN_ZONE).toISOString()).toBe(expected);
+    expect(dueDateAfter(lateNight, 1, VN_ZONE).toISOString()).toBe(expected);
+  });
+
+  it('ôn lúc 00:30 giờ Việt Nam (vẫn là "hôm qua" theo UTC) vẫn tính theo ngày địa phương', () => {
+    const justAfterMidnight = at('2026-10-06T17:30:00'); // 00:30 VN ngày 7
+    expect(dueDateAfter(justAfterMidnight, 1, VN_ZONE).toISOString()).toBe(
+      '2026-10-07T17:00:00.000Z', // 00:00 VN ngày 8
+    );
+  });
+
+  it('6 và 38 ngày, vắt qua cuối tháng và cuối năm', () => {
+    const now = at('2026-10-28T03:00:00');
+    expect(dueDateAfter(now, 6, VN_ZONE).toISOString()).toBe(
+      '2026-11-02T17:00:00.000Z',
+    );
+    expect(
+      dueDateAfter(at('2026-12-20T03:00:00'), 38, VN_ZONE).toISOString(),
+    ).toBe('2027-01-26T17:00:00.000Z');
+  });
+
+  it('múi giờ có DST: hạn ôn vẫn rơi đúng 00:00 địa phương sau khi đổi giờ', () => {
+    // New York đổi giờ ngày 8/3/2026: trước đó UTC-5, sau đó UTC-4.
+    const due = dueDateAfter(at('2026-03-07T15:00:00'), 2, 'America/New_York');
+    expect(due.toISOString()).toBe('2026-03-09T04:00:00.000Z');
   });
 });

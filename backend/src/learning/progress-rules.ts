@@ -1,15 +1,22 @@
-// Quy tắc cập nhật tiến độ sau một lần ôn — ADR-010.
-// Hàm thuần: không database, không thời gian hệ thống. Phase 11 thay file này bằng SM-2/FSRS.
+// Cập nhật tiến độ sau một lần ôn.
+// - Quy về đúng/sai, bộ đếm, chuỗi đúng liên tiếp: ADR-010.
+// - Lịch ôn (SM-2) và trạng thái suy từ lịch ôn: ADR-012, cài đặt ở srs.ts.
+// Hàm thuần: không database, không thời gian hệ thống.
 
 import type {
   LearningStatus,
   ReviewRating,
 } from '../generated/prisma/enums.js';
+import {
+  INITIAL_SRS,
+  qualityOfAnswer,
+  qualityOfRating,
+  schedule,
+  statusFor,
+  type SrsState,
+} from './srs.js';
 
-export const REVIEW_STREAK = 2;
-export const MASTERED_STREAK = 5;
-
-export interface ProgressSnapshot {
+export interface ProgressSnapshot extends SrsState {
   status: LearningStatus;
   reviewCount: number;
   correctCount: number;
@@ -19,6 +26,7 @@ export interface ProgressSnapshot {
 
 /** Tiến độ của một từ chưa ôn lần nào (chưa có dòng LearningProgress). */
 export const INITIAL_PROGRESS: ProgressSnapshot = {
+  ...INITIAL_SRS,
   status: 'NEW',
   reviewCount: 0,
   correctCount: 0,
@@ -30,13 +38,6 @@ export const INITIAL_PROGRESS: ProgressSnapshot = {
 export type ReviewInput =
   | { rating: ReviewRating; isCorrect?: undefined }
   | { rating?: undefined; isCorrect: boolean };
-
-const RANK: Record<LearningStatus, number> = {
-  NEW: 0,
-  LEARNING: 1,
-  REVIEW: 2,
-  MASTERED: 3,
-};
 
 // HARD = nhớ ra nhưng chật vật: tính là đúng, nhưng chuỗi không dài thêm.
 const STREAK_GAIN: Record<ReviewRating, number> = {
@@ -52,44 +53,32 @@ export function isCorrectReview(input: ReviewInput): boolean {
     : input.isCorrect;
 }
 
-function statusForStreak(streak: number): LearningStatus {
-  if (streak >= MASTERED_STREAK) return 'MASTERED';
-  if (streak >= REVIEW_STREAK) return 'REVIEW';
-  return 'LEARNING';
-}
-
-function demote(status: LearningStatus): LearningStatus {
-  // Tụt MỘT bậc, không về thẳng LEARNING: một lần bấm nhầm không xóa công sức nhiều tuần.
-  if (status === 'MASTERED') return 'REVIEW';
-  return 'LEARNING';
-}
-
 export function applyReview(
   current: ProgressSnapshot,
   input: ReviewInput,
 ): ProgressSnapshot {
   const correct = isCorrectReview(input);
-  const reviewCount = current.reviewCount + 1;
+  const quality =
+    input.rating !== undefined
+      ? qualityOfRating(input.rating)
+      : qualityOfAnswer(input.isCorrect);
+  const srs = schedule(
+    {
+      easeFactor: current.easeFactor,
+      intervalDays: current.intervalDays,
+      repetitions: current.repetitions,
+    },
+    quality,
+  );
+  const streakGain = input.rating !== undefined ? STREAK_GAIN[input.rating] : 1;
 
-  if (!correct) {
-    return {
-      status: demote(current.status),
-      reviewCount,
-      correctCount: current.correctCount,
-      incorrectCount: current.incorrectCount + 1,
-      correctStreak: 0,
-    };
-  }
-
-  const gain = input.rating !== undefined ? STREAK_GAIN[input.rating] : 1;
-  const correctStreak = current.correctStreak + gain;
-  const earned = statusForStreak(correctStreak);
   return {
-    // Trả lời đúng không bao giờ làm tụt bậc.
-    status: RANK[earned] > RANK[current.status] ? earned : current.status,
-    reviewCount,
-    correctCount: current.correctCount + 1,
-    incorrectCount: current.incorrectCount,
-    correctStreak,
+    ...srs,
+    // Trạng thái không còn là một máy trạng thái riêng: nó chỉ là cách đọc lịch ôn.
+    status: statusFor(srs),
+    reviewCount: current.reviewCount + 1,
+    correctCount: current.correctCount + (correct ? 1 : 0),
+    incorrectCount: current.incorrectCount + (correct ? 0 : 1),
+    correctStreak: correct ? current.correctStreak + streakGain : 0,
   };
 }

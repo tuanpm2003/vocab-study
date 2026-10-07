@@ -226,3 +226,57 @@ describe("FlashcardSession — phím tắt không tranh phím với nút đang f
     expect(screen.getByTestId("card-back")).toBeInTheDocument();
   });
 });
+
+describe("FlashcardSession — khoảng cách ôn kế tiếp (ADR-012)", () => {
+  const first = CARDS[0] as Vocabulary;
+  const second = CARDS[1] as Vocabulary;
+  const intervals = {
+    [first.id]: { AGAIN: 0, HARD: 12, GOOD: 15, EASY: 16 },
+    [second.id]: { AGAIN: 0, HARD: 1, GOOD: 1, EASY: 1 },
+  };
+  const rating = (name: RegExp) => screen.getByRole("button", { name });
+
+  it("mỗi nút chấm hiện khoảng cách ôn nếu chọn mức đó", async () => {
+    const user = userEvent.setup();
+    render(
+      <FlashcardSession
+        items={[first, second]}
+        intervals={intervals}
+        onRestart={vi.fn()}
+      />,
+    );
+
+    await user.keyboard(" ");
+
+    expect(rating(/Quên/)).toHaveTextContent("ngay");
+    expect(rating(/Khó/)).toHaveTextContent("12 ngày");
+    expect(rating(/Được/)).toHaveTextContent("15 ngày");
+    expect(rating(/Dễ/)).toHaveTextContent("16 ngày");
+  });
+
+  it("thẻ vừa bị chấm Quên quay lại với lịch học lại (1 ngày), không dùng con số cũ", async () => {
+    const user = userEvent.setup();
+    render(
+      <FlashcardSession
+        items={[first]}
+        intervals={intervals}
+        onRestart={vi.fn()}
+      />,
+    );
+
+    await user.keyboard(" 1 "); // Quên → cùng thẻ đó quay lại → lật
+
+    expect(rating(/Được/)).toHaveTextContent("1 ngày");
+    expect(rating(/Được/)).not.toHaveTextContent("15 ngày");
+    expect(rating(/Dễ/)).toHaveTextContent("1 ngày");
+  });
+
+  it("không có dữ liệu khoảng cách thì nút vẫn hiển thị bình thường", async () => {
+    const user = userEvent.setup();
+    render(<FlashcardSession items={[first]} onRestart={vi.fn()} />);
+
+    await user.keyboard(" ");
+
+    expect(rating(/Được/)).not.toHaveTextContent("ngày");
+  });
+});

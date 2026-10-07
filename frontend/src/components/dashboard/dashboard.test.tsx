@@ -123,7 +123,7 @@ describe("Dashboard — có dữ liệu", () => {
       name: "Hành động chính",
     });
     expect(
-      within(actions).getByRole("link", { name: /Ôn tập.*26 từ cần ôn/ }),
+      within(actions).getByRole("link", { name: /Ôn tập.*26 từ đến hạn ôn/ }),
     ).toHaveAttribute("href", "/study/session?source=due");
     expect(
       within(actions).getByRole("link", { name: /Thêm từ/ }),
@@ -145,7 +145,9 @@ describe("Dashboard — có dữ liệu", () => {
     expect(today).not.toHaveTextContent("0%");
     expect(today).toHaveTextContent("Hôm nay bạn chưa ôn từ nào");
     expect(today).toHaveTextContent("Chưa có chuỗi ngày học");
-    expect(screen.getByText("Không còn từ nào cần ôn")).toBeInTheDocument();
+    expect(
+      screen.getByText("Hôm nay đã ôn hết — quay lại ngày mai"),
+    ).toBeInTheDocument();
   });
 });
 

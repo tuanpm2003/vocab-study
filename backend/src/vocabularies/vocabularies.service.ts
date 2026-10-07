@@ -7,6 +7,7 @@ import { paginate, type Paginated } from '../common/dto/pagination.dto.js';
 import { Prisma } from '../generated/prisma/client.js';
 import type { LearningStatus } from '../generated/prisma/enums.js';
 import { LanguagesService } from '../languages/languages.service.js';
+import { INITIAL_SRS } from '../learning/srs.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   CreateVocabularyDto,
@@ -31,9 +32,28 @@ export const vocabularyInclude = {
       correctCount: true,
       incorrectCount: true,
       lastReviewedAt: true,
+      dueAt: true,
+      intervalDays: true,
+      easeFactor: true,
+      repetitions: true,
     },
   },
 } satisfies Prisma.VocabularyInclude;
+
+/**
+ * Từ ĐẾN HẠN ÔN (ADR-012): chưa ôn lần nào, hoặc hạn ôn đã tới. Dòng tiến độ tạo trước
+ * Phase 11 có `dueAt = null` và cũng được coi là đến hạn — lần ôn kế tiếp sẽ xếp lịch cho nó.
+ * `GET /learning/due` và `dueCount` của stats cùng dùng hàm này nên không thể lệch nhau.
+ */
+export function whereDue(now: Date): Prisma.VocabularyWhereInput {
+  return {
+    OR: [
+      { progress: null },
+      { progress: { dueAt: null } },
+      { progress: { dueAt: { lte: now } } },
+    ],
+  };
+}
 
 /**
  * Từ chưa ôn lần nào KHÔNG có dòng LearningProgress, nhưng với người dùng nó là "NEW".
@@ -93,6 +113,10 @@ export function toVocabularyResponse(row: VocabularyRow) {
       correctCount: 0,
       incorrectCount: 0,
       lastReviewedAt: null,
+      dueAt: null,
+      intervalDays: 0,
+      easeFactor: INITIAL_SRS.easeFactor,
+      repetitions: 0,
     },
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

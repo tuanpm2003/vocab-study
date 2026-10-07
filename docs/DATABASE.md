@@ -206,17 +206,20 @@ Ví dụ `extra`:
 | `reviewCount`, `correctCount`, `incorrectCount` | Int `@default(0)` | |
 | `correctStreak` | Int `@default(0)` | Số lần đúng liên tiếp — cơ sở chuyển trạng thái (ADR-010). *Thêm ở Phase 9* |
 | `lastReviewedAt` | DateTime? | |
-| — **các cột dưới đây MVP KHÔNG dùng** — | | |
-| `dueAt` | DateTime? | Phase 11 |
-| `intervalDays` | Int `@default(0)` | Phase 11 |
-| `easeFactor` | Float `@default(2.5)` | Phase 11 — giá trị khởi tạo của SM-2 |
-| `repetitions` | Int `@default(0)` | Phase 11 |
+| — **bốn cột lịch ôn, dùng từ Phase 11 (SM-2, ADR-012)** — | | |
+| `dueAt` | DateTime? | Hạn ôn kế tiếp: 00:00 giờ địa phương của ngày đến hạn. `null` = dòng tạo trước Phase 11, coi là đến hạn ngay |
+| `intervalDays` | Int `@default(0)` | Số ngày tới lần ôn kế tiếp; 0 = vừa quên |
+| `easeFactor` | Float `@default(2.5)` | "Hệ số dễ" của riêng từ này, sàn 1.3 |
+| `repetitions` | Int `@default(0)` | Số lần nhớ được liên tiếp; về 0 khi quên |
 
 Index: `@@index([ownerId, status])`, `@@index([ownerId, dueAt])`
 
+`status` từ Phase 11 là giá trị **suy ra** từ lịch ôn (`repetitions = 0` → `LEARNING`,
+`intervalDays ≥ 21` → `MASTERED`, còn lại `REVIEW`) và được lưu lại để lọc/đếm nhanh.
+
 **Bốn cột cuối là ví dụ rõ nhất trong dự án về "thiết kế cho tương lai mà không xây tương
-lai".** Chúng tốn đúng bốn cột trống. MVP bỏ qua hoàn toàn. Đến Phase 11, triển khai
-SM-2 trở thành một **hàm thuần túy** — nhận `(easeFactor, intervalDays, repetitions, rating)`
+lai".** Chúng tốn đúng bốn cột trống suốt MVP. Đến Phase 11 (đã làm, 2026-10-07), triển khai
+SM-2 đúng là chỉ còn một **hàm thuần túy** — nhận `(easeFactor, intervalDays, repetitions, rating)`
 trả về giá trị mới — và **không cần migration nào** trên dữ liệu đã dùng thật.
 
 ### ReviewLog

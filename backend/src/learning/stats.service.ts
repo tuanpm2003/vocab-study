@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { whereDue } from '../vocabularies/vocabularies.service.js';
 import { countStreak, dayRange, localDateKey } from './time-zone.js';
 
 // Chuỗi ngày học dài hơn thế này thì hiển thị đúng con số cũng không còn quan trọng.
@@ -57,16 +58,22 @@ export class StatsService {
 
     // Số truy vấn cố định, mọi phép đếm do database làm (COUNT / GROUP BY) — không tải
     // dòng ReviewLog hay Vocabulary nào về Node.
-    const [byLanguage, languages, vocabulary, statusGroups, studiedDays] =
-      await Promise.all([
-        this.prisma.$queryRaw<
-          {
-            languageId: string;
-            name: string;
-            reviewed: number;
-            correct: number;
-          }[]
-        >`
+    const [
+      byLanguage,
+      languages,
+      vocabulary,
+      statusGroups,
+      studiedDays,
+      dueCount,
+    ] = await Promise.all([
+      this.prisma.$queryRaw<
+        {
+          languageId: string;
+          name: string;
+          reviewed: number;
+          correct: number;
+        }[]
+      >`
           SELECT l.id AS "languageId", l.name,
                  COUNT(*)::int AS reviewed,
                  (COUNT(*) FILTER (WHERE r."isCorrect"))::int AS correct
@@ -78,16 +85,16 @@ export class StatsService {
             AND r."reviewedAt" < ${toSqlTimestamp(end)}::timestamp
           GROUP BY l.id, l.name
           ORDER BY reviewed DESC, l.name ASC`,
-        this.prisma.language.count({ where: { ownerId } }),
-        this.prisma.vocabulary.count({ where: { ownerId } }),
-        this.prisma.learningProgress.groupBy({
-          by: ['status'],
-          where: { ownerId },
-          _count: { _all: true },
-        }),
-        // reviewedAt lưu theo UTC (timestamp không kèm múi giờ): gắn nhãn UTC, đổi sang
-        // múi giờ cấu hình, rồi mới cắt lấy ngày.
-        this.prisma.$queryRaw<{ day: string }[]>`
+      this.prisma.language.count({ where: { ownerId } }),
+      this.prisma.vocabulary.count({ where: { ownerId } }),
+      this.prisma.learningProgress.groupBy({
+        by: ['status'],
+        where: { ownerId },
+        _count: { _all: true },
+      }),
+      // reviewedAt lưu theo UTC (timestamp không kèm múi giờ): gắn nhãn UTC, đổi sang
+      // múi giờ cấu hình, rồi mới cắt lấy ngày.
+      this.prisma.$queryRaw<{ day: string }[]>`
           SELECT DISTINCT to_char(
             (r."reviewedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timeZone},
             'YYYY-MM-DD'
@@ -96,7 +103,10 @@ export class StatsService {
           WHERE r."ownerId" = ${ownerId}
           ORDER BY day DESC
           LIMIT ${STREAK_LOOKBACK_DAYS}`,
-      ]);
+      this.prisma.vocabulary.count({
+        where: { ownerId, AND: [whereDue(now)] },
+      }),
+    ]);
 
     const countOf = (status: string): number =>
       statusGroups.find((group) => group.status === status)?._count._all ?? 0;
@@ -129,8 +139,8 @@ export class StatsService {
         review,
         mastered,
       },
-      // Cùng định nghĩa với GET /learning/due: NEW + LEARNING.
-      dueCount: fresh + learning,
+      // Cùng điều kiện với GET /learning/due (whereDue) — đến hạn theo lịch ôn, ADR-012.
+      dueCount,
       streak: countStreak(
         studiedDays.map((row) => row.day),
         localDateKey(now, timeZone),

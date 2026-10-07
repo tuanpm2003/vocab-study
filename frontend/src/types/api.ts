@@ -82,6 +82,12 @@ export interface Progress {
   correctCount: number;
   incorrectCount: number;
   lastReviewedAt: string | null;
+  /** Hạn ôn kế tiếp (ADR-012). null = chưa ôn lần nào, hoặc dữ liệu trước Phase 11. */
+  dueAt: string | null;
+  /** Số ngày giữa lần ôn vừa rồi và hạn ôn kế tiếp. */
+  intervalDays: number;
+  easeFactor: number;
+  repetitions: number;
 }
 
 export interface Vocabulary {
@@ -176,7 +182,11 @@ export interface QuizItem {
 }
 
 /** Flashcard chỉ có `vocabulary`; trắc nghiệm có đủ các field của QuizItem. */
-export type SessionItem = Pick<QuizItem, "vocabulary"> & Partial<QuizItem>;
+export type SessionItem = Pick<QuizItem, "vocabulary"> &
+  Partial<QuizItem> & {
+    /** Chỉ có ở phiên flashcard: số ngày tới lần ôn kế tiếp nếu chấm từng mức. */
+    intervals?: Record<Rating, number>;
+  };
 
 export function isQuizItem(item: SessionItem): item is QuizItem {
   return Array.isArray(item.choices) && typeof item.correctIndex === "number";

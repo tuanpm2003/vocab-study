@@ -11,6 +11,34 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Phase 11] — Spaced Repetition (SM-2) — 2026-10-07
+
+Làm theo yêu cầu của chủ dự án, trước khi có dữ liệu dùng thật mà ADR-007 muốn chờ.
+
+### Added
+- ADR-012: chọn SM-2; trạng thái suy ra từ khoảng cách ôn
+- `learning/srs.ts` — `schedule()`, `statusFor()`, `previewIntervals()` (hàm thuần);
+  `dueDateAfter()` trong `time-zone.ts`
+- Mỗi lần ôn ghi `easeFactor`, `intervalDays`, `repetitions`, `dueAt`
+- Phiên flashcard trả kèm `intervals`; mỗi nút chấm hiện khoảng cách ôn kế tiếp
+- Danh sách và trang sửa từ hiện lịch ôn ("Ôn lại ngày mai", "Ôn lại sau 6 ngày")
+- Test: +36 unit, +13 e2e, +18 frontend
+
+### Changed
+- **"Ôn tập" đổi nghĩa:** từ "mọi từ chưa thuộc" thành "từ đến hạn hôm nay" (`dueAt ≤ now`).
+  Từ đã thuộc vẫn quay lại khi tới hạn; từ vừa ôn được thì biến khỏi danh sách tới ngày hẹn.
+- Trạng thái không còn theo chuỗi đúng liên tiếp (ADR-010): `repetitions = 0` → Đang học,
+  khoảng cách ≥ 21 ngày → Đã thuộc. Trả lời đúng lần đầu nay lên thẳng "Ôn tập".
+- `dueCount` không còn bằng `new + learning`.
+
+### Notes
+- **Không có migration schema**: dùng đúng bốn cột đã để sẵn từ Phase 9 (ADR-007).
+- Từ đã học trước Phase 11 chưa có lịch (`dueAt` null) nên **tất cả đều đến hạn ngay** trong
+  lần đầu mở "Ôn tập"; mỗi từ được xếp lịch ở lần ôn kế tiếp, và trạng thái cũ được tính lại.
+- Chưa có giới hạn số từ mới mỗi ngày.
+
+Quality gates: G1 ✅ G2 ✅ G3 ⊘ G4 ⊘ G5 ⬜
+
 ## [Sau nghiệm thu] — Phản hồi hover cho mọi nút — 2026-10-07
 
 Phản hồi của chủ dự án sau khi tự chạy thử: nút bấm không có hiệu ứng hover.

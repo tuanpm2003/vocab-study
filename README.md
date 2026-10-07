@@ -6,7 +6,7 @@ học bằng Flashcard và Quiz, theo dõi tiến độ trên Dashboard.
 
 > **Trạng thái:** MVP đã đủ tính năng (Phase 1–10): quản lý ngôn ngữ / level / bài học, thêm từ
 > nhanh, danh sách có tìm kiếm và lọc, Flashcard, Trắc nghiệm, tiến độ học, Dashboard.
-> Đang chờ chủ dự án nghiệm thu (nhóm F11). Tiến độ chi tiết: [docs/PLAN.md](docs/PLAN.md).
+> Đã có thêm Spaced Repetition (Phase 11, SM-2). Đang chờ chủ dự án nghiệm thu (nhóm F11). Tiến độ chi tiết: [docs/PLAN.md](docs/PLAN.md).
 
 ---
 
@@ -107,7 +107,7 @@ Chạy lại bao nhiêu lần cũng không tạo bản ghi trùng.
 | Thêm từ liên tục | **Thêm từ** — `Ctrl+Enter` để lưu, ngữ cảnh được giữ lại cho từ kế tiếp |
 | Tìm, lọc, sửa, xóa từ | **Từ vựng** |
 | Học một phạm vi bất kỳ | **Học** → Flashcard hoặc Trắc nghiệm |
-| Ôn những từ chưa thuộc | **Ôn tập** (một lần bấm từ mọi trang) |
+| Ôn những từ **đến hạn hôm nay** | **Ôn tập** (một lần bấm từ mọi trang) — lịch ôn giãn dần theo mức độ nhớ |
 
 Phím tắt khi học: `Space` lật thẻ / sang câu, `1`–`4` chấm điểm hoặc chọn đáp án.
 
