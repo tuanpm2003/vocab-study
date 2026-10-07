@@ -36,3 +36,21 @@ Thumbs.db
 # Next.js / Vercel
 .vercel
 *.pem
+
+# Khóa và chứng chỉ
+*.key
+*.p12
+*.pfx
+
+# Dump / backup database. Không ignore *.sql — migration của Prisma là file .sql
+*.dump
+*.sql.gz
+backup/
+
+# AWS / IaC
+.aws/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+cdk.out/
