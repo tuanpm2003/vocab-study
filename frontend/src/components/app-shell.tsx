@@ -69,7 +69,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <>
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center gap-4 px-4">
-          <Link href="/" className="font-semibold">
+          <Link
+            href="/"
+            className="rounded-md px-1 font-semibold transition-colors hover:text-muted-foreground"
+          >
             Vocabulary
           </Link>
           <nav className="flex flex-1 items-center gap-1 text-sm">
@@ -78,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "rounded-md px-2.5 py-2 text-muted-foreground hover:text-foreground",
+                  "rounded-md px-2.5 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                   pathname.startsWith(link.href) &&
                     "bg-muted font-medium text-foreground",
                 )}
@@ -94,9 +97,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 action={action}
                 className={cn(
                   "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium",
+                  // Nền gần đen: làm tối thêm không nhìn ra, nên hover phải làm SÁNG lên.
+                  action.available && "pressable",
                   i === 0
-                    ? "bg-primary text-primary-foreground"
-                    : "border bg-background",
+                    ? "bg-primary text-primary-foreground hover:bg-primary/80"
+                    : "border bg-background hover:bg-muted",
                 )}
               />
             ))}
@@ -117,7 +122,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ActionLink
             key={action.href}
             action={action}
-            className="flex h-14 flex-col items-center justify-center gap-0.5 text-xs font-medium"
+            className={cn(
+              "flex h-14 flex-col items-center justify-center gap-0.5 text-xs font-medium",
+              action.available &&
+                "transition-colors hover:bg-muted active:bg-muted",
+            )}
           />
         ))}
       </nav>

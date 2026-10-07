@@ -128,3 +128,77 @@
     @apply font-sans;
   }
 }
+
+/*
+ * Phản hồi khi rê chuột cho mọi thứ bấm được.
+ *
+ * Tailwind 4 để con trỏ mặc định (mũi tên) trên <button>, và mỗi nút tự dựng lại phải tự nhớ
+ * thêm class hover — rất dễ quên. Đặt quy tắc ở đây thì nút viết sau này cũng tự có hiệu ứng.
+ *
+ * Bọc trong @media (hover: hover): trên màn hình cảm ứng, :hover "dính" lại sau khi chạm và
+ * làm nút trông như đang bị giữ.
+ */
+@layer base {
+  :where(
+    button,
+    [role="button"],
+    a[href],
+    summary,
+    select,
+    label:has(input[type="radio"]),
+    label:has(input[type="checkbox"])
+  ):not(:disabled, [aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  :where(button:disabled, select:disabled, [aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
+
+  /* a[class~="group/button"]: link mang kiểu nút của shadcn (buttonVariants). */
+  :where(button, a[class~="group/button"]):not(:disabled) {
+    transition:
+      filter 120ms ease,
+      box-shadow 120ms ease,
+      transform 120ms ease,
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+
+  @media (hover: hover) {
+    :where(button, a[class~="group/button"]):not(:disabled):hover {
+      filter: brightness(0.94);
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.16);
+    }
+  }
+
+  :where(button, a[class~="group/button"]):not(:disabled):active {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+}
+
+/* Cho link và thẻ tự dựng đóng vai trò nút: nhấc nhẹ lên và đổ bóng khi rê chuột. */
+@utility pressable {
+  transition:
+    filter 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+
+  @media (hover: hover) {
+    &:hover {
+      filter: brightness(0.96);
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.14);
+      transform: translateY(-1px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+}

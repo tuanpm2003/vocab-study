@@ -105,10 +105,10 @@ function ActionCard({
     <Link
       href={href}
       className={cn(
-        "flex min-h-20 items-center gap-3 rounded-xl border p-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        "pressable flex min-h-20 items-center gap-3 rounded-xl border p-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         primary
-          ? "border-primary bg-primary text-primary-foreground"
-          : "hover:bg-muted/50",
+          ? "border-primary bg-primary text-primary-foreground hover:bg-primary/80"
+          : "hover:border-foreground/30 hover:bg-muted",
       )}
     >
       <Icon className="size-6 shrink-0" aria-hidden />
@@ -250,7 +250,7 @@ export function Dashboard() {
               <Link
                 href={`/vocabulary?status=${status}`}
                 className={cn(
-                  "block rounded-xl border p-3 outline-none hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50",
+                  "pressable block rounded-xl border p-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                   STATUS_CLASSES[status],
                 )}
               >

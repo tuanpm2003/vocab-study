@@ -72,7 +72,7 @@ export function LanguageList() {
           {data.items.map((language) => (
             <li
               key={language.id}
-              className="relative flex items-center gap-2 rounded-xl border p-4 hover:bg-muted/40"
+              className="relative flex items-center gap-2 rounded-xl border p-4 transition hover:border-foreground/30 hover:bg-muted/60 hover:shadow-sm"
             >
               <div className="min-w-0 flex-1">
                 {/* after:inset-0 phủ link lên cả thẻ → bấm đâu cũng mở, mà vẫn chỉ có một link cho trình đọc màn hình. */}

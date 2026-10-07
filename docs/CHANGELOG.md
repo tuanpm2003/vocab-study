@@ -11,6 +11,21 @@ Ký hiệu Quality Gate: `✅` pass · `⊘` miễn trừ (kèm lý do) · `⚠�
 > G0/G5. Gate ghi `G5 ⊘` nghĩa là *chưa có người chạy thử* — không phải đã đạt. Việc tự
 > kiểm tra của con người được dồn về nhóm F11 trong [PLAN.md](PLAN.md).
 
+## [Sau nghiệm thu] — Phản hồi hover cho mọi nút — 2026-10-07
+
+Phản hồi của chủ dự án sau khi tự chạy thử: nút bấm không có hiệu ứng hover.
+
+### Fixed
+- Tailwind 4 để con trỏ mặc định (mũi tên) trên `<button>` → quy tắc chung trong
+  `globals.css`: con trỏ `pointer` cho mọi nút, link, select, nhãn radio đang bật;
+  `not-allowed` cho phần tử bị khóa
+- Mọi `<button>` và link kiểu nút: tối nhẹ + đổ bóng khi rê chuột, lún 1px khi nhấn — đặt ở
+  tầng base nên nút viết sau này tự có, không phải nhớ thêm class
+- Utility `pressable` cho link/thẻ đóng vai trò nút (thẻ hành động và ô trạng thái trên
+  Dashboard, nút trên thanh điều hướng, lựa chọn chế độ học)
+- Nút nền đen (chip đã chọn, hành động chính) sáng lên khi hover — làm tối thêm không nhìn ra
+- Hiệu ứng bọc trong `@media (hover: hover)` để không "dính" trên màn hình cảm ứng
+
 ## [Nghiệm thu MVP — G3 + G4 trên toàn bộ codebase] — 2026-10-06
 
 Rà soát chéo bằng hai subagent chỉ-đọc, ngữ cảnh độc lập (`reviewer`, `security`).

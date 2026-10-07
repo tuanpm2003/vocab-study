@@ -391,8 +391,8 @@ export function VocabularyForm({
                   className={cn(
                     "min-h-9 rounded-full border px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                     selected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "bg-background hover:bg-muted",
+                      ? "border-primary bg-primary text-primary-foreground hover:bg-primary/80"
+                      : "bg-background hover:border-foreground/40 hover:bg-muted",
                   )}
                 >
                   {c.name}

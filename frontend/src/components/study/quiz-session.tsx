@@ -170,7 +170,7 @@ export function QuizSession({
                 }
                 className={cn(
                   "flex min-h-14 w-full items-center gap-3 rounded-xl border px-4 py-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                  !answered && "hover:bg-muted",
+                  !answered && "hover:border-foreground/40 hover:bg-muted",
                   // Sau khi trả lời: đáp án đúng LUÔN được tô xanh, kể cả khi người học chọn sai.
                   answered &&
                     isAnswer &&

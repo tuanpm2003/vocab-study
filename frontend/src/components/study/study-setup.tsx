@@ -106,7 +106,7 @@ export function StudySetup() {
             <label
               key={option.value}
               className={cn(
-                "cursor-pointer rounded-xl border p-3 has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
+                "pressable rounded-xl border p-3 hover:border-foreground/40 has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
                 mode === option.value && "border-primary bg-muted/50",
               )}
             >
@@ -197,7 +197,7 @@ export function StudySetup() {
               className={cn(
                 "h-10 min-w-14 rounded-lg border px-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 limit === size
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-primary bg-primary text-primary-foreground hover:bg-primary/80"
                   : "bg-background hover:bg-muted",
               )}
             >

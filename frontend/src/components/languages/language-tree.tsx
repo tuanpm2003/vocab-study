@@ -44,7 +44,7 @@ function CollectionRow({
   onDelete: () => void;
 }) {
   return (
-    <li className="flex items-center gap-1 rounded-md pl-2 hover:bg-muted/50">
+    <li className="flex items-center gap-1 rounded-md pl-2 transition-colors hover:bg-muted">
       <Link
         href={`/collections/${collection.id}`}
         className="min-w-0 flex-1 truncate py-2 text-sm hover:underline"
