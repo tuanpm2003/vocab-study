@@ -137,7 +137,7 @@ describe('Hardening sau G3/G4 (e2e)', () => {
     const vocabularyId = fx.jaWords[0];
     const total = 12;
 
-    const responses = await Promise.all(
+    const responses = await Promise.allSettled(
       Array.from({ length: total }, (_, i) =>
         api()
           .post('/learning/review')
