@@ -195,30 +195,31 @@ bị bỏ qua hoàn toàn (ai cũng gửi được request thẳng tới API).
 
 ---
 
-## 7. Kiến trúc AWS dự kiến — Phase 13
+## 7. Kiến trúc production — Phase 13
 
 ```
-Internet
-   │
-   ▼
-Route 53 ──► CloudFront ──► S3 (Next.js static export)
-                 │
-                 └── /api/* ──► ALB ──► ECS Fargate (NestJS)
-                                            │
-                                            ├──► RDS PostgreSQL (private subnet)
-                                            ├──► Secrets Manager
-                                            └──► CloudWatch Logs
-                                       ACM cung cấp chứng chỉ HTTPS
+Trình duyệt ──HTTPS──► <tên miền> (Static IP)
+                              │
+              ┌───────────────▼──────────────── Lightsail 1 GB ──┐
+              │  Caddy :443  (Let's Encrypt)                     │
+              │    ├─ /api/*  ──► backend  NestJS :4000 ──┐      │
+              │    └─ /*      ──► frontend Next.js :3000  │      │
+              │                                           ▼      │
+              │                              PostgreSQL 16 (volume)
+              │  cron ─ pg_dump ─────────────────────────────────┼──► S3
+              └──────────────────────────────────────────────────┘
 ```
 
-**Chưa quyết định.** So sánh ba phương án kèm ước tính chi phí ở skill `aws-deploy`.
+Đã chốt ở ADR-014: một máy Lightsail chạy Docker Compose, khoảng 7–8 USD/tháng. Hạ tầng
+dựng bằng Terraform (`infra/terraform/`), deploy bằng GitHub Actions.
 
-Nguyên tắc: **không dùng AWS service chỉ để kiến trúc trông phức tạp.**
-Ưu tiên chi phí thấp → đơn giản → learning value.
+- Lý do, bảng chi phí, đường nâng cấp: [AWS_PLAN.md](AWS_PLAN.md)
+- Nhánh và pipeline: [GIT_FLOW.md](GIT_FLOW.md)
+- Cách dựng và vận hành: [infra/README.md](../infra/README.md)
 
-Điều quan trọng: quyết định hạ tầng **không ảnh hưởng tới code đang viết**. Vì dùng
-PostgreSQL chuẩn + Docker + Next static export, app chạy được ở mọi phương án mà không
-sửa dòng nào.
+Next.js chạy dạng server (`output: 'standalone'`), **không** static export: app có route
+động với id chỉ biết lúc chạy. Frontend gọi API qua đường dẫn tương đối `/api`, nên hai bên
+cùng origin.
 
 ---
 

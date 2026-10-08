@@ -1,0 +1,13 @@
+# Chép thành terraform.tfvars (đã gitignore) rồi điền giá trị thật.
+
+# Nội dung file ~/.ssh/id_ed25519.pub của bạn
+admin_ssh_public_key = "ssh-ed25519 AAAA... you@laptop"
+
+# Khóa RIÊNG cho GitHub Actions:  ssh-keygen -t ed25519 -f vocab_deploy -N '""' -C github-actions
+# Dán nội dung vocab_deploy.pub vào đây; nội dung vocab_deploy đặt ở secret DEPLOY_SSH_KEY.
+deploy_ssh_public_key = "ssh-ed25519 AAAA... github-actions"
+
+alert_email = "you@example.com"
+
+# monthly_budget_usd = 10
+# bundle_id          = "micro_3_0"

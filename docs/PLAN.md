@@ -50,7 +50,8 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 2 | 33% | G3✅ G4✅ G5⬜ |
 | F12 | Spaced Repetition | 11 | Ngoài MVP | 6 | 6 | 100% | G1✅ G2✅ G5⬜ |
 | F13 | Authentication | 12 | Ngoài MVP | 9 | 9 | 100% | G1✅ G2✅ G4✅ G5⬜ |
-| | **Tổng** | | | **114** | **109** | **96%** | |
+| F14 | AWS Deployment | 13 | Ngoài MVP | 13 | 6 | 46% | G1✅ |
+| | **Tổng** | | | **127** | **115** | **91%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -337,9 +338,31 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 | F13-09 | Cập nhật tài liệu: API.md, DATABASE.md, README (đăng ký lần đầu, biến môi trường mới), TODO "trước khi lên mạng" | Docs | Làm theo README trên database đang dùng → đăng nhập được và còn nguyên dữ liệu | ✅ |
 
 ---
+## F14 — AWS Deployment · Phase 13
+
+**Mục tiêu:** app có URL công khai trên một máy Lightsail, khoảng 7–8 USD/tháng; hạ tầng dựng bằng Terraform, deploy bằng GitHub Actions (ADR-014). Kế hoạch và sơ đồ: [AWS_PLAN.md](AWS_PLAN.md) · quy trình nhánh và pipeline: [GIT_FLOW.md](GIT_FLOW.md).
+**Phụ thuộc:** F13. **Ngoài phạm vi MVP.** Các task cần tài khoản AWS, GitHub hoặc secret của chủ dự án (F14-07 trở đi) do **con người** làm; Claude Code không tự đánh ✅.
+
+| ID | Task | Tầng | Xong khi | TT |
+|---|---|---|---|:---:|
+| F14-01 | Chốt nơi chạy, công cụ IaC và cách deploy thành ADR **trước khi code** | Docs | Có ADR-014 trong DECISIONS.md | ✅ |
+| F14-02 | `Dockerfile` multi-stage cho backend (có target `migrate`) và frontend (`output: 'standalone'`), `.dockerignore` | Infra | `docker build` cả ba image chạy được ở local | ✅ |
+| F14-03 | `infra/server/`: Compose production + `Caddyfile` (`/api/*` → backend) + `.env.example`; chạy thử toàn bộ stack ở local | Infra | `http://localhost/api/health` trả 200 qua Caddy; đăng ký + đăng nhập qua `/api` được; cổng Postgres không publish | ✅ |
+| F14-04 | Terraform `infra/terraform/`: Lightsail + static IP + firewall, S3 backup + IAM user chỉ ghi, AWS Budgets | Infra | `terraform fmt -check` và `terraform validate` sạch | ✅ |
+| F14-05 | GitHub Actions: `ci.yml` (lint, test, build, terraform validate) và `deploy.yml` (build image → GHCR → SSH deploy, có rollback) | Infra | `actionlint` sạch; mọi lệnh CI gọi tới chạy pass ở local | ✅ |
+| F14-06 | Tài liệu quy trình nhánh + pipeline (`GIT_FLOW.md`), hướng dẫn dựng hạ tầng (`infra/README.md`), script backup | Docs | Có đủ: bảng secret cần đặt, các bước dựng lần đầu, cách rollback, cách khôi phục backup | ✅ |
+| F14-07 | Hardening backend trước khi có URL công khai: `helmet`, `trust proxy = 1`, tắt Swagger ở production, throttler toàn cục | BE | E2E pass; Swagger trả 404 khi `NODE_ENV=production`; rate-limit tính theo IP thật sau Caddy | ⬜ |
+| F14-08 | Tài khoản AWS: MFA cho root, IAM user riêng; `terraform apply` | Infra | Nhận email xác nhận budget; `terraform output` có static IP; SSH vào được (con người) | ⬜ |
+| F14-09 | Đặt secret/variable trên GitHub, bật branch protection cho `main`, lượt CI đầu tiên | Infra | PR đầu tiên có dấu xanh từ CI (con người) | ⬜ |
+| F14-10 | Tạo `/opt/vocab/.env` trên server, trỏ DNS, bật `DEPLOY_ENABLED`, deploy lần đầu | Infra | `https://<domain>/api/health` trả 200, trình duyệt hiện ổ khóa (con người) | ⬜ |
+| F14-11 | Chuyển dữ liệu dev lên production bằng `pg_dump`/`pg_restore` (tài khoản phải tạo ở local **trước**, ADR-013), rồi `REGISTRATION_ENABLED=false` | DB | Đăng nhập trên production thấy đủ từ vựng cũ; đăng ký mới bị từ chối (con người) | ⬜ |
+| F14-12 | Bật cron backup, **thử khôi phục** một bản vào Postgres ở local | Infra | Số dòng `Vocabulary` và `LearningProgress` khớp production (con người) | ⬜ |
+| F14-13 | UptimeRobot cho `/api/health`; subagent `security` rà cấu hình production | Test | Không còn phát hiện NGHIÊM TRỌNG hoặc CAO | ⬜ |
+
+---
 ## Sau MVP
 
-Phase 13 (AWS) chưa được lập kế hoạch. Khi làm, thêm thành nhóm F14 theo cùng định dạng.
+Chưa có nhóm nào sau F14.
 
 ---
 
@@ -349,6 +372,12 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-08 | F14-06 | `docs/GIT_FLOW.md` (nhánh, hai workflow, rollback, bảng secret/variable, vì sao không Argo CD), `infra/README.md` (chạy thử local, dựng lần đầu, chuyển dữ liệu, backup + khôi phục), `infra/server/backup.sh`. Các lệnh chuyển dữ liệu và khôi phục trong README **chưa chạy thử** — cần server và bucket thật (F14-11, F14-12) |
+| 2026-10-08 | F14-05 | `.github/workflows/ci.yml` + `deploy.yml`. `actionlint` sạch (đã sửa SC2087: biến truyền qua stdin bằng `printf %q`). Chạy local đúng các lệnh CI gọi: backend lint/format/build, unit 227, e2e 260; frontend lint/format, test 117, build. Chưa có lượt chạy thật trên GitHub (F14-09) |
+| 2026-10-08 | F14-04 | `infra/terraform/`: 12 tài nguyên (Lightsail + key pair + static IP + firewall, S3 + lifecycle + chặn public, IAM user chỉ `PutObject`, Budgets). `terraform fmt -check` và `validate` sạch qua image `hashicorp/terraform:1.9`. Chưa `plan`/`apply` — cần tài khoản AWS (F14-08) |
+| 2026-10-08 | F14-03 | Stack production chạy ở local qua Caddy: `/api/health` 200, đăng ký 201 với cookie `HttpOnly; Secure`, `/api/auth/me` 200, chưa đăng nhập → 401, `Origin` lạ → 403, cổng 4000 không tới được từ ngoài, trình duyệt mở `/vocabulary` được chuyển về `/login` và gọi `/api/auth/me` |
+| 2026-10-08 | F14-02 | `backend/Dockerfile` (target `runtime`, `migrate`), `frontend/Dockerfile`, `output: 'standalone'`. Build được cả ba image: frontend 292 MB, backend 726 MB, migrate 1,42 GB. Bắt được lỗi: thiếu `tsconfig.json` lúc `prisma generate` làm client sinh import đuôi `.ts`, app chết khi khởi động |
+| 2026-10-08 | F14-01 | ADR-014: một máy Lightsail + Docker Compose (~7–8 USD/tháng), Terraform với state ở máy dev, GitHub Actions thay Argo CD (Argo cần Kubernetes), giữ mô hình nhánh `main` + `feature/phase-<n>`. Chủ dự án chọn cả ba qua câu hỏi trực tiếp. Thêm nhóm F14 (13 task) |
 | 2026-10-07 | F13-09 | API.md (mục Auth, chống CSRF), DATABASE.md (bảng User, dòng giữ chỗ), README (đăng ký lần đầu, JWT_SECRET, nâng cấp database cũ, quên mật khẩu), `.env.example`, TODO "trước khi lên mạng", ADR-013 có đính chính. Chưa tự kiểm được dòng "đăng nhập được và còn nguyên dữ liệu" trên database dev — việc đăng ký đầu tiên là của chủ dự án; luồng đó được phủ bằng e2e trên database test |
 | 2026-10-07 | F13-08 | Subagent `security` rà riêng phần auth: 32 route (4 công khai có chủ đích), 0 nghiêm trọng, 2 cao, 4 trung bình. Đã sửa: chốt Origin + Content-Type chống CSRF (form chéo site từng chiếm được dòng giữ chỗ), HOST ngoài loopback bắt buộc cấu hình production, `safeNext` lọt ký tự tab, tham số scrypt ghi trong hash. +16 e2e, +20 unit, +14 frontend. Phần còn lại ghi TODO cho Phase 13 |
 | 2026-10-07 | F13-07 | Trang `/login` và `/register` (RHF + Zod, một form dùng chung); `apiFetch` gửi cookie (`credentials: include`); `AuthGate` chuyển về `/login?next=…` và `safeNext` chỉ nhận đường dẫn nội bộ (chống open redirect); thanh điều hướng có nút Đăng xuất. Trên trình duyệt: mở `/vocabulary?status=LEARNING` khi chưa đăng nhập → `/login?next=%2Fvocabulary%3Fstatus%3DLEARNING`; cookie không đọc được từ JavaScript. +33 test frontend (103/103). Chưa đăng ký thật trên database dev — tài khoản đầu tiên phải là của chủ dự án |

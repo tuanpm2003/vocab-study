@@ -19,6 +19,9 @@
 | **Cách con người và AI làm việc cùng nhau** | [docs/WORKFLOW.md](docs/WORKFLOW.md) |
 | **Sáu cửa kiểm soát chất lượng** | [docs/QUALITY_GATES.md](docs/QUALITY_GATES.md) |
 | **Kế hoạch tới MVP + tiến độ từng task** | [docs/PLAN.md](docs/PLAN.md) |
+| Kiến trúc AWS, chi phí, sơ đồ | [docs/AWS_PLAN.md](docs/AWS_PLAN.md) |
+| Nhánh, CI/CD, rollback | [docs/GIT_FLOW.md](docs/GIT_FLOW.md) |
+| Dựng và vận hành hạ tầng | [infra/README.md](infra/README.md) |
 | Nợ kỹ thuật, việc hoãn, việc trước khi lên mạng | [docs/TODO.md](docs/TODO.md) |
 | Lịch sử thay đổi | [docs/CHANGELOG.md](docs/CHANGELOG.md) |
 
@@ -152,7 +155,7 @@ Quy tắc: field cần **search/filter/sort** → cột thật; field chỉ đ�
 | 10 | Dashboard | ✅ |
 | 11 | Spaced Repetition — SM-2 (ADR-012) | ✅ |
 | 12 | Authentication — JWT trong cookie httpOnly (ADR-013) | ✅ |
-| 13 | AWS Deployment | ⬜ |
+| 13 | AWS Deployment — Lightsail + Terraform + GitHub Actions (ADR-014) | 🔄 |
 
 **Ngoài MVP:** AI, TTS, Speech Recognition, SRS phức tạp, multi-user, import/export,
 dark mode, PWA, microservices, Kubernetes. Xem
@@ -189,6 +192,9 @@ cần một nơi tích hợp trước khi release.
 main                                    ← luôn chạy được
 feature/phase-<n>-<tên-ngắn>            ← một nhánh cho một phase
 ```
+
+Từ Phase 13, mọi thay đổi vào `main` đi qua Pull Request: CI chạy trên PR, và merge vào
+`main` là deploy lên production. Chi tiết: [docs/GIT_FLOW.md](docs/GIT_FLOW.md).
 
 Lợi ích thật sự của việc tách nhánh theo phase: `git diff main...HEAD` cho `reviewer`
 **đúng phạm vi** cần xem, không phải toàn bộ codebase.

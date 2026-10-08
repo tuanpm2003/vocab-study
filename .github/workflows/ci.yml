@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  # deploy.yml gọi lại workflow này: main chỉ được deploy khi đúng bộ kiểm tra này pass.
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vocab
+          # Database dùng một lần, chỉ sống trong runner này — không phải secret.
+          POSTGRES_PASSWORD: vocab_ci_only
+          POSTGRES_DB: vocab_test
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd "pg_isready -U vocab -d vocab_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://vocab:vocab_ci_only@localhost:5435/vocab_test?schema=public
+      TEST_DATABASE_URL: postgresql://vocab:vocab_ci_only@localhost:5435/vocab_test?schema=public
+      CORS_ORIGIN: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm test
+      - run: npm run test:e2e
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build
+
+  infra:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+      - run: terraform fmt -check -recursive
+      # -backend=false: chỉ tải provider để kiểm tra cú pháp, không cần tài khoản AWS.
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate

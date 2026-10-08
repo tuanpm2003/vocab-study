@@ -1,0 +1,17 @@
+# SITE_ADDRESS là tên miền (vd. vocab.example.com) → Caddy tự xin và gia hạn chứng chỉ HTTPS.
+# Chạy thử ở máy dev thì đặt http://localhost để không xin chứng chỉ.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header Strict-Transport-Security "max-age=31536000"
+
+	# handle_path BỎ tiền tố /api trước khi chuyển tiếp: backend không có global prefix,
+	# và /languages, /vocabulary trùng tên với trang của frontend.
+	handle_path /api/* {
+		reverse_proxy backend:4000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}

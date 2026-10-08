@@ -693,3 +693,57 @@ xóa một `User` là xóa sạch dữ liệu của người đó nhờ cascade.
 ### Khi nào nên xem lại
 Phase 13: `secure` cookie bắt buộc HTTPS; xem lại CORS và `sameSite` nếu frontend và API nằm
 ở hai tên miền khác nhau. Thêm refresh token / bảng Session khi cần "đăng xuất khỏi mọi thiết bị".
+
+---
+
+## ADR-014 — Deploy: một máy Lightsail + Docker Compose, Terraform, GitHub Actions
+
+**Ngày:** 2026-10-08 · **Trạng thái:** Đã chấp nhận (chủ dự án chọn ngày 2026-10-08)
+
+### Bối cảnh
+App phục vụ vài người dùng, dữ liệu chỉ là từ vựng và tiến độ học. Ưu tiên của chủ dự án:
+chi phí thấp nhất có thể. Ba câu hỏi cần chốt trước khi viết hạ tầng: chạy ở đâu, mô tả hạ
+tầng bằng gì, và deploy bằng gì. So sánh chi phí đầy đủ: [AWS_PLAN.md](AWS_PLAN.md).
+
+### Quyết định
+- **Chạy ở đâu:** một máy Lightsail 1 GB (Singapore) chạy Docker Compose gồm Caddy, Next.js
+  (`output: 'standalone'`), NestJS và PostgreSQL 16. Caddy nhận `/api/*`, bỏ tiền tố rồi
+  chuyển cho NestJS; phần còn lại về Next.js. Frontend và API cùng origin.
+- **Hạ tầng bằng code:** Terraform trong `infra/terraform/` tạo instance, static IP, firewall,
+  bucket S3 backup, IAM user chỉ có quyền ghi backup, và AWS Budgets. State lưu **ở máy dev**
+  (đã gitignore).
+- **Deploy:** GitHub Actions. PR vào `main` → chạy CI. Merge vào `main` → CI → build image →
+  đẩy GHCR → SSH vào server: `pull` → `prisma migrate deploy` (bước riêng) → `up -d`.
+- **Mô hình nhánh giữ nguyên** (CLAUDE.md §8): `main` + `feature/phase-<n>-*`, không `develop`.
+
+### Lý do
+- **Lightsail thay vì Fargate/RDS:** ALB và RDS tính tiền kể cả khi không ai dùng; một máy
+  gộp cả ba thành phần còn khoảng 7–8 USD/tháng.
+- **Lightsail thay vì Lambda + Neon** (~0 USD): cold start ở mỗi lần mở app, bộ đếm rate-limit
+  trong RAM mất tác dụng, dữ liệu nằm trên gói miễn phí của bên thứ ba. Dockerfile viết cho
+  Lightsail dùng lại được trên Lambda sau này, nên hướng đó không bị đóng.
+- **GitHub Actions thay vì Argo CD:** Argo CD chỉ chạy trên Kubernetes. EKS tốn khoảng
+  73 USD/tháng riêng control plane; k3s + Argo CD tự dựng cần máy khoảng 4 GB. Cả hai đi
+  ngược mục tiêu chi phí, và Kubernetes đang nằm ngoài MVP.
+- **Không static export:** app có route động (`/collections/[id]`...) với id chỉ biết lúc
+  chạy, nên Next.js phải chạy dạng server. Giả định "S3 + CloudFront" ở ARCHITECTURE.md §7 cũ
+  không còn đúng.
+- **State Terraform ở máy dev:** một người vận hành, không cần khóa state. Bucket S3 cho
+  state là thêm tài nguyên phải tạo tay trước khi Terraform chạy được.
+
+### Hệ quả
+**Tích cực:** chi phí cố định và thấp; production chạy đúng bộ image đã build trong CI; toàn
+bộ hạ tầng dựng lại được bằng một lệnh.
+**Cái giá phải trả:**
+- Một điểm hỏng duy nhất. Backup `pg_dump` hằng đêm ra S3 là bắt buộc, và phải thử khôi phục.
+- Tự vá hệ điều hành và Postgres.
+- Cổng 22 mở cho mọi IP (chỉ đăng nhập bằng khóa) vì runner của GitHub không có IP cố định.
+- Access key của IAM user backup nằm trong state Terraform ở máy dev: mất máy hoặc lộ file
+  state là lộ quyền **ghi** vào bucket backup (không đọc, không xóa được).
+- Secret production nằm trong file `.env` trên server (`chmod 600`), không dùng Secrets
+  Manager.
+- Mất file state thì Terraform không còn biết tài nguyên nào là của mình; phải `import` lại.
+
+### Khi nào nên xem lại
+Khi cần hơn một instance backend, khi máy 1 GB hết RAM, hoặc khi có người thứ hai cùng vận
+hành hạ tầng (lúc đó chuyển state lên S3). Đường nâng cấp: AWS_PLAN.md §7.
