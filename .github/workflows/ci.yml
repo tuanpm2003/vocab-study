@@ -34,6 +34,7 @@ jobs:
       DATABASE_URL: postgresql://vocab:vocab_ci_only@localhost:5435/vocab_test?schema=public
       TEST_DATABASE_URL: postgresql://vocab:vocab_ci_only@localhost:5435/vocab_test?schema=public
       CORS_ORIGIN: http://localhost:3000
+      LOCAL_OWNER_ID: local-owner
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
