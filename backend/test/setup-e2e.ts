@@ -31,3 +31,5 @@ process.env.DATABASE_URL = testUrl;
 process.env.JWT_SECRET = randomBytes(32).toString('hex');
 // Bộ test gọi /auth/* dồn dập; giới hạn thật (10/phút) được kiểm ở auth-throttle.e2e-spec.ts.
 process.env.AUTH_RATE_LIMIT_PER_MINUTE ??= '1000';
+// Cả bộ e2e gọi từ một IP; giới hạn chung được kiểm ở api-throttle.e2e-spec.ts.
+process.env.API_RATE_LIMIT_PER_MINUTE ??= '1000000';

@@ -6,11 +6,9 @@ import {
   HttpStatus,
   Post,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import type { CookieOptions, Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
@@ -18,6 +16,7 @@ import { SESSION_TTL_SECONDS } from './auth.constants.js';
 import { AuthService, type AuthResult } from './auth.service.js';
 import { LoginDto, RegisterDto } from './dto/auth.dto.js';
 import { ACCESS_TOKEN_COOKIE } from './jwt-auth.guard.js';
+import { PasswordAttempt } from './password-attempt.decorator.js';
 import { Public } from './public.decorator.js';
 
 @ApiTags('auth')
@@ -28,9 +27,9 @@ export class AuthController {
     private readonly config: ConfigService<EnvironmentVariables, true>,
   ) {}
 
-  // ThrottlerGuard chỉ gắn ở hai route nhận mật khẩu: chặn việc thử hàng nghìn mật khẩu.
+  // Hai route nhận mật khẩu chịu giới hạn chặt hơn phần còn lại: chặn việc thử hàng nghìn mật khẩu.
   @Public()
-  @UseGuards(ThrottlerGuard)
+  @PasswordAttempt()
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
@@ -40,7 +39,7 @@ export class AuthController {
   }
 
   @Public()
-  @UseGuards(ThrottlerGuard)
+  @PasswordAttempt()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(

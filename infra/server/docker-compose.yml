@@ -1,0 +1,95 @@
+# Stack production trên máy Lightsail (ADR-014). File này được workflow deploy chép lên
+# /opt/vocab/ ở mỗi lần deploy — sửa ở repo, không sửa trên server.
+# Giá trị thật nằm trong /opt/vocab/.env (xem .env.example cùng thư mục).
+name: vocab
+
+x-logging: &logging
+  # Mặc định Docker giữ log không giới hạn; đĩa 40 GB đầy thì Postgres ngừng ghi.
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-database-url: &database-url postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    # Dịch vụ DUY NHẤT publish cổng ra ngoài.
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Chứng chỉ Let's Encrypt. Mất volume này = xin lại chứng chỉ, và Let's Encrypt giới hạn số lần xin.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    networks: [edge]
+    logging: *logging
+
+  frontend:
+    image: ${IMAGE_PREFIX}/frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    networks: [edge]
+    logging: *logging
+
+  backend:
+    image: ${IMAGE_PREFIX}/backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: *database-url
+      CORS_ORIGIN: ${APP_ORIGIN}
+      # Đúng một proxy đứng trước backend: Caddy.
+      TRUST_PROXY_HOPS: 1
+      JWT_SECRET: ${JWT_SECRET}
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-false}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Ho_Chi_Minh}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [edge, db]
+    logging: *logging
+
+  # Không tự chạy khi `up`. Workflow deploy gọi: docker compose run --rm migrate
+  migrate:
+    image: ${IMAGE_PREFIX}/backend-migrate:${IMAGE_TAG:-latest}
+    profiles: ["tools"]
+    networks: [db]
+    environment:
+      DATABASE_URL: *database-url
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # Không có `ports`, và chỉ nằm trong mạng `db`: frontend và Caddy không nối tới được.
+    networks: [db]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+networks:
+  edge:
+  db:
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,33 @@
+#!/bin/bash
+# Chạy MỘT lần, bằng root, ở lần khởi động đầu tiên của instance.
+# Log: /var/log/cloud-init-output.log
+set -euxo pipefail
+
+# Swap 2 GB: máy 1 GB RAM chạy Postgres + NestJS + Next.js sát giới hạn; không có swap,
+# một đợt tăng bộ nhớ là kernel giết tiến trình (thường là Postgres).
+if [ ! -f /swapfile ]; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y docker.io docker-compose-v2 unattended-upgrades
+systemctl enable --now docker
+# Thành viên nhóm docker tương đương root trên máy này — chấp nhận được vì máy chỉ có một việc.
+usermod -aG docker ubuntu
+
+install -d -o ubuntu -g ubuntu -m 750 /opt/vocab
+
+# Khóa riêng cho GitHub Actions: lộ thì thu hồi được mà không đụng tới khóa của bạn.
+echo '${deploy_ssh_public_key}' >> /home/ubuntu/.ssh/authorized_keys
+
+# 19:00 UTC = 02:00 giờ Việt Nam. backup.sh do workflow deploy chép lên; trước lần deploy
+# đầu tiên file chưa tồn tại nên dòng cron tự bỏ qua.
+cat > /etc/cron.d/vocab-backup <<'CRON'
+0 19 * * * ubuntu [ -x /opt/vocab/backup.sh ] && /opt/vocab/backup.sh >> /opt/vocab/backup.log 2>&1
+CRON
+chmod 644 /etc/cron.d/vocab-backup

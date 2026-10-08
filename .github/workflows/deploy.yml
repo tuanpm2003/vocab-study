@@ -1,0 +1,135 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # Chạy tay để rollback: nhập SHA của commit muốn quay về (image của nó đã có trên GHCR).
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "SHA đầy đủ của commit cần deploy lại. Bỏ trống = build và deploy commit hiện tại."
+        required: false
+        type: string
+
+# Hai lượt deploy chạy chồng nhau có thể chạy migration đồng thời. Xếp hàng, không hủy lượt đang chạy.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    if: ${{ !inputs.image_tag }}
+    uses: ./.github/workflows/ci.yml
+
+  images:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - name: backend
+            context: backend
+            target: runtime
+          - name: backend-migrate
+            context: backend
+            target: migrate
+          - name: frontend
+            context: frontend
+            target: runtime
+    steps:
+      - uses: actions/checkout@v4
+      # GHCR chỉ nhận tên image viết thường.
+      - id: prefix
+        run: echo "value=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      # Action bên thứ ba ghim theo commit SHA: tag có thể bị trỏ sang mã khác, SHA thì không.
+      # Job này giữ quyền ghi GHCR.
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ${{ matrix.context }}
+          target: ${{ matrix.target }}
+          push: true
+          # Tag theo SHA để rollback được về đúng một commit.
+          tags: |
+            ${{ steps.prefix.outputs.value }}/${{ matrix.name }}:${{ github.sha }}
+            ${{ steps.prefix.outputs.value }}/${{ matrix.name }}:latest
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
+
+  deploy:
+    needs: images
+    # always(): khi rollback, job ci và images bị bỏ qua nhưng deploy vẫn phải chạy.
+    # DEPLOY_ENABLED: trước khi server tồn tại, workflow dừng ở bước build image thay vì báo đỏ.
+    if: ${{ always() && vars.DEPLOY_ENABLED == 'true' && (needs.images.result == 'success' || inputs.image_tag) }}
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cấu hình SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Khóa máy chủ được ghim sẵn: runner từ chối kết nối nếu có máy khác giả làm server.
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Chép cấu hình stack lên server
+        run: |
+          scp infra/server/docker-compose.yml infra/server/Caddyfile infra/server/backup.sh \
+            "ubuntu@${DEPLOY_HOST}:/opt/vocab/"
+
+      - name: Pull, migrate, khởi động lại
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Biến đi qua stdin của phiên SSH, không nằm trong tham số dòng lệnh (thứ `ps` đọc được).
+        # printf %q thoát ký tự đặc biệt, nên giá trị nhập tay ở image_tag không chèn được lệnh.
+        # GITHUB_TOKEN hết hạn khi job kết thúc: server không giữ thông tin đăng nhập dài hạn nào.
+        run: |
+          {
+            printf 'GHCR_USER=%q\nGHCR_TOKEN=%q\nexport IMAGE_TAG=%q\n' "$GHCR_USER" "$GHCR_TOKEN" "$IMAGE_TAG"
+            cat <<'EOF'
+          set -euo pipefail
+          cd /opt/vocab
+          chmod +x backup.sh
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          # trap: deploy lỗi giữa chừng vẫn đăng xuất, không để token nằm lại trên server.
+          trap 'docker logout ghcr.io' EXIT
+          docker compose --profile tools pull --quiet
+          # Migration là bước riêng, chạy MỘT lần, trước khi code mới nhận request.
+          docker compose run --rm migrate
+          docker compose up -d --remove-orphans
+          # Ghi lại bản đang chạy: `docker compose up -d` gõ tay trên server sẽ dùng đúng image này
+          # (đã có sẵn trên máy) thay vì cố kéo :latest khi không còn đăng nhập GHCR.
+          { grep -v '^IMAGE_TAG=' .env || true; echo "IMAGE_TAG=$IMAGE_TAG"; } > .env.next
+          chmod 600 .env.next
+          mv .env.next .env
+          docker image prune -af --filter until=168h
+          EOF
+          } | ssh "ubuntu@${DEPLOY_HOST}" bash -s
+
+      - name: Kiểm tra app sau deploy
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "${APP_URL}/api/health"

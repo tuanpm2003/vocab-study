@@ -61,7 +61,9 @@ export function CollectionDetail({ id }: { id: string }) {
           <span>{data.vocabularyCount} từ</span>
         </div>
         {data.description && (
-          <p className="mt-3 whitespace-pre-line">{data.description}</p>
+          <p className="mt-3 text-[22px] whitespace-pre-line">
+            {data.description}
+          </p>
         )}
         <Link href={addHref} className={cn(buttonVariants(), "mt-4 h-10 px-4")}>
           <Plus aria-hidden /> Thêm từ vào đây

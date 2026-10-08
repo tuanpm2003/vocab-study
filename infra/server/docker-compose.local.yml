@@ -1,0 +1,14 @@
+# Chạy thử stack production trên máy dev, build image từ mã nguồn thay vì kéo từ GHCR:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env.local up --build
+services:
+  frontend:
+    build:
+      context: ../../frontend
+  backend:
+    build:
+      context: ../../backend
+      target: runtime
+  migrate:
+    build:
+      context: ../../backend
+      target: migrate

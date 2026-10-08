@@ -44,6 +44,14 @@ describe('Giới hạn tần suất cho /auth/login và /auth/register (e2e)', (
     expect(statuses.slice(LIMIT)).toEqual([429, 429]);
   });
 
+  it('không có proxy (TRUST_PROXY_HOPS=0): tự khai X-Forwarded-For không né được giới hạn', async () => {
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .set('X-Forwarded-For', '203.0.113.99')
+      .send({ email: 'ai-do@example.com', password: GUESS })
+      .expect(429);
+  });
+
   it('đăng ký hàng loạt cũng bị chặn, và không tạo thêm tài khoản khi đã bị chặn', async () => {
     const statuses: number[] = [];
     for (let i = 0; i < LIMIT + 1; i++) {
