@@ -50,8 +50,8 @@ Phase 0 (kiến trúc + quy trình AI) đã xong và không tính vào bảng n�
 | F11 | Nghiệm thu MVP | — | §6 | 6 | 2 | 33% | G3✅ G4✅ G5⬜ |
 | F12 | Spaced Repetition | 11 | Ngoài MVP | 6 | 6 | 100% | G1✅ G2✅ G5⬜ |
 | F13 | Authentication | 12 | Ngoài MVP | 9 | 9 | 100% | G1✅ G2✅ G4✅ G5⬜ |
-| F14 | AWS Deployment | 13 | Ngoài MVP | 13 | 6 | 46% | G1✅ |
-| | **Tổng** | | | **127** | **115** | **91%** | |
+| F14 | AWS Deployment | 13 | Ngoài MVP | 13 | 7 | 54% | G1✅ G2✅ |
+| | **Tổng** | | | **127** | **116** | **91%** | |
 
 Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G5✅`. Hai chức năng cùng Phase 3 (F2, F3) dùng chung một dòng Gate.
 
@@ -351,7 +351,7 @@ Cột Gate ghi kết quả khi đóng phase, ví dụ `G1✅ G2✅ G3✅ G4✅ G
 | F14-04 | Terraform `infra/terraform/`: Lightsail + static IP + firewall, S3 backup + IAM user chỉ ghi, AWS Budgets | Infra | `terraform fmt -check` và `terraform validate` sạch | ✅ |
 | F14-05 | GitHub Actions: `ci.yml` (lint, test, build, terraform validate) và `deploy.yml` (build image → GHCR → SSH deploy, có rollback) | Infra | `actionlint` sạch; mọi lệnh CI gọi tới chạy pass ở local | ✅ |
 | F14-06 | Tài liệu quy trình nhánh + pipeline (`GIT_FLOW.md`), hướng dẫn dựng hạ tầng (`infra/README.md`), script backup | Docs | Có đủ: bảng secret cần đặt, các bước dựng lần đầu, cách rollback, cách khôi phục backup | ✅ |
-| F14-07 | Hardening backend trước khi có URL công khai: `helmet`, `trust proxy = 1`, tắt Swagger ở production, throttler toàn cục | BE | E2E pass; Swagger trả 404 khi `NODE_ENV=production`; rate-limit tính theo IP thật sau Caddy | ⬜ |
+| F14-07 | Hardening backend trước khi có URL công khai: security header, `trust proxy = 1`, tắt Swagger ở production, throttler toàn cục | BE | E2E pass; Swagger trả 404 khi `NODE_ENV=production`; rate-limit tính theo IP thật sau Caddy | ✅ |
 | F14-08 | Tài khoản AWS: MFA cho root, IAM user riêng; `terraform apply` | Infra | Nhận email xác nhận budget; `terraform output` có static IP; SSH vào được (con người) | ⬜ |
 | F14-09 | Đặt secret/variable trên GitHub, bật branch protection cho `main`, lượt CI đầu tiên | Infra | PR đầu tiên có dấu xanh từ CI (con người) | ⬜ |
 | F14-10 | Tạo `/opt/vocab/.env` trên server, trỏ DNS, bật `DEPLOY_ENABLED`, deploy lần đầu | Infra | `https://<domain>/api/health` trả 200, trình duyệt hiện ổ khóa (con người) | ⬜ |
@@ -372,6 +372,8 @@ Mỗi task xong thì thêm một dòng. Mới nhất ở trên cùng.
 
 | Ngày | Task | Ghi chú |
 |---|---|---|
+| 2026-10-08 | F14-07 (bổ sung) | Subagent `security` rà Phase 13: 0 nghiêm trọng, 0 cao, 4 trung bình, 8 thấp. Đã sửa: versioning cho bucket backup, Node 20 (hết hỗ trợ) → 22 trong Dockerfile và CI, ghim 4 action bên thứ ba theo commit SHA, khóa 15 phút khi vượt giới hạn đăng nhập, `trap` đăng xuất GHCR, `umask 077` + `mktemp` trong backup.sh, tách mạng Compose `edge`/`db`, validation cho biến khóa SSH, CSP bổ sung, secret đặt trong environment `production`. Hoãn vào TODO: nâng Next.js, role Postgres riêng, CSP đầy đủ, giới hạn theo tài khoản. Đã kiểm lại: actionlint, terraform validate, lint, build, e2e 264. Sau khi Docker hồi phục (ổ C: đầy làm Docker Desktop sập giữa lúc build), đã build lại trên Node 22 và chạy stack qua Caddy: health 200, đăng ký 201, Swagger 404, frontend và Caddy không phân giải được `postgres` (mạng đã tách), backend nối được, lần đăng nhập thứ 11 → 429. Test chưa chạy trên Node 22 (máy dev dùng Node 20) — lượt CI đầu tiên sẽ kiểm |
+| 2026-10-08 | F14-07 | `TRUST_PROXY_HOPS`, ThrottlerGuard toàn cục đứng trước xác thực với hai bộ đếm (`api` gộp mọi route theo IP, `auth` cho route nhận mật khẩu), Swagger tắt ở production, security header ở Caddy thay `helmet`. +4 e2e (tổng 264), unit 227. Test bắt được: mặc định thư viện đếm riêng từng route, nên giới hạn "chung" thực ra là limit × số endpoint. Qua Caddy ở local: Swagger 404, lần đăng nhập thứ 11 → 429 dù đổi `X-Forwarded-For` mỗi lần |
 | 2026-10-08 | F14-06 | `docs/GIT_FLOW.md` (nhánh, hai workflow, rollback, bảng secret/variable, vì sao không Argo CD), `infra/README.md` (chạy thử local, dựng lần đầu, chuyển dữ liệu, backup + khôi phục), `infra/server/backup.sh`. Các lệnh chuyển dữ liệu và khôi phục trong README **chưa chạy thử** — cần server và bucket thật (F14-11, F14-12) |
 | 2026-10-08 | F14-05 | `.github/workflows/ci.yml` + `deploy.yml`. `actionlint` sạch (đã sửa SC2087: biến truyền qua stdin bằng `printf %q`). Chạy local đúng các lệnh CI gọi: backend lint/format/build, unit 227, e2e 260; frontend lint/format, test 117, build. Chưa có lượt chạy thật trên GitHub (F14-09) |
 | 2026-10-08 | F14-04 | `infra/terraform/`: 12 tài nguyên (Lightsail + key pair + static IP + firewall, S3 + lifecycle + chặn public, IAM user chỉ `PutObject`, Budgets). `terraform fmt -check` và `validate` sạch qua image `hashicorp/terraform:1.9`. Chưa `plan`/`apply` — cần tài khoản AWS (F14-08) |

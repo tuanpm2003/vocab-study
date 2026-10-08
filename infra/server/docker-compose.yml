@@ -30,11 +30,13 @@ services:
     depends_on:
       - backend
       - frontend
+    networks: [edge]
     logging: *logging
 
   frontend:
     image: ${IMAGE_PREFIX}/frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    networks: [edge]
     logging: *logging
 
   backend:
@@ -43,18 +45,22 @@ services:
     environment:
       DATABASE_URL: *database-url
       CORS_ORIGIN: ${APP_ORIGIN}
+      # Đúng một proxy đứng trước backend: Caddy.
+      TRUST_PROXY_HOPS: 1
       JWT_SECRET: ${JWT_SECRET}
       REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-false}
       APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Ho_Chi_Minh}
     depends_on:
       postgres:
         condition: service_healthy
+    networks: [edge, db]
     logging: *logging
 
   # Không tự chạy khi `up`. Workflow deploy gọi: docker compose run --rm migrate
   migrate:
     image: ${IMAGE_PREFIX}/backend-migrate:${IMAGE_TAG:-latest}
     profiles: ["tools"]
+    networks: [db]
     environment:
       DATABASE_URL: *database-url
     depends_on:
@@ -64,7 +70,8 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
-    # Không có `ports`: chỉ các container trong mạng Compose này kết nối được.
+    # Không có `ports`, và chỉ nằm trong mạng `db`: frontend và Caddy không nối tới được.
+    networks: [db]
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -77,6 +84,10 @@ services:
       timeout: 3s
       retries: 10
     logging: *logging
+
+networks:
+  edge:
+  db:
 
 volumes:
   pgdata:

@@ -3,7 +3,16 @@
 {$SITE_ADDRESS} {
 	encode zstd gzip
 
-	header Strict-Transport-Security "max-age=31536000"
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		# Trình duyệt không được đoán kiểu nội dung khác với Content-Type.
+		X-Content-Type-Options "nosniff"
+		# Không trang nào khác được nhúng app vào iframe (chống clickjacking).
+		Content-Security-Policy "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		-X-Powered-By
+	}
 
 	# handle_path BỎ tiền tố /api trước khi chuyển tiếp: backend không có global prefix,
 	# và /languages, /vocabulary trùng tên với trang của frontend.

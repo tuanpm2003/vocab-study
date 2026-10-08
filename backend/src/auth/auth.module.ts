@@ -9,6 +9,7 @@ import { SESSION_TTL_SECONDS } from './auth.constants.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { isPasswordAttempt } from './password-attempt.decorator.js';
 
 /**
  * Production bắt buộc có JWT_SECRET (validateEnv đã chặn từ lúc khởi động).
@@ -16,6 +17,8 @@ import { JwtAuthGuard } from './jwt-auth.guard.js';
  * viết sẵn trong code: app vẫn chạy ngay, không có secret nào nằm trong repo. Cái giá: mỗi
  * lần backend khởi động lại là mọi người phải đăng nhập lại — đặt JWT_SECRET trong .env để tránh.
  */
+const AUTH_BLOCK_MS = 15 * 60_000;
+
 function resolveSecret(config: ConfigService<EnvironmentVariables, true>) {
   const secret = config.get('JWT_SECRET', { infer: true });
   if (secret) return secret;
@@ -39,10 +42,25 @@ function resolveSecret(config: ConfigService<EnvironmentVariables, true>) {
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
+      // Hai bộ đếm độc lập cho mỗi IP. ThrottlerGuard toàn cục (app.module.ts) áp cả hai;
+      // `skipIf` giữ bộ đếm chặt chỉ cho route nhận mật khẩu.
       useFactory: (config: ConfigService<EnvironmentVariables, true>) => [
         {
+          name: 'api',
+          ttl: 60_000,
+          limit: config.get('API_RATE_LIMIT_PER_MINUTE', { infer: true }),
+          // Mặc định thư viện đếm riêng cho từng route. Bộ đếm chung phải gộp mọi route
+          // của một IP, nếu không giới hạn thật là "limit × số endpoint".
+          generateKey: (_context, tracker, name) => `${name}:${tracker}`,
+        },
+        {
+          name: 'auth',
           ttl: 60_000,
           limit: config.get('AUTH_RATE_LIMIT_PER_MINUTE', { infer: true }),
+          // Vượt giới hạn thì khóa 15 phút, không phải hết phút là thử tiếp: từ ~14.400 lần
+          // đoán mỗi ngày từ một IP xuống dưới 1.000.
+          blockDuration: AUTH_BLOCK_MS,
+          skipIf: (context) => !isPasswordAttempt(context),
         },
       ],
     }),

@@ -3,7 +3,7 @@
 #   --target runtime  (mặc định)  chạy API, chỉ có dependency production
 #   --target migrate              chạy `prisma migrate deploy`, cần Prisma CLI (devDependency)
 
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 # postinstall chạy `prisma generate`, nên schema và config phải có mặt TRƯỚC `npm ci`.
 # tsconfig.json cũng vậy: thiếu nó, Prisma sinh import đuôi ".ts" thay vì ".js" và app
@@ -22,14 +22,14 @@ ENV NODE_ENV=production
 USER node
 CMD ["npx", "prisma", "migrate", "deploy"]
 
-FROM node:20-alpine AS prod-deps
+FROM node:22-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 # --ignore-scripts: postinstall gọi Prisma CLI, thứ không có khi bỏ devDependencies.
 # Prisma Client đã được biên dịch vào dist/generated ở stage build.
 RUN npm ci --omit=dev --ignore-scripts
 
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \

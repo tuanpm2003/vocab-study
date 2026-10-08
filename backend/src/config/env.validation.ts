@@ -106,6 +106,21 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(100_000)
   AUTH_RATE_LIMIT_PER_MINUTE: number = 10;
+
+  // Số request tối đa mỗi phút từ một địa chỉ IP, tính trên MỌI endpoint.
+  @IsInt()
+  @Min(1)
+  @Max(1_000_000)
+  API_RATE_LIMIT_PER_MINUTE: number = 300;
+
+  // Số reverse proxy đứng trước backend. Phải đúng CHÍNH XÁC: 0 khi không có proxy (local),
+  // 1 khi chỉ có Caddy. Thấp hơn thực tế → mọi người dùng chung một IP (IP của proxy) và
+  // chung một bộ đếm rate-limit. Cao hơn thực tế → ai cũng tự khai IP qua header
+  // X-Forwarded-For và né được giới hạn.
+  @IsInt()
+  @Min(0)
+  @Max(5)
+  TRUST_PROXY_HOPS: number = 0;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

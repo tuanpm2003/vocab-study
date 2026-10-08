@@ -42,7 +42,7 @@ Những thứ **cố ý không làm**, kèm điều kiện để xem lại:
 | E2E test (Playwright) | Chậm, hay vỡ vặt; G5 đã thay thế phần lớn | Sau MVP |
 | Typing mode | Ngoài MVP theo yêu cầu | Sau Phase 11 |
 | Dark mode, PWA | Ngoài MVP | Sau MVP |
-| `helmet`, rate limiting | App chạy localhost | **Bắt buộc trước Phase 13** |
+| `helmet` | Security header đã đặt ở Caddy (2026-10-08) | Khi backend được gọi trực tiếp, không qua Caddy |
 | Redis / cache | Chưa có vấn đề hiệu năng nào | Khi đo được nút thắt thật |
 
 ---
@@ -54,24 +54,28 @@ có URL công khai.** Chi tiết ở skill `security-checklist`.
 
 - [x] Authentication thật (Phase 12, ADR-013) — xong 2026-10-07
 - [x] `ownerId` trở thành khóa ngoại thật tới bảng `User` — xong 2026-10-07
-- [ ] `helmet` + HTTP security header
-- [ ] Rate limiting cho **toàn bộ** API (`@nestjs/throttler` hiện mới gắn ở `/auth/login` và `/auth/register`); sau reverse proxy phải cấu hình `trust proxy` để giới hạn theo IP thật
+- [x] HTTP security header — đặt ở Caddy (`infra/server/Caddyfile`) thay vì `helmet`: phủ được cả trang của Next.js, không thêm dependency. Xong 2026-10-08
+- [x] Rate limiting cho **toàn bộ** API theo IP thật (`API_RATE_LIMIT_PER_MINUTE`, `TRUST_PROXY_HOPS`) — xong 2026-10-08
 - [ ] HTTPS bắt buộc + HSTS — cookie phiên chỉ có cờ `secure` khi `NODE_ENV=production`
 - [ ] **Tạo tài khoản của mình TRƯỚC khi app có URL công khai**, rồi đặt `REGISTRATION_ENABLED=false`: nếu dòng giữ chỗ dữ liệu cũ chưa được nhận, người lạ đầu tiên đăng ký sẽ lấy toàn bộ dữ liệu
 - [ ] `JWT_SECRET` thật, lưu ở Secrets Manager; `NODE_ENV=production` phải được đặt (nếu không, backend chạy với khóa tạm và cookie không `secure`)
 - [ ] Quên mật khẩu / đổi mật khẩu / xác minh email; thu hồi phiên (refresh token hoặc bảng Session)
 - [ ] Chống dò mật khẩu **theo tài khoản**, không chỉ theo IP: 10 lần/phút/IP vẫn là 14.400 lần đoán mỗi ngày. Thêm giới hạn theo email (ví dụ 5 lần sai / 15 phút, tăng dần) và bộ đếm dùng chung giữa các instance (hiện nằm trong RAM)
-- [ ] `trust proxy` đúng số hop của CloudFront/ALB: chưa đặt thì mọi request cùng một IP (một người khóa đăng nhập của tất cả); đặt bừa thì giả `X-Forwarded-For` là né được
+- [x] `trust proxy` đúng số hop (1 = Caddy, đặt trong `infra/server/docker-compose.yml`; thêm CloudFront thì phải tăng lên 2) — xong 2026-10-08. Lý do: chưa đặt thì mọi request cùng một IP (một người khóa đăng nhập của tất cả); đặt bừa thì giả `X-Forwarded-For` là né được
 - [ ] Đổi tên cookie thành `__Host-access_token` để subdomain khác không ghi đè được
 - [ ] Đặt lại mật khẩu bằng một lệnh CLI thay cho cách sửa tay trong Prisma Studio (README → "Quên mật khẩu")
 - [ ] Mật khẩu DB mạnh, lưu ở Secrets Manager
-- [ ] RDS trong private subnet, Security Group chỉ cho phép ECS task
+- [x] Database không tới được từ internet — theo ADR-014 không dùng RDS: Postgres chạy trong Compose, không publish cổng; firewall Lightsail chỉ mở 80/443/22. Xong 2026-10-08 (cấu hình), kiểm lại trên server thật ở F14-08
 - [ ] CORS giới hạn đúng domain production
 - [ ] `HOST=0.0.0.0` chỉ đặt bên trong container phía sau load balancer — mặc định `127.0.0.1` (Phase 1)
 - [ ] Log không ghi thông tin nhạy cảm — cụ thể: `AllExceptionsFilter` ghi `exception.stack` cho lỗi 500, và lỗi validation của Prisma có thể chứa dữ liệu người dùng
-- [ ] Tắt hoặc bảo vệ Swagger `/api` ở production (hiện luôn bật trong `main.ts`)
+- [x] Tắt Swagger ở production — xong 2026-10-08
 - [ ] Kiểm tra header `Host` (chống DNS rebinding) — hoặc để authentication giải quyết
 - [ ] 8 lệnh ghi "an toàn gián tiếp" (kiểm tra owner ở bước trước, không nằm trong chính câu lệnh ghi — bảng A của báo cáo G4 2026-10-06) phải xem lại nếu thêm tính năng chuyển/chia sẻ dữ liệu giữa người dùng
+- [ ] Nâng Next.js lên bản đã vá (từ 16.3.8): bản 16.3.6 có advisory; rà soát G4 2026-10-08 không thấy cái nào khai thác được với cấu hình hiện tại, nhưng nên nâng trước khi công khai
+- [ ] Role Postgres riêng cho app thay vì superuser `POSTGRES_USER` (phòng thủ tầng sâu, G4 2026-10-08)
+- [ ] CSP đầy đủ (`script-src` với nonce) cho Next.js — hiện chỉ có `frame-ancestors`, `base-uri`, `form-action`, `object-src`
+- [ ] Chỉ dùng bản ghi DNS loại A cho tên miền. Thêm AAAA (IPv6) có thể khiến mọi người dùng IPv6 bị tính chung một IP trong rate-limit — chưa kiểm trên máy thật
 - [ ] Backup tự động + **đã thử khôi phục một lần**
 - [ ] CloudWatch alarm cho lỗi 5xx **và cho chi phí**
 - [ ] Billing Alarm đặt ngay khi tạo tài khoản AWS, trước cả khi tạo tài nguyên đầu tiên

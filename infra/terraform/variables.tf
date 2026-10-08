@@ -25,11 +25,23 @@ variable "blueprint_id" {
 variable "admin_ssh_public_key" {
   description = "Khóa công khai SSH của bạn (nội dung file .pub)."
   type        = string
+
+  # Giá trị này được chèn vào script chạy bằng root (user_data): chỉ nhận đúng dạng khóa công khai.
+  validation {
+    condition     = can(regex("^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp[0-9]+) [A-Za-z0-9+/=]+( [A-Za-z0-9_@.-]+)?$", var.admin_ssh_public_key))
+    error_message = "Phải là MỘT dòng khóa công khai SSH, ví dụ: ssh-ed25519 AAAA... ghi-chu"
+  }
 }
 
 variable "deploy_ssh_public_key" {
   description = "Khóa công khai SSH riêng cho GitHub Actions. Khóa bí mật tương ứng đặt ở secret DEPLOY_SSH_KEY."
   type        = string
+
+  # Giá trị này được chèn vào script chạy bằng root (user_data): chỉ nhận đúng dạng khóa công khai.
+  validation {
+    condition     = can(regex("^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp[0-9]+) [A-Za-z0-9+/=]+( [A-Za-z0-9_@.-]+)?$", var.deploy_ssh_public_key))
+    error_message = "Phải là MỘT dòng khóa công khai SSH, ví dụ: ssh-ed25519 AAAA... ghi-chu"
+  }
 }
 
 variable "ssh_allowed_cidrs" {

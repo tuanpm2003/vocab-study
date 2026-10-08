@@ -100,7 +100,10 @@ tiếp sẽ deploy lại đúng lỗi đó.
 
 ## 5. Cấu hình một lần trên GitHub
 
-Settings → Secrets and variables → Actions:
+Settings → Environments → tạo environment **`production`**, đặt *Deployment branches* là
+chỉ `main`, rồi thêm secret và variable **vào environment đó** (không đặt ở cấp repo).
+`DEPLOY_SSH_KEY` tương đương quyền root trên server; đặt trong environment thì workflow
+chạy từ nhánh khác không đọc được nó.
 
 | Loại | Tên | Giá trị |
 |---|---|---|

@@ -36,6 +36,16 @@ với `credentials: "include"`. Không có cookie hợp lệ → **401** `"Bạn
 
 Client không phải trình duyệt (curl, script) không gửi `Origin` nên không bị ảnh hưởng.
 
+**Giới hạn tần suất** (Phase 13) — tính theo địa chỉ IP, chạy **trước** xác thực:
+- mọi endpoint cộng lại: `API_RATE_LIMIT_PER_MINUTE` request/phút (mặc định 300);
+- riêng `/auth/login` và `/auth/register`: thêm `AUTH_RATE_LIMIT_PER_MINUTE` lần/phút (mặc định 10).
+
+Vượt giới hạn → **429**. Sau reverse proxy, IP thật lấy từ `X-Forwarded-For` theo
+`TRUST_PROXY_HOPS`.
+
+Ở production (`NODE_ENV=production`) Swagger UI bị tắt, và API nằm sau tiền tố `/api` do Caddy
+thêm: `GET /health` ở đây là `GET https://<tên miền>/api/health`.
+
 ---
 
 ## Health — Phase 1

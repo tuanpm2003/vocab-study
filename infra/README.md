@@ -152,9 +152,8 @@ free -m            # RAM và swap
 Không sửa `docker-compose.yml`, `Caddyfile`, `backup.sh` trên server: lần deploy kế tiếp sẽ
 ghi đè. Sửa trong repo.
 
-## 7. Chưa làm — phải xong trước khi công khai URL
+## 7. Thêm một proxy phía trước thì phải sửa gì
 
-Task F14-07 trong [docs/PLAN.md](../docs/PLAN.md): `helmet`, `trust proxy`, tắt Swagger ở
-production, rate-limit toàn cục. Cụ thể, khi chưa đặt `trust proxy`, backend thấy mọi request
-đến từ IP của Caddy, nên giới hạn 10 lần đăng nhập/phút đang tính **chung cho mọi người
-dùng**.
+Backend đang tin đúng **một** proxy (`TRUST_PROXY_HOPS: 1` trong `docker-compose.yml`). Nếu
+sau này đặt CloudFront hay một proxy khác trước Caddy, tăng giá trị này lên 2. Để nguyên thì
+mọi người dùng bị tính chung một IP và chung một bộ đếm rate-limit.
